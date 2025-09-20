@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Importe para navegar
 
-export default function HomeScreen() {
-  const navigation = useNavigation();
+// O componente agora é uma CLASSE que herda de Component
+export default class HomeScreen extends Component {
+  
+  // O código da interface deve ir dentro do método render()
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Bem-vindo!</Text>
+        <Text style={styles.subtitle}>Sua jornada de saúde começa aqui.</Text>
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bem-vindo!</Text>
-      <Text style={styles.subtitle}>Sua jornada de saúde começa aqui.</Text>
-
-      {/* Botão que leva para a tela de Perfil */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Profile')} // 'Profile' será o nome da sua tela na navegação
-      >
-        <Text style={styles.buttonText}>Ir para o Perfil</Text>
-      </TouchableOpacity>
-    </View>
-  );
+        {/* O acesso à navegação é feito com 'this.props' */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => this.props.navigation.navigate('Profile')}
+        >
+          <Text style={styles.buttonText}>Ir para o Perfil</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
