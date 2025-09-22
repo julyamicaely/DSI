@@ -19,7 +19,7 @@ export function HomeScreen() {
     <View style={styles.container}>
       <Image source={logo} style={styles.logo} />
 
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Metas de atividade física</Text>
 
       <TextInput
         style={styles.input}
