@@ -3,10 +3,11 @@ import { useNavigation } from '@react-navigation/native';
 import { AppNavigationProp } from '../../types/navigation'; 
 
 const logo = require('../../assets/lifebeat.png');
-const goals_logo = null;
-const habits_logo = null;
-const clinical_data = null;
-const map_logo = null;
+const exitLogo = require('../../assets/exit_logo.png');
+const goalsLogo = null;
+const habitsLogo = null;
+const clinicalData = null;
+const mapLogo = null;
 
 export function HomeScreen() {
 
@@ -44,7 +45,8 @@ export function HomeScreen() {
       </View>
       
       <View style={styles.rectangle}>
-         <TouchableOpacity style={styles.button1} onPress={undefined}></TouchableOpacity>
+         <TouchableOpacity style={styles.exitButton} onPress={undefined}></TouchableOpacity>
+         <Image source={exitLogo} style={styles.exitButton} />
 
       </View>
 
@@ -150,11 +152,19 @@ const styles = StyleSheet.create({
 
   },
   rectangle: {
+    flexDirection: 'row',
     backgroundColor: '#A42020',
     width: 10000000,
     height: 100,
     alignSelf: 'center',
+    justifyContent: 'flex-start',
+    alignContent: 'center',
+    alignItems: 'center',
     marginTop: '10%'
-  }
+  },
+  exitButton: {
+    width: 50,
+    height: 50
+  },
   
 });
