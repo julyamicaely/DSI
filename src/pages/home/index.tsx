@@ -19,34 +19,20 @@ export function HomeScreen() {
     <View style={styles.container}>
       <Image source={logo} style={styles.logo} />
 
-      <Text style={styles.title}>Metas de atividade física</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        placeholderTextColor="#fff"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#fff"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText1}>Metas diárias</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleGoToHome}>
-        <Text style={styles.registerText}>
-          Ainda não tem uma conta? <Text style={styles.registerLink}>Cadastre-se.</Text>
-        </Text>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText2}>Hábitos</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText3}>Dados clínicos</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText4}>Hospitais próximos</Text>
       </TouchableOpacity>
     </View>
   );
@@ -65,43 +51,24 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: 20
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#A42020',
-    marginBottom: 40,
-  },
-  input: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#fff',
-  },
-  button: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
+  buttonText1: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  registerText: {
-    marginTop: 20,
-    color: '#333',
-    fontSize: 14,
+  buttonText2: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  registerLink: {
-    color: '#A42020',
+  buttonText3: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonText4: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
