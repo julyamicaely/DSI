@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Alert, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppNavigationProp } from '../../types/navigation'; 
 
@@ -25,7 +25,7 @@ export function HomeScreen() {
       <View style={styles.upperButtons}>
       
         <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.buttonText}>Metas diárias</Text>
+          <Text style={styles.buttonText}>Metas de atividade física</Text>
           <Image source={goalsLogo} style={styles.goalsLogo} /> 
         </TouchableOpacity>
 
@@ -52,15 +52,15 @@ export function HomeScreen() {
       
       <View style={styles.rectangle}>
 
-        <TouchableOpacity style={styles.exitButton} onPress={handleGoToLogin}>
+        <TouchableOpacity onPress={handleGoToLogin}>
           <Image source={exitLogo} style={styles.exitButton}></Image>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.questionButton} onPress={undefined}>
+        <TouchableOpacity onPress={undefined}>
           <Image source={questionLogo} style={styles.questionButton}></Image>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.profileButton} onPress={undefined}>
+        <TouchableOpacity onPress={undefined}>
           <Image source={profileLogo} style={styles.profileButton}></Image>
         </TouchableOpacity>
 
@@ -71,46 +71,43 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+  container: {
     flex: 1,
     backgroundColor: '#BBBBBB',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 50, // Afasta a logo do topo
+    // Remova 'justifyContent: center' para permitir que o conteúdo se alinhe no topo
   },
-    logo: {
-    width: 150,
+  logo: {
+    width: 200,
     height: 80,
     resizeMode: 'contain',
     marginBottom: 50
   },
   upperButtons: {
     flexDirection: "row",
-    width: 300,
-    height: 200,
-    maxWidth: '80%',
-    maxHeight: '80%',
-    backgroundColor: '#BBBBBB',
+    width: '90%', 
+    maxWidth: 400,
+    justifyContent: 'center',
     paddingHorizontal: 5,
-    gap: 5
+    gap: 10
   },
-    lowerButtons: {
+  lowerButtons: {
     flexDirection: "row",
-    width: 300,
-    height: 200,
-    maxWidth: '80%',
-    maxHeight: '80%',
-    backgroundColor: '#BBBBBB',
+    width: '90%', 
+    maxWidth: 400,
+    justifyContent: 'center',
     paddingHorizontal: 5,
-    gap: 5
+    gap: 10,
+    marginTop: 10,
   },
   homeButton: {
-    width: '50%',
-    height: '90%',
+    flex: 1, 
+    aspectRatio: 1, 
     backgroundColor: '#A42020',
     borderRadius: 15,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 15,
+    justifyContent: 'center',
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 1, height: 1 },
@@ -118,68 +115,60 @@ const styles = StyleSheet.create({
     shadowRadius: 50
   },
   goalsLogo: {
-    height: '71%',
-    width: '63%',
-    margin: 15
+    height: '60%', 
+    width: '60%',
+    resizeMode: 'contain',
   },
   habitsLogo: {
-    height: '55%',
-    width: '110%',
-    margin: 15
+    height: '60%',
+    width: '100%',
+    resizeMode: 'contain',
   },
   clinicalData: {
-    height: '75%',
-    width: '95%',
-    margin: 10,
+    height: '60%',
+    width: '90%',
+    resizeMode: 'contain',
   },
   mapLogo: {
     height: '60%',
     width: '75%',
-    margin: 15,
-    borderRadius: 15
+    resizeMode: 'contain',
+    borderRadius: 15,
   },
   buttonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
-    margin: 5
+    textAlign: 'center',
+    marginBottom: 5,
   },
   hospitalButton: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
-    margin: 5,
+    textAlign: 'center',
+    marginBottom: 5,
   },
   rectangle: {
     flexDirection: 'row',
     backgroundColor: '#A42020',
-    width: 10000,
+    width: '100%',
     height: 100,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginTop: '10%'
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
   },
   exitButton: {
-    alignSelf: 'center',
     height: 50,
     width: 45,
-    marginHorizontal: 60,
-    marginTop: 10
   },
   questionButton: {
-    alignSelf: 'center',
     height: 42,
     width: 25,
-    marginHorizontal: 60,
-    marginTop: 10
-
   },
   profileButton: {
-    alignSelf: 'center',
     height: 45,
     width: 30,
-    marginHorizontal: 60,
-    marginTop: 10
   }
-  
 });
