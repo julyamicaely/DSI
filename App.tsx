@@ -6,6 +6,7 @@ import { AuthProvider } from './src/context/AuthContext'; // Importe o provedor
 // Importe as duas telas
 import { LoginScreen } from './src/pages/teladelogin';
 import { RegisterScreen } from './src/pages/cadastro';
+import { HomeScreen } from './src/pages/home';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +17,7 @@ export default function App() {
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false}} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

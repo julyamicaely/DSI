@@ -16,8 +16,9 @@ export function LoginScreen() {
   const handleLogin = () => {
     // Validação de login
     if (credentials && email === credentials.email && password === credentials.password) {
-      Alert.alert('Sucesso', 'Login realizado!');
+      Alert.alert('Sucesso', 'Login realizado!'); 
       // Ação para navegar para a próxima tela do aplicativo
+      navigation.navigate('Home'); 
     } else {
       Alert.alert('Erro', 'Credenciais inválidas. Verifique seu e-mail e senha.');
     }
@@ -25,7 +26,7 @@ export function LoginScreen() {
 
   const handleGoToRegister = () => {
     navigation.navigate('Register'); 
-  };
+  };                                                                                       
 
   return (
     <View style={styles.container}>
