@@ -24,24 +24,28 @@ export function HomeScreen() {
 
       <View style={styles.upperButtons}>
       
-        <TouchableOpacity style={styles.button1} onPress={undefined}>
+        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
           <Text style={styles.buttonText}>Metas diárias</Text>
+          <Image source={goalsLogo} style={styles.goalsLogo} /> 
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button2} onPress={undefined}>
+        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
           <Text style={styles.buttonText}>Hábitos</Text>
+          <Image source={habitsLogo} style={styles.habitsLogo} /> 
         </TouchableOpacity>
 
       </View>
 
       <View style={styles.lowerButtons}>
 
-        <TouchableOpacity style={styles.button3} onPress={undefined}>
+        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
           <Text style={styles.buttonText}>Dados clínicos</Text>
+          <Image source={clinicalData} style={styles.clinicalData} /> 
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button4} onPress={undefined}>
+        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
           <Text style={styles.buttonText}>Hospitais perto</Text>
+          <Image source={mapLogo} style={styles.mapLogo} /> 
         </TouchableOpacity>
     
       </View>
@@ -99,11 +103,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     gap: 5
   },
-  button1: {
+  homeButton: {
     width: '50%',
     height: '90%',
     backgroundColor: '#A42020',
-    borderRadius: 13,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'flex-start',
     marginTop: 15,
@@ -113,47 +117,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 50
   },
-  button2: {
-    width: '50%',
-    height: '90%',
-    backgroundColor: '#A42020',
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 15,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 50
+  goalsLogo: {
+    height: '71%',
+    width: '63%',
+    margin: 15
   },
-  button3: {
-    width: '50%',
-    height: '90%',
-    backgroundColor: '#A42020',
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 15,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 50
+  habitsLogo: {
+    height: '55%',
+    width: '110%',
+    margin: 15
   },
-    button4: {
-    width: '50%',
-    height: '90%',
-    backgroundColor: '#A42020',
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 15,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 50
+  clinicalData: {
+    height: '75%',
+    width: '90%',
+    margin: 15,
+  },
+  mapLogo: {
+    height: '60%',
+    width: '75%',
+    margin: 15,
+    borderRadius: 15
   },
   buttonText: {
     color: '#fff',
@@ -163,27 +146,33 @@ const styles = StyleSheet.create({
   rectangle: {
     flexDirection: 'row',
     backgroundColor: '#A42020',
-    width: 100000,
+    width: 10000,
     height: 100,
-    alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'flex-start',
     marginTop: '10%'
   },
   exitButton: {
-    alignContent: 'center',
+    alignSelf: 'center',
     height: 50,
-    width: 50
+    width: 45,
+    marginHorizontal: 60,
+    marginTop: 10
   },
   questionButton: {
-    alignContent: 'center',
-    height: 50,
-    width: 50
+    alignSelf: 'center',
+    height: 42,
+    width: 25,
+    marginHorizontal: 60,
+    marginTop: 10
+
   },
   profileButton: {
-    alignContent: 'center',
-    height: 50,
-    width: 50
+    alignSelf: 'center',
+    height: 45,
+    width: 30,
+    marginHorizontal: 60,
+    marginTop: 10
   }
   
 });
