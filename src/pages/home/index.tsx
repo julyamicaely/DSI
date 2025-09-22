@@ -1,13 +1,15 @@
-import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Alert, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppNavigationProp } from '../../types/navigation'; 
 
 const logo = require('../../assets/lifebeat.png');
-const exitLogo = require('../../assets/exit_logo.png');
-const goalsLogo = null;
-const habitsLogo = null;
-const clinicalData = null;
-const mapLogo = null;
+const exitLogo = require('../../assets/exitLogo.png');
+const questionLogo = require('../../assets/questionLogo.png');
+const profileLogo = require('../../assets/profileLogo.png');
+const goalsLogo = require('../../assets/goalsLogo.png');
+const habitsLogo = require('../../assets/habitsLogo.png');
+const clinicalData = require('../../assets/clinicalData.png');
+const mapLogo = require('../../assets/mapLogo.png');
 
 export function HomeScreen() {
 
@@ -45,9 +47,19 @@ export function HomeScreen() {
       </View>
       
       <View style={styles.rectangle}>
-         <TouchableOpacity style={styles.exitButton} onPress={undefined}></TouchableOpacity>
-         <Image source={exitLogo} style={styles.exitButton} />
 
+        <TouchableOpacity style={styles.exitButton} onPress={handleGoToLogin}>
+          <Image source={exitLogo} style={styles.exitButton}></Image>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.exitButton} onPress={undefined}>
+          <Image source={questionLogo} style={styles.exitButton}></Image>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.exitButton} onPress={undefined}>
+          <Image source={profileLogo} style={styles.exitButton}></Image>
+        </TouchableOpacity>
+        
       </View>
 
     </View>
@@ -148,23 +160,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
-  pseudoTabs: {
-
-  },
   rectangle: {
     flexDirection: 'row',
     backgroundColor: '#A42020',
-    width: 10000000,
+    width: 100000,
     height: 100,
     alignSelf: 'center',
-    justifyContent: 'flex-start',
-    alignContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
     marginTop: '10%'
   },
   exitButton: {
-    width: 50,
-    height: 50
+    alignContent: 'center',
+    height: 50,
+    width: 50
   },
   
 });
