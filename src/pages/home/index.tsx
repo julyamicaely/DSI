@@ -22,11 +22,11 @@ export function HomeScreen() {
       <View style={styles.upperButtons}>
       
         <TouchableOpacity style={styles.button1} onPress={undefined}>
-          <Text style={styles.buttonText1}>Metas diárias</Text>
+          <Text style={styles.buttonText}>Metas diárias</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button2} onPress={undefined}>
-          <Text style={styles.buttonText2}>Hábitos</Text>
+          <Text style={styles.buttonText}>Hábitos</Text>
         </TouchableOpacity>
 
       </View>
@@ -34,17 +34,17 @@ export function HomeScreen() {
       <View style={styles.lowerButtons}>
 
         <TouchableOpacity style={styles.button3} onPress={undefined}>
-          <Text style={styles.buttonText3}>Dados clínicos</Text>
+          <Text style={styles.buttonText}>Dados clínicos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button4} onPress={undefined}>
-          <Text style={styles.buttonText4}>Hospitais perto</Text>
+          <Text style={styles.buttonText}>Hospitais perto</Text>
         </TouchableOpacity>
     
       </View>
-
-      <View style={styles.pseudoTabs}>
-
+      
+      <View style={styles.rectangle}>
+         <TouchableOpacity style={styles.button1} onPress={undefined}></TouchableOpacity>
 
       </View>
 
@@ -141,22 +141,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 50
   },
-  buttonText1: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  buttonText2: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  buttonText3: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  buttonText4: {
+  buttonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
@@ -164,5 +149,12 @@ const styles = StyleSheet.create({
   pseudoTabs: {
 
   },
+  rectangle: {
+    backgroundColor: '#A42020',
+    width: 10000000,
+    height: 100,
+    alignSelf: 'center',
+    marginTop: '10%'
+  }
   
 });
