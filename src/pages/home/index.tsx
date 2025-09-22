@@ -52,14 +52,14 @@ export function HomeScreen() {
           <Image source={exitLogo} style={styles.exitButton}></Image>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.exitButton} onPress={undefined}>
-          <Image source={questionLogo} style={styles.exitButton}></Image>
+        <TouchableOpacity style={styles.questionButton} onPress={undefined}>
+          <Image source={questionLogo} style={styles.questionButton}></Image>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.exitButton} onPress={undefined}>
-          <Image source={profileLogo} style={styles.exitButton}></Image>
+        <TouchableOpacity style={styles.profileButton} onPress={undefined}>
+          <Image source={profileLogo} style={styles.profileButton}></Image>
         </TouchableOpacity>
-        
+
       </View>
 
     </View>
@@ -175,5 +175,15 @@ const styles = StyleSheet.create({
     height: 50,
     width: 50
   },
+  questionButton: {
+    alignContent: 'center',
+    height: 50,
+    width: 50
+  },
+  profileButton: {
+    alignContent: 'center',
+    height: 50,
+    width: 50
+  }
   
 });
