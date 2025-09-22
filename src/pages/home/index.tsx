@@ -19,21 +19,26 @@ export function HomeScreen() {
     <View style={styles.container}>
       <Image source={logo} style={styles.logo} />
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText1}>Metas diárias</Text>
-      </TouchableOpacity>
+      <View style={styles.contentBox}>
+      
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText1}>Metas diárias</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText2}>Hábitos</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText2}>Hábitos</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText3}>Dados clínicos</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText3}>Dados clínicos</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText4}>Hospitais próximos</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText4}>Hospitais próximos</Text>
+        </TouchableOpacity>
+
+      </View>
+      
     </View>
   );
 }
