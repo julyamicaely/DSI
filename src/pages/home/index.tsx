@@ -8,7 +8,7 @@ const questionLogo = require('../../assets/questionLogo.png');
 const profileLogo = require('../../assets/profileLogo.png');
 const goalsLogo = require('../../assets/goalsLogo.png');
 const habitsLogo = require('../../assets/habitsLogo.png');
-const clinicalData = require('../../assets/clinicalData.png');
+const estetoscopio = require('../../assets/estetoscopio.png');
 const mapLogo = require('../../assets/mapLogo.png');
 
 export function HomeScreen() {
@@ -40,11 +40,11 @@ export function HomeScreen() {
 
         <TouchableOpacity style={styles.homeButton} onPress={undefined}>
           <Text style={styles.buttonText}>Dados clínicos</Text>
-          <Image source={clinicalData} style={styles.clinicalData} /> 
+          <Image source={estetoscopio} style={styles.clinicalData} /> 
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.buttonText}>Hospitais perto</Text>
+          <Text style={styles.hospitalButton}>Hospitais próximos</Text>
           <Image source={mapLogo} style={styles.mapLogo} /> 
         </TouchableOpacity>
     
@@ -129,8 +129,8 @@ const styles = StyleSheet.create({
   },
   clinicalData: {
     height: '75%',
-    width: '90%',
-    margin: 15,
+    width: '95%',
+    margin: 10,
   },
   mapLogo: {
     height: '60%',
@@ -142,6 +142,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
+    margin: 5
+  },
+  hospitalButton: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    margin: 5,
   },
   rectangle: {
     flexDirection: 'row',
