@@ -20,6 +20,11 @@ export function RegisterScreen() {
       return;
     }
 
+    if (!email.includes('@')) {
+      Alert.alert('Erro no cadastro', 'Por favor, insira um email válido.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Erro no cadastro', 'As senhas não coincidem!');
       return;
