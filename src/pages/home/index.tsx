@@ -1,174 +1,467 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AppNavigationProp } from '../../types/navigation'; 
+import { AppNavigationProp } from '../../types/navigation';
+// Importação dos Ícones Vetoriais
+import Ionicons from 'react-native-vector-icons/Ionicons'; 
 
-const logo = require('../../assets/lifebeat.png');
-const exitLogo = require('../../assets/exitLogo.png');
-const questionLogo = require('../../assets/questionLogo.png');
-const profileLogo = require('../../assets/profileLogo.png');
-const goalsLogo = require('../../assets/goalsLogo.png');
-const habitsLogo = require('../../assets/habitsLogo.png');
-const estetoscopio = require('../../assets/estetoscopio.png');
-const mapLogo = require('../../assets/mapLogo.png');
+// --- Componente Reutilizável para o Card de Notificação (Grid 2x2) ---
+
+interface NotificationCardProps {
+  title: string;
+  subtitle: string;
+  dateOrValue: string;
+  cardColor: string;
+}
+
+const NotificationCard = ({ title, subtitle, dateOrValue, cardColor }: NotificationCardProps) => (
+  <View style={[styles.notificationCard, { backgroundColor: cardColor }]}>
+    <View style={styles.tag}>
+      <Text style={styles.tagText}>Notificação</Text>
+    </View>
+    <Text style={styles.cardTitle}>{title}</Text>
+    <Text style={styles.cardSubtitle}>{subtitle}</Text>
+    <Text style={styles.cardDate}>{dateOrValue}</Text>
+  </View>
+);
+
+// --- Componente Reutilizável para o Card de Impacto ---
+
+interface ImpactCardProps {
+  title: string;
+  value: string | number;
+  change: string;
+}
+
+const ImpactCard = ({ title, value, change }: ImpactCardProps) => (
+  <View style={styles.impactCard}>
+    <Text style={styles.impactTitle}>{title}</Text>
+    <Text style={styles.impactValue}>{value}</Text>
+    <Text style={styles.impactChange}>{change}</Text>
+  </View>
+);
+
+// --- Componente Reutilizável para Itens de Ação ---
+
+interface ActionItemProps {
+  iconName: string;
+  title: string;
+  subtitle: string;
+}
+
+const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
+  <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Ação', `Abrir ${title}`)}>
+    {/* Ícone com fundo arredondado */}
+    <Ionicons name={iconName} size={30} color="#6A5ACD" style={styles.actionIcon} />
+    <View style={styles.actionTextContainer}>
+      <Text style={styles.actionTitle}>{title}</Text>
+      <Text style={styles.actionSubtitle}>{subtitle}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
+// --- Componente Principal da Tela ---
 
 export function HomeScreen() {
-
   const navigation = useNavigation<AppNavigationProp>(); 
+  
   const handleGoToLogin = () => {
     navigation.navigate('Login'); 
   };
 
+  // Para demonstração: 'Início' está sempre ativo
+  const activeTab = 'Início'; 
+
   return (
     <View style={styles.container}>
-      <Image source={logo} style={styles.logo} />
-
-      <View style={styles.upperButtons}>
       
-        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.buttonText}>Metas de atividade física</Text>
-          <Image source={goalsLogo} style={styles.goalsLogo} /> 
+      {/* 1. HEADER (Permanece FIXO no topo) */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerIconContainer} onPress={() => Alert.alert('Ação', 'Navegar de volta (back)')}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
+        
+        <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerHeart}>❤️</Text>
+            <Text style={styles.headerTitle}>LifeBeat</Text>
+        </View>
 
-        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.buttonText}>Hábitos</Text>
-          <Image source={habitsLogo} style={styles.habitsLogo} /> 
-        </TouchableOpacity>
-
+        <View style={styles.headerRightIcons}>
+          <TouchableOpacity style={styles.headerIconContainer} onPress={() => Alert.alert('Ação', 'Abrir Ajuda/FAQ')}>
+            <Ionicons name="help-circle-outline" size={24} color="#fff" /> 
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconContainer} onPress={handleGoToLogin}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.lowerButtons}>
+      {/* ---------------------------------------------------- */}
+      {/* 2. ScrollView (Permite que o conteúdo role) */}
+      {/* ---------------------------------------------------- */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.buttonText}>Dados clínicos</Text>
-          <Image source={estetoscopio} style={styles.clinicalData} /> 
-        </TouchableOpacity>
+        {/* 2. BOAS-VINDAS */}
+        <View style={styles.welcomeContainer}>
+          <View style={styles.profileCircle}></View>
+          <View>
+            <Text style={styles.welcomeText}>Olá, **Julya**!</Text>
+            <Text style={styles.welcomeSubtext}>Bem vinda ao LifeBeat.</Text>
+          </View>
+        </View>
 
-        <TouchableOpacity style={styles.homeButton} onPress={undefined}>
-          <Text style={styles.hospitalButton}>Hospitais próximos</Text>
-          <Image source={mapLogo} style={styles.mapLogo} /> 
-        </TouchableOpacity>
-    
-      </View>
+        {/* 3. CARDS DE NOTIFICAÇÃO (Grid 2x2) */}
+        <View style={styles.gridContainer}>
+          <View style={styles.gridRow}>
+            <NotificationCard
+              title="Metas de Atividade Física"
+              subtitle="Atividade recente"
+              dateOrValue="Set 15, 2025"
+              cardColor="#E6E6FA"
+            />
+            <NotificationCard
+              title="Hábitos Inteligentes"
+              subtitle="Próximo Item"
+              dateOrValue="Caminhada das q..."
+              cardColor="#E0FFFF"
+            />
+          </View>
+          <View style={styles.gridRow}>
+            <NotificationCard
+              title="Dados Clínicos"
+              subtitle="Último registro"
+              dateOrValue="Set 15, 2025"
+              cardColor="#F0F8FF"
+            />
+            <NotificationCard
+              title="Hospitais Próximos"
+              subtitle="Endereço atual"
+              dateOrValue="Rua Acadêmico H..."
+              cardColor="#F5F5DC"
+            />
+          </View>
+        </View>
+        
+        {/* 4. IMPACTO DE HÁBITOS */}
+        <View style={styles.impactoHeader}>
+          <Text style={styles.impactoHabitosTitle}>Impacto de Hábitos</Text>
+          <Text style={styles.impactoHabitosSubtitle}>Veja como você melhorou!</Text>
+        </View>
+        <View style={styles.impactCardsRow}>
+          <ImpactCard
+            title="Atividades Físicas"
+            value={25}
+            change="+5 em relação a ago."
+          />
+          <ImpactCard
+            title="Hábito X"
+            value="50 dias"
+            change="+10 em relação a ago."
+          />
+        </View>
+
+        {/* 5. OUTRAS AÇÕES */}
+        <View style={styles.outrasAcoesHeader}>
+          <Text style={styles.outrasAcoesTitle}>Outras Ações</Text>
+        </View>
+        <View style={styles.actionsList}>
+          <ActionItem
+            iconName="hand-left-outline" 
+            title="Feedback"
+            subtitle="Compartilhe o que está achando do LifeBeat!"
+          />
+          <View style={styles.separator} /> 
+          <ActionItem
+            iconName="share-social-outline" 
+            title="Compartilhar"
+            subtitle="Envie atividades, lista de hábitos e muito mais aos..."
+          />
+        </View>
       
-      <View style={styles.rectangle}>
+      </ScrollView> 
+      {/* ---------------------------------------------------- */}
 
-        <TouchableOpacity onPress={handleGoToLogin}>
-          <Image source={exitLogo} style={styles.exitButton}></Image>
+      {/* 6. FOOTER (Permanece FIXO na parte inferior) */}
+      <View style={styles.footer}>
+        
+        {/* INÍCIO */}
+        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Início')}>
+          <Ionicons 
+            name={activeTab === 'Início' ? "home" : "home-outline"} 
+            size={24} 
+            color={activeTab === 'Início' ? styles.footerTextSelected.color : styles.footerText.color} 
+          />
+          <Text style={activeTab === 'Início' ? styles.footerTextSelected : styles.footerText}>Início</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={undefined}>
-          <Image source={questionLogo} style={styles.questionButton}></Image>
+        
+        {/* GERENCIAMENTO */}
+        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Gerenciamento')}>
+          <Ionicons 
+            name={activeTab === 'Gerenciamento' ? "list" : "list-outline"} 
+            size={24} 
+            color={activeTab === 'Gerenciamento' ? styles.footerTextSelected.color : styles.footerText.color} 
+          />
+          <Text style={activeTab === 'Gerenciamento' ? styles.footerTextSelected : styles.footerText}>Gerenciamento</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={undefined}>
-          <Image source={profileLogo} style={styles.profileButton}></Image>
+        
+        {/* CONTA */}
+        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Conta')}>
+          <Ionicons 
+            name={activeTab === 'Conta' ? "settings" : "settings-outline"} 
+            size={24} 
+            color={activeTab === 'Conta' ? styles.footerTextSelected.color : styles.footerText.color} 
+          />
+          <Text style={activeTab === 'Conta' ? styles.footerTextSelected : styles.footerText}>Conta</Text>
         </TouchableOpacity>
-
       </View>
-
     </View>
   );
 }
 
+// --- Estilos (Styles) ---
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#BBBBBB',
+    backgroundColor: '#fff', 
+  },
+  
+  // Estilo para o conteúdo dentro do ScrollView
+  scrollContent: {
+    paddingBottom: 70, // ESSENCIAL: Espaço para não esconder o conteúdo atrás do footer fixo
+  },
+
+  // 1. HEADER (Barra Superior)
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 50, // Afasta a logo do topo
-    // Remova 'justifyContent: center' para permitir que o conteúdo se alinhe no topo
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingTop: 40, 
+    paddingBottom: 10,
+    backgroundColor: '#A42020', 
   },
-  logo: {
-    width: 200,
-    height: 80,
-    resizeMode: 'contain',
-    marginBottom: 50
+  headerIconContainer: {
+    padding: 5,
   },
-  upperButtons: {
-    flexDirection: "row",
-    width: '90%', 
-    maxWidth: 400,
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-    gap: 10
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: -40, 
   },
-  lowerButtons: {
-    flexDirection: "row",
-    width: '90%', 
-    maxWidth: 400,
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-    gap: 10,
+  headerHeart: {
+    fontSize: 24,
+    marginRight: 5,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerRightIcons: {
+    flexDirection: 'row',
+    width: 70, 
+    justifyContent: 'space-between',
+  },
+
+  // 2. BOAS-VINDAS
+  welcomeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  profileCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ccc',
+    marginRight: 15,
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  welcomeSubtext: {
+    fontSize: 16,
+    color: '#666',
+  },
+
+  // 3. CARDS DE NOTIFICAÇÃO (Grid 2x2)
+  gridContainer: {
+    paddingHorizontal: 10,
     marginTop: 10,
   },
-  homeButton: {
-    flex: 1, 
-    aspectRatio: 1, 
-    backgroundColor: '#A42020',
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 50
-  },
-  goalsLogo: {
-    height: '60%', 
-    width: '60%',
-    resizeMode: 'contain',
-  },
-  habitsLogo: {
-    height: '60%',
-    width: '100%',
-    resizeMode: 'contain',
-  },
-  clinicalData: {
-    height: '60%',
-    width: '90%',
-    resizeMode: 'contain',
-  },
-  mapLogo: {
-    height: '60%',
-    width: '75%',
-    resizeMode: 'contain',
-    borderRadius: 15,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  hospitalButton: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  rectangle: {
+  gridRow: {
     flexDirection: 'row',
-    backgroundColor: '#A42020',
-    width: '100%',
-    height: 100,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  notificationCard: {
+    flex: 1,
+    height: 180, 
+    marginHorizontal: 5,
+    borderRadius: 15,
+    padding: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    justifyContent: 'space-between', 
+  },
+  tag: {
+    backgroundColor: '#A42020', 
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: 'flex-start', 
+    marginBottom: 10,
+  },
+  tagText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  cardDate: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#A42020', 
+    marginTop: 10,
+  },
+
+  // 4. IMPACTO DE HÁBITOS
+  impactoHeader: {
+    paddingHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  impactoHabitosTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  impactoHabitosSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  impactCardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    marginBottom: 20,
+  },
+  impactCard: {
+    flex: 1,
+    backgroundColor: '#F5F5F5', 
+    marginHorizontal: 5,
+    padding: 15,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  impactTitle: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  impactValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#A42020',
+    marginBottom: 5,
+  },
+  impactChange: {
+    fontSize: 14,
+    color: '#6B8E23', 
+    fontWeight: '600',
+  },
+
+  // 5. OUTRAS AÇÕES
+  outrasAcoesHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  outrasAcoesTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  actionsList: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    // A margem inferior é controlada pelo scrollContent
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+  },
+  actionIcon: {
+    backgroundColor: '#E6E6FA', 
+    borderRadius: 15,
+    padding: 8,
+    marginRight: 15,
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  actionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginLeft: 50, 
+  },
+
+  // 6. FOOTER (Barra de Navegação Inferior)
+  footer: {
+    flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    position: 'absolute',
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    height: 70, 
+    position: 'absolute', // FIXO
     bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10, // Garante que fique acima de outros elementos
   },
-  exitButton: {
-    height: 50,
-    width: 45,
+  footerTab: {
+    alignItems: 'center',
+    padding: 5,
   },
-  questionButton: {
-    height: 42,
-    width: 25,
+  footerText: {
+    fontSize: 12,
+    color: '#999', 
   },
-  profileButton: {
-    height: 45,
-    width: 30,
-  }
+  footerTextSelected: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#A42020', 
+  },
 });
