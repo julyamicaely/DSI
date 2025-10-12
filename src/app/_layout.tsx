@@ -1,9 +1,11 @@
 import * as React from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
+  
+    const routerButton = useRouter();
 
   return (
     <Stack
@@ -22,8 +24,8 @@ export default function RootLayout() {
         headerRight: () => {
           return (
             <View style={{ flexDirection: 'row' }}>
-              <TouchableOpacity style={styles.buttonHelp} onPress={() => {}} >
-                <Image source={require('../assets/buttonHelp.svg')} style={styles.buttonHelp} />
+              <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
               </TouchableOpacity>
             </View>
           )
@@ -33,8 +35,36 @@ export default function RootLayout() {
         },
       }}
       />
-      <Stack.Screen name="Register" />
-    </Stack>
+      <Stack.Screen 
+        name="register"
+        options={{
+        headerShown: true,
+        headerTitle: () => (
+          <View style={{ flexDirection: 'row' }}>
+            <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
+            <Text style={styles.title} >Lifebeat</Text>
+          </View>
+          ),
+        headerRight: () => {
+          return (
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+              </TouchableOpacity>
+            </View>
+          )
+        },
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => routerButton.back()}>
+            <Image source={require('../assets/buttonBack.svg')} style={styles.headerButtonsLeft} />
+          </TouchableOpacity>
+        ),
+        headerStyle: {
+          backgroundColor: '#E53935',
+        },
+      }}
+      />
+  </Stack>
   );
 }
 
@@ -54,9 +84,14 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     marginLeft: 8,
   },
-  buttonHelp: {
-    marginLeft: 12,
-    marginRight: 24,
+  headerButtonsRight: {
+    marginRight: 20,
+    marginLeft: 10,
+    width: 21.26,
+    height: 22,
+  },
+  headerButtonsLeft: {
+    marginLeft: 10,
     width: 21.26,
     height: 22,
   },

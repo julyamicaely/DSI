@@ -30,7 +30,7 @@ export default function IndexScreen() {
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => routerButton.navigate('/Register')}>
+      <TouchableOpacity onPress={() => routerButton.navigate('/register')}>
         <Text style={styles.registerText}>
           Ainda não tem uma conta? <Text style={styles.registerLink}>Cadastre-se.</Text>
         </Text>

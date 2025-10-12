@@ -10,7 +10,7 @@ export default function TabLayout() {
         screenOptions={{
           headerLeft: () => (
             <TouchableOpacity onPress={() => routerButton.back()}>
-              <Image source={require('../../assets/buttonBack.svg')} style={styles.headerButtons} />
+              <Image source={require('../../assets/buttonBack.svg')} style={styles.headerButtonsLeft} />
             </TouchableOpacity>
           ),
           tabBarStyle: { backgroundColor: '#FFFFFF', 
@@ -38,11 +38,11 @@ export default function TabLayout() {
             headerRight: () => {
               return (
                 <View style={{ flexDirection: 'row' }}>
-                  <TouchableOpacity style={styles.headerButtons} onPress={() => {}} >
-                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtons} />
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.headerButtons} onPress={() => {}} >
-                    <Image source={require('../../assets/buttonLogOut.svg')} style={styles.headerButtons} />
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonLogOut.svg')} style={styles.headerButtonsRight} />
                   </TouchableOpacity>
                 </View>
               )
@@ -79,10 +79,14 @@ const styles = StyleSheet.create({
     width: 24,  
     height: 24,
   },
-  headerButtons: {
-    marginRight: 12,
-    marginLeft: 12,
-    paddingRight: 12,
+  headerButtonsRight: {
+    marginRight: 20,
+    marginLeft: 10,
+    width: 21.26,
+    height: 22,
+  },
+  headerButtonsLeft: {
+    marginLeft: 10,
     width: 21.26,
     height: 22,
   },
