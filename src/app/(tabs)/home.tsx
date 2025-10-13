@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+// import { useNavigation } from '@react-navigation/native';
 import { AppNavigationProp } from '../../types/navigation';
 // Importação dos Ícones Vetoriais
-import Ionicons from 'react-native-vector-icons/Ionicons'; 
+// import Ionicons from 'react-native-vector-icons/Ionicons'; 
 
 // --- Componente Reutilizável para o Card de Notificação (Grid 2x2) ---
 
@@ -51,7 +52,7 @@ interface ActionItemProps {
 const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
   <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Ação', `Abrir ${title}`)}>
     {/* Ícone com fundo arredondado */}
-    <Ionicons name={iconName} size={30} color="#6A5ACD" style={styles.actionIcon} />
+    {/* <Ionicons name={iconName} size={30} color="#6A5ACD" style={styles.actionIcon} /> */}
     <View style={styles.actionTextContainer}>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -61,46 +62,21 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
 
 // --- Componente Principal da Tela ---
 
-export function HomeScreen() {
-  const navigation = useNavigation<AppNavigationProp>(); 
-  
-  const handleGoToLogin = () => {
-    navigation.navigate('Login'); 
-  };
+export default function HomeScreen() {
+//   const navigation = useNavigation<AppNavigationProp>(); 
+  const routerButton = useRouter();
+//   const handleGoToLogin = () => {
+//     navigation.navigate('Login'); 
+//   };
 
-  // Para demonstração: 'Início' está sempre ativo
-  const activeTab = 'Início'; 
+//   // Para demonstração: 'Início' está sempre ativo
+//   const activeTab = 'Início'; 
 
   return (
-    <View style={styles.container}>
-      
-      {/* 1. HEADER (Permanece FIXO no topo) */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIconContainer} onPress={() => Alert.alert('Ação', 'Navegar de volta (back)')}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerHeart}>❤️</Text>
-            <Text style={styles.headerTitle}>LifeBeat</Text>
-        </View>
+      <View style={styles.container}>
 
-        <View style={styles.headerRightIcons}>
-          <TouchableOpacity style={styles.headerIconContainer} onPress={() => Alert.alert('Ação', 'Abrir Ajuda/FAQ')}>
-            <Ionicons name="help-circle-outline" size={24} color="#fff" /> 
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconContainer} onPress={handleGoToLogin}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ---------------------------------------------------- */}
-      {/* 2. ScrollView (Permite que o conteúdo role) */}
-      {/* ---------------------------------------------------- */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* 2. BOAS-VINDAS */}
         <View style={styles.welcomeContainer}>
           <View style={styles.profileCircle}></View>
           <View>
@@ -109,20 +85,19 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* 3. CARDS DE NOTIFICAÇÃO (Grid 2x2) */}
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
             <NotificationCard
               title="Metas de Atividade Física"
               subtitle="Atividade recente"
               dateOrValue="Set 15, 2025"
-              cardColor="#E6E6FA"
+              cardColor="#F0F2FF"
             />
             <NotificationCard
               title="Hábitos Inteligentes"
               subtitle="Próximo Item"
               dateOrValue="Caminhada das q..."
-              cardColor="#E0FFFF"
+              cardColor="#F0F2FF"
             />
           </View>
           <View style={styles.gridRow}>
@@ -130,18 +105,17 @@ export function HomeScreen() {
               title="Dados Clínicos"
               subtitle="Último registro"
               dateOrValue="Set 15, 2025"
-              cardColor="#F0F8FF"
+              cardColor="#F0F2FF"
             />
             <NotificationCard
               title="Hospitais Próximos"
               subtitle="Endereço atual"
               dateOrValue="Rua Acadêmico H..."
-              cardColor="#F5F5DC"
+              cardColor="#F0F2FF"
             />
           </View>
         </View>
-        
-        {/* 4. IMPACTO DE HÁBITOS */}
+
         <View style={styles.impactoHeader}>
           <Text style={styles.impactoHabitosTitle}>Impacto de Hábitos</Text>
           <Text style={styles.impactoHabitosSubtitle}>Veja como você melhorou!</Text>
@@ -159,7 +133,6 @@ export function HomeScreen() {
           />
         </View>
 
-        {/* 5. OUTRAS AÇÕES */}
         <View style={styles.outrasAcoesHeader}>
           <Text style={styles.outrasAcoesTitle}>Outras Ações</Text>
         </View>
@@ -176,43 +149,8 @@ export function HomeScreen() {
             subtitle="Envie atividades, lista de hábitos e muito mais aos..."
           />
         </View>
-      
-      </ScrollView> 
-      {/* ---------------------------------------------------- */}
-
-      {/* 6. FOOTER (Permanece FIXO na parte inferior) */}
-      <View style={styles.footer}>
         
-        {/* INÍCIO */}
-        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Início')}>
-          <Ionicons 
-            name={activeTab === 'Início' ? "home" : "home-outline"} 
-            size={24} 
-            color={activeTab === 'Início' ? styles.footerTextSelected.color : styles.footerText.color} 
-          />
-          <Text style={activeTab === 'Início' ? styles.footerTextSelected : styles.footerText}>Início</Text>
-        </TouchableOpacity>
-        
-        {/* GERENCIAMENTO */}
-        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Gerenciamento')}>
-          <Ionicons 
-            name={activeTab === 'Gerenciamento' ? "list" : "list-outline"} 
-            size={24} 
-            color={activeTab === 'Gerenciamento' ? styles.footerTextSelected.color : styles.footerText.color} 
-          />
-          <Text style={activeTab === 'Gerenciamento' ? styles.footerTextSelected : styles.footerText}>Gerenciamento</Text>
-        </TouchableOpacity>
-        
-        {/* CONTA */}
-        <TouchableOpacity style={styles.footerTab} onPress={() => Alert.alert('Navegação', 'Ir para Conta')}>
-          <Ionicons 
-            name={activeTab === 'Conta' ? "settings" : "settings-outline"} 
-            size={24} 
-            color={activeTab === 'Conta' ? styles.footerTextSelected.color : styles.footerText.color} 
-          />
-          <Text style={activeTab === 'Conta' ? styles.footerTextSelected : styles.footerText}>Conta</Text>
-        </TouchableOpacity>
-      </View>
+        </ScrollView>
     </View>
   );
 }
@@ -312,7 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', 
   },
   tag: {
-    backgroundColor: '#A42020', 
+    backgroundColor: '#7F96FF', 
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -335,9 +273,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   cardDate: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#A42020', 
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000', 
     marginTop: 10,
   },
 
