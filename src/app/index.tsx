@@ -1,38 +1,77 @@
-// import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { use } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
+import CustomButton from '../../src/com/CustomButton';
+import CustomTextInput from '../../src/com/CustomTextInput';
 
 export default function IndexScreen() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const routerButton = useRouter();                                                                                  
+  async function handleLogin() {
+    if (!email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      router.replace('/home');
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro no login", "E-mail ou senha incorretos.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.title}>Login</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        placeholderTextColor="#fff"
+      
+      <Text style={styles.subtitle}>E-mail</Text>
+      <CustomTextInput
+        placeholder="Insira seu e-mail"
         keyboardType="email-address"
         autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#fff"
+      
+      <Text style={styles.subtitle}>Senha</Text>
+      <CustomTextInput
+        placeholder="Insira sua senha"
         secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
       />
-
-      <TouchableOpacity style={styles.button} onPress={() => routerButton.navigate('/home')}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => routerButton.navigate('/register')}>
+      
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          title="Esqueci minha senha"
+          onPress={() => { /* Lógica para recuperar senha */ }}
+          backgroundColor="#FFE6E6"
+          textColor="#000000"
+          borderColor="#E94040"
+          width={326}
+        />
+        <CustomButton
+          title={loading ? "Entrando..." : "Entrar"}
+          onPress={handleLogin}
+          backgroundColor="#E94040"
+          textColor="#FFE6E6"
+          width={326}
+        />
+      </View>
+      
+      <TouchableOpacity onPress={() => router.push('/register')}>
         <Text style={styles.registerText}>
-          Ainda não tem uma conta? <Text style={styles.registerLink}>Cadastre-se.</Text>
+          Ainda não tem uma conta? <Text style={styles.registerLink}>Cadastre-se aqui</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -42,47 +81,39 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    width: 390,
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 50,
+    backgroundColor: '#FFFFFF',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#A42020',
-    marginBottom: 40,
-  },
-  input: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#000000',
     marginBottom: 20,
-    fontSize: 16,
-    color: '#fff',
   },
-  button: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#000000',
+    alignSelf: 'flex-start',
+    marginLeft: 40,
+  },
+  buttonContainer: {
     marginTop: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    marginBottom: 10,
+    gap: 8,
   },
   registerText: {
+    fontSize: 15,
+    fontWeight: '400',
+    textAlign: 'center',
+    color: '#000000',
+    lineHeight: 19,
     marginTop: 20,
-    color: '#333',
-    fontSize: 14,
   },
   registerLink: {
-    color: '#A42020',
+    color: '#2664E5',
     fontWeight: 'bold',
   },
 });
