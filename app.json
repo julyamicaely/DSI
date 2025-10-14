@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "lifebeat-scheme",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -27,7 +28,6 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "scheme": "your-app-scheme",
     "plugins": [
       "expo-router"
     ]
