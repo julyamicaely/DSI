@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import CustomButton from '../../src/com/CustomButton';
-import CustomTextInput from '../../src/com/CustomTextInput';
+import CustomButton from '../com/CustomButton';
+import CustomTextInput from '../com/CustomTextInput';
 
 export default function IndexScreen() {
   const router = useRouter();
