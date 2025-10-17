@@ -8,7 +8,10 @@ import { auth } from "../../firebaseConfig";
 import CustomTextInput from "../com/CustomTextInput";
 import CustomButton from "../com/CustomButton";
 
+import { useAuth } from "../context/AuthContext";
+
 export default function RegisterScreen() {
+  const { setUser } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -23,6 +26,7 @@ export default function RegisterScreen() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       await updateProfile(userCredential.user, { displayName: nomeUsuario });
+      setUser(userCredential.user); // Salva o usuário no contexto
       Alert.alert("Sucesso", "Conta criada com sucesso!");
       router.replace("/home");
     } catch (error: any) {
@@ -33,6 +37,7 @@ export default function RegisterScreen() {
   }
 
   return (
+
     <View style={styles.container}>
       {/* Cabeçalho simples */}
       <Text style={styles.appTitle}>LifeBeat</Text>

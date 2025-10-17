@@ -2,10 +2,9 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } fr
 import { useRouter } from 'expo-router';
 import NotificationCard from '../../com/NotificationCard';
 import ImpactCard from '../../com/ImpactCard';
-// import { useNavigation } from '@react-navigation/native';
-import { AppNavigationProp } from '../../types/navigation';
-// Importação dos Ícones Vetoriais
-// import Ionicons from 'react-native-vector-icons/Ionicons'; 
+// In your home.tsx or any other component
+import { auth } from '../../../firebaseConfig'; // Adjust the import path if needed
+import { useState, useEffect } from 'react';
 
 // --- Componente Reutilizável para Itens de Ação ---
 
@@ -17,8 +16,6 @@ interface ActionItemProps {
 
 const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
   <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Ação', `Abrir ${title}`)}>
-    {/* Ícone com fundo arredondado */}
-    {/* <Ionicons name={iconName} size={30} color="#6A5ACD" style={styles.actionIcon} /> */}
     <View style={styles.actionTextContainer}>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -29,14 +26,17 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
 // --- Componente Principal da Tela ---
 
 export default function HomeScreen() {
-//   const navigation = useNavigation<AppNavigationProp>(); 
-  const routerButton = useRouter();
-//   const handleGoToLogin = () => {
-//     navigation.navigate('Login'); 
-//   };
 
-//   // Para demonstração: 'Início' está sempre ativo
-//   const activeTab = 'Início'; 
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName || ''); // Get the display name
+    }
+  }, []);
+
+  const routerButton = useRouter();
 
   return (
       <View style={styles.container}>
@@ -46,7 +46,7 @@ export default function HomeScreen() {
         <View style={styles.welcomeContainer}>
           <View style={styles.profileCircle}></View>
           <View>
-            <Text style={styles.welcomeText}>Olá, Julya!</Text>
+            <Text style={styles.welcomeText}>{userName}</Text>
             <Text style={styles.welcomeSubtext}>Bem vinda ao LifeBeat.</Text>
           </View>
         </View>

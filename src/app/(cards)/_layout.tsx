@@ -49,8 +49,6 @@ const styles = StyleSheet.create({
     height: 24,
   },
   headerButtonsRight: {
-    marginRight: 20,
-    marginLeft: 10,
     width: 21.26,
     height: 22,
   },

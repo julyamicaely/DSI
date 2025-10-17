@@ -81,7 +81,6 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: 390,
     alignItems: 'center',
     paddingTop: 50,
     backgroundColor: '#FFFFFF',
