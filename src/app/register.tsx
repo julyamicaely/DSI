@@ -1,57 +1,77 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseConfig';
+import { View, Text, Alert, StyleSheet } from "react-native";
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "../../firebaseConfig";
+
+// Componentes customizados
+import CustomTextInput from "../com/CustomTextInput";
+import CustomButton from "../com/CustomButton";
+
+import { useAuth } from "../context/AuthContext";
 
 export default function RegisterScreen() {
+  const { setUser } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState("");
 
   async function handleRegister() {
-    if (!email || !senha) {
+    if (!email || !senha || !nomeUsuario) {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, senha);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      await updateProfile(userCredential.user, { displayName: nomeUsuario });
+      setUser(userCredential.user); // Salva o usuário no contexto
       Alert.alert("Sucesso", "Conta criada com sucesso!");
-      router.replace('/home');
-    } catch (error) {
-        console.log(error);
-        const message = error instanceof Error ? error.message : String(error);
-        Alert.alert("Erro", message);
+      router.replace("/home");
+    } catch (error: any) {
+      console.log(error);
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert("Erro", message);
     }
   }
 
   return (
+
     <View style={styles.container}>
+      {/* Cabeçalho simples */}
+      <Text style={styles.appTitle}>LifeBeat</Text>
+
       <Text style={styles.title}>Cadastro</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        placeholderTextColor="#fff"
-        keyboardType="email-address"
-        autoCapitalize="none"
+      <Text style={styles.label}>Nome de usuário</Text>
+      <CustomTextInput
+        placeholder="Insira seu nome"
+        value={nomeUsuario}
+        onChangeText={setNomeUsuario}
+      />
+
+      <Text style={styles.label}>E-mail</Text>
+      <CustomTextInput
+        placeholder="Insira seu e-mail"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#fff"
-        secureTextEntry
+      <Text style={styles.label}>Senha</Text>
+      <CustomTextInput
+        placeholder="Insira sua senha"
         value={senha}
         onChangeText={setSenha}
+        secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Cadastrar</Text>
-      </TouchableOpacity>
+      <CustomButton title="Criar conta" onPress={handleRegister} backgroundColor="#EF4444" />
+
+      <Text style={styles.linkText} onPress={() => router.push("/")}>
+        Já tem uma conta? Entrar
+      </Text>
     </View>
   );
 }
@@ -59,47 +79,32 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    paddingTop: 48,
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 32,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#A42020',
-    marginBottom: 40,
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 24,
   },
-  input: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#fff',
-  },
-  button: {
-    width: 350,
-    height: 50,
-    backgroundColor: '#A42020',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  registerText: {
-    marginTop: 20,
-    color: '#333',
+  label: {
+    alignSelf: "flex-start",
+    marginLeft: 16,
+    marginTop: 12,
     fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
   },
-  registerLink: {
-    color: '#A42020',
-    fontWeight: 'bold',
+  linkText: {
+    color: "#1E90FF",
+    textAlign: "center",
+    marginTop: 24,
+    fontWeight: "500",
   },
 });

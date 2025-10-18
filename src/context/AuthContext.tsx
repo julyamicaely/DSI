@@ -1,16 +1,10 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-
-// Define o tipo para as credenciais
-interface AuthCredentials {
-  email: string;
-  password: string;
-}
+import { User } from 'firebase/auth';
 
 // Define o tipo para o contexto (o que ele irá fornecer)
 interface AuthContextType {
-  credentials: AuthCredentials | null;
-  setCredentials: (creds: AuthCredentials) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
 }
 
 // Cria o contexto com valores iniciais
@@ -18,10 +12,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Define o provedor do contexto, que irá envolver as telas
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   return (
-    <AuthContext.Provider value={{ credentials, setCredentials }}>
+    <AuthContext.Provider value={{ user, setUser }}>
       {children}
     </AuthContext.Provider>
   );

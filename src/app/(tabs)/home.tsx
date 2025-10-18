@@ -1,45 +1,10 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-// import { useNavigation } from '@react-navigation/native';
-import { AppNavigationProp } from '../../types/navigation';
-// Importação dos Ícones Vetoriais
-// import Ionicons from 'react-native-vector-icons/Ionicons'; 
-
-// --- Componente Reutilizável para o Card de Notificação (Grid 2x2) ---
-
-interface NotificationCardProps {
-  title: string;
-  subtitle: string;
-  dateOrValue: string;
-  cardColor: string;
-}
-
-const NotificationCard = ({ title, subtitle, dateOrValue, cardColor }: NotificationCardProps) => (
-  <View style={[styles.notificationCard, { backgroundColor: cardColor }]}>
-    <View style={styles.tag}>
-      <Text style={styles.tagText}>Notificação</Text>
-    </View>
-    <Text style={styles.cardTitle}>{title}</Text>
-    <Text style={styles.cardSubtitle}>{subtitle}</Text>
-    <Text style={styles.cardDate}>{dateOrValue}</Text>
-  </View>
-);
-
-// --- Componente Reutilizável para o Card de Impacto ---
-
-interface ImpactCardProps {
-  title: string;
-  value: string | number;
-  change: string;
-}
-
-const ImpactCard = ({ title, value, change }: ImpactCardProps) => (
-  <View style={styles.impactCard}>
-    <Text style={styles.impactTitle}>{title}</Text>
-    <Text style={styles.impactValue}>{value}</Text>
-    <Text style={styles.impactChange}>{change}</Text>
-  </View>
-);
+import NotificationCard from '../../com/NotificationCard';
+import ImpactCard from '../../com/ImpactCard';
+// In your home.tsx or any other component
+import { auth } from '../../../firebaseConfig'; // Adjust the import path if needed
+import { useState, useEffect } from 'react';
 
 // --- Componente Reutilizável para Itens de Ação ---
 
@@ -51,8 +16,6 @@ interface ActionItemProps {
 
 const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
   <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('Ação', `Abrir ${title}`)}>
-    {/* Ícone com fundo arredondado */}
-    {/* <Ionicons name={iconName} size={30} color="#6A5ACD" style={styles.actionIcon} /> */}
     <View style={styles.actionTextContainer}>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -63,14 +26,17 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
 // --- Componente Principal da Tela ---
 
 export default function HomeScreen() {
-//   const navigation = useNavigation<AppNavigationProp>(); 
-  const routerButton = useRouter();
-//   const handleGoToLogin = () => {
-//     navigation.navigate('Login'); 
-//   };
 
-//   // Para demonstração: 'Início' está sempre ativo
-//   const activeTab = 'Início'; 
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName || ''); // Get the display name
+    }
+  }, []);
+
+  const routerButton = useRouter();
 
   return (
       <View style={styles.container}>
@@ -80,7 +46,7 @@ export default function HomeScreen() {
         <View style={styles.welcomeContainer}>
           <View style={styles.profileCircle}></View>
           <View>
-            <Text style={styles.welcomeText}>Olá, **Julya**!</Text>
+            <Text style={styles.welcomeText}>{userName}</Text>
             <Text style={styles.welcomeSubtext}>Bem vinda ao LifeBeat.</Text>
           </View>
         </View>
@@ -88,6 +54,7 @@ export default function HomeScreen() {
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
             <NotificationCard
+              onPress={() => routerButton.push('/goals')}
               title="Metas de Atividade Física"
               subtitle="Atividade recente"
               dateOrValue="Set 15, 2025"
@@ -166,39 +133,6 @@ const styles = StyleSheet.create({
   // Estilo para o conteúdo dentro do ScrollView
   scrollContent: {
     paddingBottom: 70, // ESSENCIAL: Espaço para não esconder o conteúdo atrás do footer fixo
-  },
-
-  // 1. HEADER (Barra Superior)
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingTop: 40, 
-    paddingBottom: 10,
-    backgroundColor: '#A42020', 
-  },
-  headerIconContainer: {
-    padding: 5,
-  },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: -40, 
-  },
-  headerHeart: {
-    fontSize: 24,
-    marginRight: 5,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerRightIcons: {
-    flexDirection: 'row',
-    width: 70, 
-    justifyContent: 'space-between',
   },
 
   // 2. BOAS-VINDAS
@@ -299,34 +233,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     marginBottom: 20,
-  },
-  impactCard: {
-    flex: 1,
-    backgroundColor: '#F5F5F5', 
-    marginHorizontal: 5,
-    padding: 15,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  impactTitle: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
-  },
-  impactValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#A42020',
-    marginBottom: 5,
-  },
-  impactChange: {
-    fontSize: 14,
-    color: '#6B8E23', 
-    fontWeight: '600',
   },
 
   // 5. OUTRAS AÇÕES

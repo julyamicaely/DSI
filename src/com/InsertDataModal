@@ -1,0 +1,13 @@
+import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
+
+type Props = {
+    isVisble: boolean;
+    children: React.ReactNode;
+    onClose: () => void;
+};
+
+export default function InsertDataModal({ isVisble, children, onClose }: Props) {
+    return (
+        <Modal animationType='fade' transparent={true} visible={isVisble}></Modal>
+    )
+};
