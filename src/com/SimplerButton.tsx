@@ -15,9 +15,9 @@ interface CustomButtonProps {
 const CustomButton: React.FC<CustomButtonProps> = ({
   title,
   onPress,
-  backgroundColor = "#A42020",
+  backgroundColor = colors.red,
   textColor = "#fff",
-  borderColor = "#A42020",
+  borderColor = colors.red,
   outline = false,
   width = 350,
 }) => {

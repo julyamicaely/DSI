@@ -1,15 +1,17 @@
-import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity } from 'react-native';
-import CustomButton from '../../com/CustomButton';
-import CustomTextInput from '../../com/CustomTextInput';
+import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomButton from '../../com/CustomButton';
+import CustomTextInput from '../../com/CustomTextInput';
+import colors from '../../com/Colors';
+
 
 type Habit = {
   id: string;
   name: string;
 };
 
-function HabitModal ({ isVisible, onClose, onSave, editingHabit: editingHabit, habitName: habitName, setHabitName: setHabitName} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void}) {
+function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void}) {
   return (
     <View>
       <Modal animationType='slide' transparent={true} visible={isVisible}>
@@ -20,24 +22,37 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit: editingHabit, h
               placeholder='Insira aqui'
               value={habitName}
               onChangeText={setHabitName}
+              backgroundColor={colors.white}
+              borderRadius={8}
             />
           </View>
           <View style={styles.modalButtons}>
             <CustomButton
-              title='Voltar'
+              title={'Voltar'}
               onPress = {onClose}
-              backgroundColor="#5B79FF"
+              backgroundColor={colors.blue}
               textColor="#FFFFFF"
               width={147}
             />
             <CustomButton
               title={editingHabit ? 'Salvar Hábito' : 'Adicionar Hábito'}
               onPress={onSave}
-              backgroundColor="#5B79FF"
+              backgroundColor={colors.blue}
               textColor="#FFFFFF"
               width={147}
             />
           </View>
+          {editingHabit && (
+            <View style={styles.deleteButtonContainer}>
+              <CustomButton
+                title="Excluir Hábito"
+                onPress={onDelete}
+                backgroundColor={colors.blue}
+                textColor="#FFFFFF"
+                width={312}
+              />
+            </View>
+          )}
         </View>
       </Modal>
     </View>
@@ -111,10 +126,13 @@ export default function HabitsScreen() {
     setIsModalVisible(true);
   };
 
-  const handleDeleteHabit = (habitId: string) => {
-    const updatedHabits = habits.filter(g => g.id !== habitId);
-    setHabits(updatedHabits);
-    saveHabitsToStorage(updatedHabits);
+  const handleDeleteHabit = () => {
+    if (editingHabit) {
+      const updatedHabits = habits.filter(g => g.id !== editingHabit.id);
+      setHabits(updatedHabits);
+      saveHabitsToStorage(updatedHabits);
+      onModalClose();
+    }
   };
 
   return (
@@ -124,8 +142,8 @@ export default function HabitsScreen() {
         <CustomButton
           title='Adicionar Hábito'
           onPress={onAddHabit}
-          backgroundColor="#E94040"
-          textColor="#FFE6E6"
+          backgroundColor={colors.red}
+          textColor={colors.lightRed}
           width={326}
           />
         </View>
@@ -133,21 +151,18 @@ export default function HabitsScreen() {
       <FlatList
         data={habits}
         renderItem={({ item }) => (
-          <View style={styles.goalItem}>
-            <Text style={styles.goalText}>{item.name}</Text>
-            <View style={styles.goalButtons}>
-              <TouchableOpacity onPress={() => handleEditHabit(item)}>
-                <Text style={styles.editButton}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteHabit(item.id)}>
-                <Text style={styles.deleteButton}>Excluir</Text>
+          <View style={styles.habitItem}>
+            <View style={styles.habitButtons}>
+              <TouchableOpacity onPress={() => handleEditHabit(item)} style={styles.editButton}>
+                <Text style={styles.habitText} >{item.name}</Text>
+                <Image source={require('../../assets/editButton.svg')}/>
               </TouchableOpacity>
             </View>
           </View>
         )}
         keyExtractor={item => item.id}
-        numColumns={2}
-        style={styles.grid}
+        style={styles.column}
+        contentContainerStyle={{ gap: 10 }}
       />
 
       <HabitModal 
@@ -157,6 +172,7 @@ export default function HabitsScreen() {
         editingHabit={editingHabit}
         habitName={habitName}
         setHabitName={setHabitName}
+        onDelete={handleDeleteHabit}
       />
 
     
@@ -187,8 +203,8 @@ const styles = StyleSheet.create ({
   },
   modalContent: {
     width: '90%',
-    height: '35%',
-    backgroundColor: '#E5E8FF',
+    height: '30%',
+    backgroundColor: colors.lighterBlue,
     marginHorizontal: '5%',
     borderRadius: 30,
     position: 'absolute',
@@ -196,7 +212,7 @@ const styles = StyleSheet.create ({
   },
   modalTitles: {
     top: 5,
-    color: '#5B79FF',
+    color: colors.blue,
     alignSelf: 'flex-start',
     marginHorizontal: 30,
   },
@@ -209,22 +225,37 @@ const styles = StyleSheet.create ({
     padding: 15,
     gap: 15
   },
-  goalItem: {
-
+  deleteButtonContainer: {
+    alignItems: 'center',
   },
-  goalText: {
-
+  list: {
+    alignSelf: 'center'
   },
-  goalButtons: {
+  habitItem: {
+  },
+  habitButtons: {
+    columnGap: 10
+  },
+    habitText: {
+      lineHeight: 22,
+      fontSize: 16,
+      fontWeight: 'bold',
 
   },
   editButton: {
-
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: 350,
+    height: 50,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: colors.lighterBlue
   },
   deleteButton: {
 
   },
-  grid: {
-
+  column: {
+    alignSelf: 'center'
   },
 })
