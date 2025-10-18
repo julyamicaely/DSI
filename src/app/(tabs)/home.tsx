@@ -68,12 +68,15 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.gridRow}>
-            <NotificationCard
-              title="Dados Clínicos"
-              subtitle="Último registro"
-              dateOrValue="Set 15, 2025"
-              cardColor="#F0F2FF"
-            />
+            <TouchableOpacity onPress={() => routerButton.push('/dados-clinicos')} activeOpacity={0.8}>
+  <NotificationCard
+    title="Dados Clínicos"
+    subtitle="Último registro"
+    dateOrValue="Set 15, 2025"
+    cardColor="#F0F2FF"
+  />
+</TouchableOpacity>
+
             <NotificationCard
               title="Hospitais Próximos"
               subtitle="Endereço atual"
