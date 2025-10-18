@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
+import colors from '../com/Colors'
 
 export default function RootLayout() {
   
@@ -33,7 +34,7 @@ export default function RootLayout() {
             )
           },
           headerStyle: {
-            backgroundColor: '#E53935',
+            backgroundColor: colors.red,
           },
         }}
         
@@ -58,7 +59,7 @@ export default function RootLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
         }}
 
@@ -88,7 +89,7 @@ export default function RootLayout() {
             </TouchableOpacity>
           ),
           headerStyle: {
-            backgroundColor: '#E53935',
+            backgroundColor: colors.red,
           },
         }}
         />

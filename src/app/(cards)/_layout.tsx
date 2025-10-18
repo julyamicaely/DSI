@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import colors from '../../com/Colors'
 
 export default function StackLayout() {
 
@@ -35,7 +36,7 @@ export default function StackLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
            }} 
         />
@@ -59,7 +60,7 @@ export default function StackLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
            }} 
         />
@@ -83,7 +84,7 @@ export default function StackLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
            }} 
         />

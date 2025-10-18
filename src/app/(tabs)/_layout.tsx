@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Tabs, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import colors from '../../com/Colors'
 
 export default function TabLayout() {
 
@@ -48,7 +49,7 @@ export default function TabLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
            }} 
         />

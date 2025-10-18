@@ -5,6 +5,7 @@ import ImpactCard from '../../com/ImpactCard';
 // In your home.tsx or any other component
 import { auth } from '../../../firebaseConfig'; // Adjust the import path if needed
 import { useState, useEffect } from 'react';
+import colors from '../../com/Colors'
 
 // --- Componente Reutilizável para Itens de Ação ---
 
@@ -58,14 +59,14 @@ export default function HomeScreen() {
               title="Metas de Atividade Física"
               subtitle="Atividade recente"
               dateOrValue="Set 15, 2025"
-              cardColor="#F0F2FF"
+              cardColor={colors.ligthestBlue}
             />
             <NotificationCard
               onPress={() => routerButton.push('/habits')}
               title="Hábitos Inteligentes"
               subtitle="Próximo Item"
               dateOrValue="Caminhada das q..."
-              cardColor="#F0F2FF"
+              cardColor={colors.ligthestBlue}
             />
           </View>
           <View style={styles.gridRow}>
@@ -74,13 +75,13 @@ export default function HomeScreen() {
               title="Dados Clínicos"
               subtitle="Último registro"
               dateOrValue="Set 15, 2025"
-              cardColor="#F0F2FF"
+              cardColor={colors.ligthestBlue}
             />
             <NotificationCard
               title="Hospitais Próximos"
               subtitle="Endereço atual"
               dateOrValue="Rua Acadêmico H..."
-              cardColor="#F0F2FF"
+              cardColor={colors.ligthestBlue}
             />
           </View>
         </View>
