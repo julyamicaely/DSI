@@ -39,6 +39,54 @@ export default function StackLayout() {
             },
            }} 
         />
+        <Stack.Screen 
+          name="clinicalData" 
+          options={{ 
+            headerShown: true,
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row' }}>
+                <Image style={styles.image} source={require('../../assets/Lifebeat-Logo.svg')} />
+                <Text style={styles.title} >Lifebeat</Text>
+              </View>
+              ),
+            headerRight: () => {
+              return (
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                  </TouchableOpacity>
+                </View>
+              )
+            },
+            headerStyle: {
+              backgroundColor: '#E53935',
+            },
+           }} 
+        />
+         <Stack.Screen 
+          name="habits" 
+          options={{ 
+            headerShown: true,
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row' }}>
+                <Image style={styles.image} source={require('../../assets/Lifebeat-Logo.svg')} />
+                <Text style={styles.title} >Lifebeat</Text>
+              </View>
+              ),
+            headerRight: () => {
+              return (
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                  </TouchableOpacity>
+                </View>
+              )
+            },
+            headerStyle: {
+              backgroundColor: '#E53935',
+            },
+           }} 
+        />
       </Stack>
     );
 }
