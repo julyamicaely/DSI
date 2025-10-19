@@ -10,6 +10,7 @@ interface CustomButtonProps {
   borderColor?: string;
   outline?: boolean;
   width?: number;
+  borderWidth?: number;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -20,6 +21,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   borderColor = colors.red,
   outline = false,
   width = 350,
+  borderWidth = 4,
 }) => {
   return (
     <TouchableOpacity

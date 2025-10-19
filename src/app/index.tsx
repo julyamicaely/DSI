@@ -25,6 +25,8 @@ export default function IndexScreen() {
           backgroundColor={colors.red}
           textColor={colors.lightRed}
           width={326}
+          borderColor={colors.red}
+          borderWidth={6}
         />
         <CustomButton
           title="Cadastre-se"

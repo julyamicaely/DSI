@@ -1,5 +1,6 @@
 import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useState, useEffect } from 'react';
+import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices.ts";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
@@ -47,8 +48,8 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               <CustomButton
                 title="Excluir Hábito"
                 onPress={onDelete}
-                backgroundColor={colors.blue}
-                textColor="#FFFFFF"
+                backgroundColor={colors.lightRed}
+                textColor="#000000"
                 width={312}
               />
             </View>
@@ -63,7 +64,6 @@ export default function HabitsScreen() {
 
   const [habits, setHabits] = useState<Habit[]>([]);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-  const [habitName, setHabitName] = useState('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
@@ -147,7 +147,6 @@ export default function HabitsScreen() {
           width={326}
           />
         </View>
-
       <FlatList
         data={habits}
         renderItem={({ item }) => (
@@ -164,7 +163,6 @@ export default function HabitsScreen() {
         style={styles.column}
         contentContainerStyle={{ gap: 10 }}
       />
-
       <HabitModal 
         isVisible={isModalVisible} 
         onClose={onModalClose}
@@ -174,12 +172,9 @@ export default function HabitsScreen() {
         setHabitName={setHabitName}
         onDelete={handleDeleteHabit}
       />
-
-    
     </View>
   );  
 }
-
 
 const styles = StyleSheet.create ({
   container: {
