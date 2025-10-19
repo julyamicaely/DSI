@@ -1,11 +1,9 @@
 import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useState, useEffect } from 'react';
-import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices.ts";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
-
 
 type Habit = {
   id: string;
@@ -64,6 +62,7 @@ export default function HabitsScreen() {
 
   const [habits, setHabits] = useState<Habit[]>([]);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [habitName, setHabitName] = useState<string>('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
@@ -72,20 +71,12 @@ export default function HabitsScreen() {
 
   const loadHabitsFromStorage = async () => {
     try {
-      const storedHabits = await AsyncStorage.getItem('habits');
+      const storedHabits = await listHabits();
       if (storedHabits !== null) {
-        setHabits(JSON.parse(storedHabits));
+        setHabits(storedHabits as Habit[]);
       }
     } catch (error) {
       console.error('Failed to load habits from storage', error);
-    }
-  };
-
-  const saveHabitsToStorage = async (habitsToSave: Habit[]) => {
-    try {
-      await AsyncStorage.setItem('habits', JSON.stringify(habitsToSave));
-    } catch (error) {
-      console.error('Failed to save habits to storage', error);
     }
   };
 
@@ -100,24 +91,18 @@ export default function HabitsScreen() {
     setEditingHabit(null);
   };
 
-  const handleSaveHabits = () => {
-    let updatedGoals;
+  const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
-      updatedGoals = habits.map(h => h.id === editingHabit.id ? { ...h, name: habitName} : h);
-      setHabits(updatedGoals);
+      await updateHabit(editingHabit.id, { name: habitName });
     } else {
       // Add new habit
-      const newGoal: Habit = {
-        id: Date.now().toString(),
-        name: habitName,
-      };
-      updatedGoals = [...habits, newGoal];
-      setHabits(updatedGoals);
+      await addHabit({ name: habitName });
     }
-    saveHabitsToStorage(updatedGoals);
     setHabitName('');
     onModalClose();
+
+    loadHabitsFromStorage();
   };
 
   const handleEditHabit = (habit: Habit) => {
@@ -126,11 +111,11 @@ export default function HabitsScreen() {
     setIsModalVisible(true);
   };
 
-  const handleDeleteHabit = () => {
+  const handleDeleteHabit = async () => {
     if (editingHabit) {
       const updatedHabits = habits.filter(g => g.id !== editingHabit.id);
       setHabits(updatedHabits);
-      saveHabitsToStorage(updatedHabits);
+      await deleteHabit(editingHabit.id);
       onModalClose();
     }
   };
