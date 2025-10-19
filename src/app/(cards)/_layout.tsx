@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import colors from '../../com/Colors'
 
 export default function StackLayout() {
 
@@ -35,7 +36,55 @@ export default function StackLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
+            },
+           }} 
+        />
+        <Stack.Screen 
+          name="clinicalData" 
+          options={{ 
+            headerShown: true,
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row' }}>
+                <Image style={styles.image} source={require('../../assets/Lifebeat-Logo.svg')} />
+                <Text style={styles.title} >Lifebeat</Text>
+              </View>
+              ),
+            headerRight: () => {
+              return (
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                  </TouchableOpacity>
+                </View>
+              )
+            },
+            headerStyle: {
+              backgroundColor: colors.red,
+            },
+           }} 
+        />
+         <Stack.Screen 
+          name="habits" 
+          options={{ 
+            headerShown: true,
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row' }}>
+                <Image style={styles.image} source={require('../../assets/Lifebeat-Logo.svg')} />
+                <Text style={styles.title} >Lifebeat</Text>
+              </View>
+              ),
+            headerRight: () => {
+              return (
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                  </TouchableOpacity>
+                </View>
+              )
+            },
+            headerStyle: {
+              backgroundColor: colors.red,
             },
            }} 
         />
