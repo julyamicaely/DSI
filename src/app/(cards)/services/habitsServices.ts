@@ -1,14 +1,20 @@
-import { db } from "../../../../firebaseConfig";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { db, auth } from "../../../../firebaseConfig";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
 
 const habitsRef = collection(db, "habits");
 
 export const addHabit = async (dados: any) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Usuário não autenticado");
   await addDoc(habitsRef, dados);
 };
 
 export const listHabits = async () => {
-  const snapshot = await getDocs(habitsRef);
+  const user = auth.currentUser;
+  if (!user) throw new Error("Usuário não autenticado");
+
+  const q = query(habitsRef, where("userId", "==", user.uid));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
