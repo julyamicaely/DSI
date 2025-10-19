@@ -68,7 +68,7 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.gridRow}>
-            <TouchableOpacity onPress={() => routerButton.push('/dados-clinicos')} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => routerButton.push('/Dados-Clinicos')} activeOpacity={0.8}>
   <NotificationCard
     title="Dados Clínicos"
     subtitle="Último registro"
