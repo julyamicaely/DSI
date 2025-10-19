@@ -234,7 +234,7 @@ export default function HabitsScreen() {
             <View style={styles.habitButtons}>
               <TouchableOpacity onPress={() => handleEditHabit(item)} style={styles.editButton}>
                 <Text style={styles.habitText} >{item.name}</Text>
-                <Image source={require('../../assets/editButton.svg')}/>
+                <Image source={require('../../assets/Vector 78.png')}/>
               </TouchableOpacity>
             </View>
           </View>
