@@ -1,18 +1,35 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { User } from 'firebase/auth';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebaseConfig'; // ajuste o caminho conforme a estrutura do seu projeto
+import { View, ActivityIndicator } from 'react-native';
 
-// Define o tipo para o contexto (o que ele irá fornecer)
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
 }
 
-// Cria o contexto com valores iniciais
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Define o provedor do contexto, que irá envolver as telas
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#A42020" />
+      </View>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
@@ -21,10 +38,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook customizado para usar o contexto facilmente
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
