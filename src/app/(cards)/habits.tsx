@@ -18,7 +18,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
   const handleReminderPress = (index: number) => {
     Alert.alert(
       'Editar Lembrete',
-      'O que você gostaria de fazer?',
+      'Editar ou excluir este lembrete?',
       [
         {
           text: 'Cancelar',
@@ -51,6 +51,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               backgroundColor={colors.white}
               borderRadius={8}
             />
+          </View>
             <View style={styles.remindersContainer}>
               {reminders.map((reminder, index) => (
                   <CustomButton
@@ -58,36 +59,39 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
                     title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     onPress={() => handleReminderPress(index)}
                     backgroundColor={'#FFFFFF'}
-                    textColor={colors.ligthBlue}
-                    width={'auto'}
-                    borderWidth={5}
-                    borderColor={colors.ligthBlue}/>
+                    textColor={colors.lightBlue}
+                    width={70}
+                    borderWidth={2}
+                    borderColor={colors.lightBlue}/>
               ))}
             </View  >
+            <View style={styles.reminderButton}>
             <CustomButton
               title="Adicionar Lembrete"
               onPress={onAddReminder}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
-              width={'85%'}
-              height={40}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
+              width={'95%'}
+              height={28}
+              borderRadius={30}
             />
+            </View>
           <View style={styles.modalButtons}>
             <CustomButton
               title={'Voltar'}
               onPress = {onClose}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
               width={'50%'}
-              height={40}
+              height={28}
             />
             <CustomButton
               title={editingHabit ? 'Salvar Hábito' : 'Adicionar Hábito'}
               onPress={onSave}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
               width={'50%'}
-              height={40}
+              height={28}
             />
           </View>
           {editingHabit && (
@@ -95,14 +99,13 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               <CustomButton
                 title="Excluir Hábito"
                 onPress={onDelete}
-                backgroundColor={'#FFFFFF'}
+                backgroundColor={colors.lighterBlue}
                 textColor={colors.red}
-                width={'90%'}
-                height={40}
+                width={'95%'}
+                height={28}
               />
             </View>
           )}
-        </View>
         </View>
       </Modal>
     </View>
@@ -304,13 +307,13 @@ const styles = StyleSheet.create ({
   modalContent: {
     width: '90%',
     height: 'auto',
-    backgroundColor: colors.lighterBlue,
+    backgroundColor: colors.lightestBlue,
     marginHorizontal: '5%',
     borderRadius: 30,
     position: 'absolute',
     bottom: '30%',
     borderWidth: 1,
-    borderColor: colors.ligthBlue,
+    borderColor: colors.lightBlue,
     borderStyle: 'dashed',
     gap: -5,
   },
@@ -330,18 +333,21 @@ const styles = StyleSheet.create ({
     gap: 10,
     marginTop: 10,
   },
+  reminderButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: -10
+  },
   modalButtons: {
     justifyContent: 'center',
     flexDirection: 'row',
     marginTop: -10,
     padding: 15,
-    gap: 15,
-    width: '90%',
+    gap: 10,
   },
   deleteButtonContainer: {
     alignItems: 'center',
-    marginTop: -10,
-    width: '100%',
+    marginTop: -20,
   },
   list: {
     alignSelf: 'center'
