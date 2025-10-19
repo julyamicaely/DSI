@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, DimensionValue } from "react-native";
 import colors from './Colors'
 
 interface CustomButtonProps {
@@ -9,7 +9,9 @@ interface CustomButtonProps {
   textColor?: string;
   borderColor?: string;
   outline?: boolean;
-  width?: number;
+  width?: DimensionValue;
+  borderWidth?: number;
+  height?: DimensionValue;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -20,6 +22,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   borderColor = colors.red,
   outline = false,
   width = 350,
+  height = 50,
+  borderWidth = 4,
 }) => {
   return (
     <TouchableOpacity
@@ -28,8 +32,9 @@ const CustomButton: React.FC<CustomButtonProps> = ({
         {
           backgroundColor: outline ? "transparent" : backgroundColor,
           borderColor: borderColor,
-          borderWidth: outline ? 2 : 0,
+          borderWidth: outline ? borderWidth : 0,
           width,
+          height,
         },
       ]}
       onPress={onPress}
@@ -47,10 +52,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 };
 
 export default CustomButton;
-
 const styles = StyleSheet.create({
   button: {
-    height: 50,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
