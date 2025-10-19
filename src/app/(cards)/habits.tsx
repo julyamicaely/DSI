@@ -1,13 +1,10 @@
 import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Button, Image, Alert } from 'react-native';
-import { SafeAreaView} from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
-import { DateTimePickerComponent } from '../../com/DateTimePicker';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
-import { hairlineWidth } from 'react-native/types_generated/Libraries/StyleSheet/StyleSheetExports';
 
 type Habit = {
   id: string;
@@ -56,25 +53,25 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
             />
             <View style={styles.remindersContainer}>
               {reminders.map((reminder, index) => (
-                <CustomButton
-                  key={index}
-                  title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  onPress={() => handleReminderPress(index)}
-                  backgroundColor={'#FFFFFF'}
-                  textColor={colors.ligthBlue}
-                  width={'auto'}
-                />
+                  <CustomButton
+                    key={index}
+                    title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    onPress={() => handleReminderPress(index)}
+                    backgroundColor={'#FFFFFF'}
+                    textColor={colors.ligthBlue}
+                    width={'auto'}
+                    borderWidth={5}
+                    borderColor={colors.ligthBlue}/>
               ))}
-            </View>
+            </View  >
             <CustomButton
               title="Adicionar Lembrete"
               onPress={onAddReminder}
               backgroundColor={'#FFFFFF'}
               textColor={colors.ligthBlue}
-              width={'90%'}
+              width={'85%'}
               height={40}
             />
-          </View>
           <View style={styles.modalButtons}>
             <CustomButton
               title={'Voltar'}
@@ -105,6 +102,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               />
             </View>
           )}
+        </View>
         </View>
       </Modal>
     </View>
@@ -337,10 +335,13 @@ const styles = StyleSheet.create ({
     flexDirection: 'row',
     marginTop: -10,
     padding: 15,
-    gap: 15
+    gap: 15,
+    width: '90%',
   },
   deleteButtonContainer: {
     alignItems: 'center',
+    marginTop: -10,
+    width: '100%',
   },
   list: {
     alignSelf: 'center'
