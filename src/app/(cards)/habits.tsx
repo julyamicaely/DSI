@@ -310,10 +310,11 @@ const styles = StyleSheet.create ({
     marginHorizontal: '5%',
     borderRadius: 30,
     position: 'absolute',
-    bottom: '20%',
+    bottom: '30%',
     borderWidth: 1,
     borderColor: colors.ligthBlue,
-    borderStyle: 'dashed'
+    borderStyle: 'dashed',
+    gap: -5,
   },
   modalTitles: {
     top: 5,
@@ -334,6 +335,7 @@ const styles = StyleSheet.create ({
   modalButtons: {
     justifyContent: 'center',
     flexDirection: 'row',
+    marginTop: -10,
     padding: 15,
     gap: 15
   },
