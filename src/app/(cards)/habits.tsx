@@ -1,19 +1,49 @@
-import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Image } from 'react-native';
+import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Button, Image, Alert } from 'react-native';
+import { SafeAreaView} from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
+import { DateTimePickerComponent } from '../../com/DateTimePicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
+import { hairlineWidth } from 'react-native/types_generated/Libraries/StyleSheet/StyleSheetExports';
 
 type Habit = {
   id: string;
   name: string;
+  time: any;
+  reminders?: Date[];
 };
 
-function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void}) {
+function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void}) {
+  
+  const handleReminderPress = (index: number) => {
+    Alert.alert(
+      'Editar Lembrete',
+      'O que você gostaria de fazer?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          onPress: () => onDeleteReminder(index),
+          style: 'destructive',
+        },
+        {
+          text: 'Editar',
+          onPress: () => onEditReminder(index),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <View>
-      <Modal animationType='slide' transparent={true} visible={isVisible}>
+      <Modal animationType='fade' transparent={true} visible={isVisible}>
         <View style={styles.modalContent}>
           <View style={styles.textInputs}>
             <Text style={styles.modalTitles} >Nome da atividade</Text>
@@ -24,21 +54,43 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               backgroundColor={colors.white}
               borderRadius={8}
             />
+            <View style={styles.remindersContainer}>
+              {reminders.map((reminder, index) => (
+                <CustomButton
+                  key={index}
+                  title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  onPress={() => handleReminderPress(index)}
+                  backgroundColor={'#FFFFFF'}
+                  textColor={colors.ligthBlue}
+                  width={'auto'}
+                />
+              ))}
+            </View>
+            <CustomButton
+              title="Adicionar Lembrete"
+              onPress={onAddReminder}
+              backgroundColor={'#FFFFFF'}
+              textColor={colors.ligthBlue}
+              width={'90%'}
+              height={40}
+            />
           </View>
           <View style={styles.modalButtons}>
             <CustomButton
               title={'Voltar'}
               onPress = {onClose}
-              backgroundColor={colors.blue}
-              textColor="#FFFFFF"
-              width={147}
+              backgroundColor={'#FFFFFF'}
+              textColor={colors.ligthBlue}
+              width={'50%'}
+              height={40}
             />
             <CustomButton
               title={editingHabit ? 'Salvar Hábito' : 'Adicionar Hábito'}
               onPress={onSave}
-              backgroundColor={colors.blue}
-              textColor="#FFFFFF"
-              width={147}
+              backgroundColor={'#FFFFFF'}
+              textColor={colors.ligthBlue}
+              width={'50%'}
+              height={40}
             />
           </View>
           {editingHabit && (
@@ -46,9 +98,10 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               <CustomButton
                 title="Excluir Hábito"
                 onPress={onDelete}
-                backgroundColor={colors.lightRed}
-                textColor="#000000"
-                width={312}
+                backgroundColor={'#FFFFFF'}
+                textColor={colors.red}
+                width={'90%'}
+                height={40}
               />
             </View>
           )}
@@ -63,7 +116,11 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [habitName, setHabitName] = useState<string>('');
+  const [habitTime, setHabitTime] = useState<Date | null>(new Date());
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [reminders, setReminders] = useState<Date[]>([]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editingReminderIndex, setEditingReminderIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadHabitsFromStorage();
@@ -83,6 +140,8 @@ export default function HabitsScreen() {
   const onAddHabit = () => {
     setEditingHabit(null);
     setHabitName('');
+    setHabitTime(new Date());
+    setReminders([]);
     setIsModalVisible(true);
   }
 
@@ -91,13 +150,42 @@ export default function HabitsScreen() {
     setEditingHabit(null);
   };
 
+  const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowTimePicker(false);
+    if (event.type === 'set' && selectedDate) {
+      if (editingReminderIndex !== null) {
+        const updatedReminders = [...reminders];
+        updatedReminders[editingReminderIndex] = selectedDate;
+        setReminders(updatedReminders);
+        setEditingReminderIndex(null);
+      } else {
+        setReminders([...reminders, selectedDate]);
+      }
+    }
+  };
+
+  const handleAddReminder = () => {
+    setEditingReminderIndex(null);
+    setShowTimePicker(true);
+  };
+
+  const handleEditReminder = (index: number) => {
+    setEditingReminderIndex(index);
+    setShowTimePicker(true);
+  };
+
+  const handleDeleteReminder = (index: number) => {
+    const updatedReminders = reminders.filter((_, i) => i !== index);
+    setReminders(updatedReminders);
+  };
+
   const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
-      await updateHabit(editingHabit.id, { name: habitName });
+      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders });
     } else {
       // Add new habit
-      await addHabit({ name: habitName });
+      await addHabit({ name: habitName, time: habitTime, reminders: reminders });
     }
     setHabitName('');
     onModalClose();
@@ -108,6 +196,24 @@ export default function HabitsScreen() {
   const handleEditHabit = (habit: Habit) => {
     setEditingHabit(habit);
     setHabitName(habit.name);
+    if (habit.time && typeof habit.time.seconds === 'number') {
+      setHabitTime(new Date(habit.time.seconds * 1000));
+    } else if (habit.time && typeof habit.time === 'string') {
+      setHabitTime(new Date(habit.time));
+    } else {
+      setHabitTime(new Date());
+    }
+    if (habit.reminders) {
+      const reminderDates = habit.reminders.map(r => {
+        if (r && typeof (r as any).seconds === 'number') {
+          return new Date((r as any).seconds * 1000);
+        }
+        return new Date(r);
+      });
+      setReminders(reminderDates);
+    } else {
+      setReminders([]);
+    }
     setIsModalVisible(true);
   };
 
@@ -123,15 +229,6 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hábitos Inteligentes</Text>
-      <View style={styles.button}>
-        <CustomButton
-          title='Adicionar Hábito'
-          onPress={onAddHabit}
-          backgroundColor={colors.red}
-          textColor={colors.lightRed}
-          width={326}
-          />
-        </View>
       <FlatList
         data={habits}
         renderItem={({ item }) => (
@@ -148,6 +245,15 @@ export default function HabitsScreen() {
         style={styles.column}
         contentContainerStyle={{ gap: 10 }}
       />
+      <View style={styles.button}>
+        <CustomButton
+          title='Adicionar Hábito'
+          onPress={onAddHabit}
+          backgroundColor={colors.red}
+          textColor={colors.lightRed}
+          width={326}
+        />
+      </View>
       <HabitModal 
         isVisible={isModalVisible} 
         onClose={onModalClose}
@@ -156,7 +262,22 @@ export default function HabitsScreen() {
         habitName={habitName}
         setHabitName={setHabitName}
         onDelete={handleDeleteHabit}
+        habitTime={habitTime}
+        onTimeChange={onTimeChange}
+        onAddReminder={handleAddReminder}
+        reminders={reminders}
+        onEditReminder={handleEditReminder}
+        onDeleteReminder={handleDeleteReminder}
       />
+      {showTimePicker && (
+        <DateTimePicker
+          value={habitTime || new Date()}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={onTimeChange}
+        />
+      )}
     </View>
   );  
 }
@@ -180,15 +301,19 @@ const styles = StyleSheet.create ({
   },
   button: {
     alignSelf: 'center',
+    marginBottom: 50,
   },
   modalContent: {
     width: '90%',
-    height: '30%',
+    height: 'auto',
     backgroundColor: colors.lighterBlue,
     marginHorizontal: '5%',
     borderRadius: 30,
     position: 'absolute',
-    bottom: '30%',
+    bottom: '20%',
+    borderWidth: 1,
+    borderColor: colors.ligthBlue,
+    borderStyle: 'dashed'
   },
   modalTitles: {
     top: 5,
@@ -198,6 +323,13 @@ const styles = StyleSheet.create ({
   },
   textInputs: {
     alignItems: 'center'
+  },
+  remindersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 10,
   },
   modalButtons: {
     justifyContent: 'center',

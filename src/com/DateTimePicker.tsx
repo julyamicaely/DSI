@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { Button, Text } from 'react-native';
-import DateTimePicker, { DateTimePickerAndroid, DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
+import { Button, Text, View } from 'react-native';
+import { DateTimePickerAndroid, DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-export const App = () => {
-  const [date, setDate] = useState(new Date(1598051730000));
+type DateTimePickerComponentProps = {
+  date: Date;
+  onChange: (event: DateTimePickerEvent, selectedDate?: Date) => void;
+  habitTime: Date | null;
+};
 
-  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setDate(currentDate);
-  };
+export const DateTimePickerComponent = ({ date, onChange, habitTime }: DateTimePickerComponentProps) => {
 
-  const showMode = (currentMode: any) => {
+  const showMode = (currentMode: 'time') => {
     DateTimePickerAndroid.open({
       value: date,
       onChange,
@@ -20,19 +19,19 @@ export const App = () => {
     });
   };
 
-  const showDatepicker = () => {
-    showMode('date');
-  };
-
   const showTimepicker = () => {
     showMode('time');
   };
 
-  return (
-    <SafeAreaView>
-      <Button onPress={showDatepicker} title="Show date picker!" />
-      <Button onPress={showTimepicker} title="Show time picker!" />
-      <Text>selected: {date.toLocaleString()}</Text>
-    </SafeAreaView>
-  );
+  const timeSetter = () => {
+    if (!habitTime) {
+      return null;
+    }
+    const timeToDisplay = habitTime || date;
+    return timeToDisplay.toLocaleTimeString().split(':').map(Number).slice(0,2).map((unit) => unit < 10 ? `0${unit}` : unit).join(':');
+  }
+
+  const selectedTime = timeSetter();
+
+  return showTimepicker();
 };
