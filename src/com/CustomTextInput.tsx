@@ -1,13 +1,16 @@
 import React from 'react';
 import { StyleSheet, TextInput, View, TextInputProps } from 'react-native';
+import colors from './Colors';
 
 interface CustomTextInputProps extends TextInputProps {
   placeholder?: string;
+  backgroundColor?: string;
+  borderRadius?: number;
 }
 
-const CustomTextInput: React.FC<CustomTextInputProps> = ({ placeholder, ...props }) => {
+const CustomTextInput: React.FC<CustomTextInputProps> = ({ placeholder, backgroundColor, borderRadius, ...props }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: backgroundColor || colors.ligthestBlue, borderRadius }]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -22,7 +25,6 @@ const styles = StyleSheet.create({
   container: {
     width: 322,
     height: 44,
-    backgroundColor: '#EEF1FF',
     borderWidth: 1,
     borderColor: '#A6B6FF',
     borderRadius: 8,

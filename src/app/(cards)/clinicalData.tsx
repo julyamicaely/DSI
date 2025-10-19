@@ -77,7 +77,7 @@ export default function DadosClinicosScreen() {
   };
 
   const handleRemover = async (id?: string) => {
-    if (!id) return; 
+    if (!id) return;
     await deletarConsulta(id);
     Alert.alert("Removido", "Consulta deletada!");
     carregarConsultas();

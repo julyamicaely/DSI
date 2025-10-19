@@ -1,7 +1,8 @@
 import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity } from 'react-native';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = {
     isVisible: boolean;
@@ -14,6 +15,47 @@ type Goal = {
   time: string;
 };
 
+function GoalModal ({ isVisible, onClose, onSave, editingGoal, goalName, setGoalName, goalTime, setGoalTime } : { isVisible: boolean, onClose: () => void, onSave: () => void, editingGoal: Goal | null, goalName: string, setGoalName: (text: string) => void, goalTime: string, setGoalTime: (text: string) => void }) {
+  return (
+    <View>
+      <Modal animationType='slide' transparent={true} visible={isVisible}>
+        <View style={styles.modalContent}>
+          <View style={styles.textInputs}>
+            <Text style={styles.modalTitles} >Nome da atividade</Text>
+            <CustomTextInput
+              placeholder='Insira aqui'
+              value={goalName}
+              onChangeText={setGoalName}
+            />
+            <Text style={styles.modalTitles} >Meta de tempo</Text>
+            <CustomTextInput
+               placeholder='Insira aqui'
+               value={goalTime}
+               onChangeText={setGoalTime}
+            />
+          </View>
+          <View style={styles.modalButtons}>
+            <CustomButton
+              title='Voltar'
+              onPress = {onClose}
+              backgroundColor="#5B79FF"
+              textColor="#FFFFFF"
+              width={147}
+            />
+            <CustomButton
+              title={editingGoal ? 'Salvar Meta' : 'Adicionar Meta'}
+              onPress={onSave}
+              backgroundColor="#5B79FF"
+              textColor="#FFFFFF"
+              width={147}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 export default function GoalsScreen() {
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -21,6 +63,29 @@ export default function GoalsScreen() {
   const [goalName, setGoalName] = useState('');
   const [goalTime, setGoalTime] = useState('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    loadGoalsFromStorage();
+  }, []);
+
+  const loadGoalsFromStorage = async () => {
+    try {
+      const storedGoals = await AsyncStorage.getItem('goals');
+      if (storedGoals !== null) {
+        setGoals(JSON.parse(storedGoals));
+      }
+    } catch (error) {
+      console.error('Failed to load goals from storage', error);
+    }
+  };
+
+  const saveGoalsToStorage = async (goalsToSave: Goal[]) => {
+    try {
+      await AsyncStorage.setItem('goals', JSON.stringify(goalsToSave));
+    } catch (error) {
+      console.error('Failed to save goals to storage', error);
+    }
+  };
 
   const onAddGoal = () => {
     setEditingGoal(null);
@@ -35,9 +100,11 @@ export default function GoalsScreen() {
   };
 
   const handleSaveGoal = () => {
+    let updatedGoals;
     if (editingGoal) {
       // Update existing goal
-      setGoals(goals.map(g => g.id === editingGoal.id ? { ...g, name: goalName, time: goalTime } : g));
+      updatedGoals = goals.map(g => g.id === editingGoal.id ? { ...g, name: goalName, time: goalTime } : g);
+      setGoals(updatedGoals);
     } else {
       // Add new goal
       const newGoal: Goal = {
@@ -45,8 +112,10 @@ export default function GoalsScreen() {
         name: goalName,
         time: goalTime,
       };
-      setGoals([...goals, newGoal]);
+      updatedGoals = [...goals, newGoal];
+      setGoals(updatedGoals);
     }
+    saveGoalsToStorage(updatedGoals);
     setGoalName('');
     setGoalTime('');
     onModalClose();
@@ -60,50 +129,9 @@ export default function GoalsScreen() {
   };
 
   const handleDeleteGoal = (goalId: string) => {
-    setGoals(goals.filter(g => g.id !== goalId));
-  };
-
-  function GoalModal ({ isVisible, onClose } : Props) {
-    return (
-      <View>
-        <Modal animationType='slide' transparent={true} visible={isVisible}>
-          <View style={styles.modalContent}>
-            <View style={styles.textInputs}>
-              <Text style={styles.modalTitles} >Nome da atividade</Text>
-              <CustomTextInput
-                placeholder='Insira aqui'
-                secureTextEntry
-                value={goalName}
-                onChangeText={setGoalName}
-              />
-              <Text style={styles.modalTitles} >Meta de tempo</Text>
-              <CustomTextInput
-                 placeholder='Insira aqui'
-                 secureTextEntry
-                 value={goalTime}
-                 onChangeText={setGoalTime}
-              />
-            </View>
-            <View style={styles.modalButtons}>
-              <CustomButton
-                title='Voltar'
-                onPress = {onClose}
-                backgroundColor="#5B79FF"
-                textColor="#FFFFFF"
-                width={147}
-              />
-              <CustomButton
-                title={editingGoal ? 'Salvar Meta' : 'Adicionar Meta'}
-                onPress={handleSaveGoal}
-                backgroundColor="#5B79FF"
-                textColor="#FFFFFF"
-                width={147}
-              />
-            </View>
-          </View>
-        </Modal>
-      </View>
-    );
+    const updatedGoals = goals.filter(g => g.id !== goalId);
+    setGoals(updatedGoals);
+    saveGoalsToStorage(updatedGoals);
   };
 
   return (
@@ -140,8 +168,16 @@ export default function GoalsScreen() {
         style={styles.grid}
       />
 
-      <GoalModal isVisible={isModalVisible} onClose={onModalClose}>
-      </GoalModal>
+      <GoalModal 
+        isVisible={isModalVisible} 
+        onClose={onModalClose}
+        onSave={handleSaveGoal}
+        editingGoal={editingGoal}
+        goalName={goalName}
+        setGoalName={setGoalName}
+        goalTime={goalTime}
+        setGoalTime={setGoalTime}
+      />
 
     
     </View>
@@ -192,5 +228,23 @@ const styles = StyleSheet.create ({
     flexDirection: 'row',
     padding: 15,
     gap: 15
-  }
+  },
+  goalItem: {
+
+  },
+  goalText: {
+
+  },
+  goalButtons: {
+
+  },
+  editButton: {
+
+  },
+  deleteButton: {
+
+  },
+  grid: {
+
+  },
 })
