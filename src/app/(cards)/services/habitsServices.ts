@@ -6,7 +6,7 @@ const habitsRef = collection(db, "habits");
 export const addHabit = async (dados: any) => {
   const user = auth.currentUser;
   if (!user) throw new Error("Usuário não autenticado");
-  await addDoc(habitsRef, dados);
+  await addDoc(habitsRef, { ...dados, userId: user.uid });
 };
 
 export const listHabits = async () => {
