@@ -60,9 +60,10 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
                     onPress={() => handleReminderPress(index)}
                     backgroundColor={'#FFFFFF'}
                     textColor={colors.lightBlue}
-                    width={70}
+                    width={'auto'}
                     borderWidth={2}
-                    borderColor={colors.lightBlue}/>
+                    borderColor={colors.lightBlue}
+                    padding={8}/>
               ))}
             </View  >
             <View style={styles.reminderButton}>
@@ -86,7 +87,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               height={28}
             />
             <CustomButton
-              title={editingHabit ? 'Salvar Hábito' : 'Adicionar Hábito'}
+              title={editingHabit ? 'Salvar' : 'Adicionar'}
               onPress={onSave}
               backgroundColor={colors.lighterBlue}
               textColor={colors.lightBlue2}
@@ -236,8 +237,17 @@ export default function HabitsScreen() {
           <View style={styles.habitItem}>
             <View style={styles.habitButtons}>
               <TouchableOpacity onPress={() => handleEditHabit(item)} style={styles.editButton}>
-                <Text style={styles.habitText} >{item.name}</Text>
-                <Image source={require('../../assets/Vector 78.png')}/>
+                <Text style={styles.habitText1} >{item.name}</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
+      {/*             <Text style={styles.habitText2} >{item.reminders && item.reminders.length > 0 ? item.reminders.slice(0, 2).map(r => {
+                      if (r && typeof (r as any).seconds === 'number') {
+                          return new Date((r as any).seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      }
+                      return new Date(r).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }).join(', ') : ''}</Text> */}
+                  {editingHabit ? 
+                  <Image source={require('../../assets/Vector 78.png')} style={styles.habitIcon}/> : <Image source={require('../../assets/Iconezitos.png')}/>}
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -248,7 +258,7 @@ export default function HabitsScreen() {
       />
       <View style={styles.button}>
         <CustomButton
-          title='Adicionar Hábito'
+          title='Novo Hábito'
           onPress={onAddHabit}
           backgroundColor={colors.red}
           textColor={colors.lightRed}
@@ -288,6 +298,7 @@ const styles = StyleSheet.create ({
     flex: 1,
     paddingTop: 30,
     gap: 5,
+    backgroundColor: '#fff',
   },
     scrollContent: {
     paddingBottom: 70,
@@ -357,11 +368,18 @@ const styles = StyleSheet.create ({
   habitButtons: {
     columnGap: 10
   },
-    habitText: {
+    habitText1: {
       lineHeight: 22,
       fontSize: 16,
       fontWeight: 'bold',
-
+  },
+  habitText2: {
+    lineHeight: 22,
+    fontSize: 14,
+    fontWeight: '300',
+  },
+  habitIcon: {
+    tintColor: colors.red
   },
   editButton: {
     flexDirection: 'row',
@@ -371,7 +389,7 @@ const styles = StyleSheet.create ({
     height: 50,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: colors.lighterBlue
+    backgroundColor: colors.lighterBlue,
   },
   deleteButton: {
 

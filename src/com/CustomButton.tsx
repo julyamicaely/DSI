@@ -13,6 +13,7 @@ interface CustomButtonProps {
   borderWidth?: number;
   height?: DimensionValue;
   borderRadius?: number;
+  padding?: number;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -25,6 +26,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   width = 350,
   height = 50,
   borderWidth = 0,
+  padding = 0,
 }) => {
   return (
     <TouchableOpacity
@@ -36,6 +38,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
           borderWidth: borderWidth,
           width,
           height,
+          padding,
         },
       ]}
       onPress={onPress}

@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView, Button } from 'react-native';
 import { useRouter } from 'expo-router';
+import { auth } from '../../../firebaseConfig';
+import { useState, useEffect } from 'react';
+import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
+import * as Notifications from 'expo-notifications';
 import NotificationCard from '../../com/NotificationCard';
 import ImpactCard from '../../com/ImpactCard';
-// In your home.tsx or any other component
-import { auth } from '../../../firebaseConfig'; // Adjust the import path if needed
-import { useState, useEffect } from 'react';
 import colors from '../../com/Colors'
 
 // --- Componente Reutilizável para Itens de Ação ---
@@ -24,11 +25,68 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
   </TouchableOpacity>
 );
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+async function sendPushNotification(expoPushToken: string) {
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'Original Title',
+    body: 'And here is the body!',
+    data: { someData: 'goes here' },
+  };
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+}
+
+function handleRegistrationError(errorMessage: string) {
+  alert(errorMessage);
+  throw new Error(errorMessage);
+}
+
 // --- Componente Principal da Tela ---
 
 export default function HomeScreen() {
 
   const [userName, setUserName] = useState('');
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => setExpoPushToken(token ?? ''))
+      .catch((error: any) => setExpoPushToken(`${error}`));
+
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -48,9 +106,23 @@ export default function HomeScreen() {
           <View style={styles.profileCircle}></View>
           <View>
             <Text style={styles.welcomeText}>{userName}</Text>
-            <Text style={styles.welcomeSubtext}>Bem vinda ao LifeBeat.</Text>
           </View>
         </View>
+        
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
+      <Text>Your Expo push token: {expoPushToken}</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Title: {notification && notification.request.content.title} </Text>
+        <Text>Body: {notification && notification.request.content.body}</Text>
+        <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
+      </View>
+      <Button
+        title="Press to Send Notification"
+        onPress={async () => {
+          await sendPushNotification(expoPushToken);
+        }}
+      />
+    </View>
 
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
@@ -59,14 +131,14 @@ export default function HomeScreen() {
               title="Metas de Atividade Física"
               subtitle="Atividade recente"
               dateOrValue="Set 15, 2025"
-              cardColor={colors.ligthestBlue}
+              cardColor={colors.lightestBlue}
             />
             <NotificationCard
               onPress={() => routerButton.push('/habits')}
               title="Hábitos Inteligentes"
               subtitle="Próximo Item"
               dateOrValue="Caminhada das q..."
-              cardColor={colors.ligthestBlue}
+              cardColor={colors.lightestBlue}
             />
           </View>
           <View style={styles.gridRow}>
@@ -75,13 +147,13 @@ export default function HomeScreen() {
               title="Dados Clínicos"
               subtitle="Último registro"
               dateOrValue="Set 15, 2025"
-              cardColor={colors.ligthestBlue}
+              cardColor={colors.lightestBlue}
             />
             <NotificationCard
               title="Hospitais Próximos"
               subtitle="Endereço atual"
               dateOrValue="Rua Acadêmico H..."
-              cardColor={colors.ligthestBlue}
+              cardColor={colors.lightestBlue}
             />
           </View>
         </View>
