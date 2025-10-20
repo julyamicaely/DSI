@@ -4,12 +4,12 @@
     "slug": "lifebeat",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logoLifeBeat-3.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "lifebeat-scheme",
     "splash": {
-      "image": "./assets/LogoenomeLifeBeat-3.png",
+      "image": "./assets/LogoLifeBeat.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

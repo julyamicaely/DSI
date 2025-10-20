@@ -39,7 +39,6 @@ async function schedulePushNotification(habitName: string, reminder: Date, weekd
       },
       trigger,
     });
-    console.log(trigger);
   }
 }
 
@@ -281,7 +280,6 @@ export default function HabitsScreen() {
               : new Date(r)
           );
           for (const reminderDate of reminderDates) {
-            console.log(reminderDate)
             await schedulePushNotification(habit.name, reminderDate, habit.weekdays);
           }
         }
