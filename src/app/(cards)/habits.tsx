@@ -5,15 +5,55 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
+import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
+import * as Notifications from 'expo-notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true, 
+    shouldShowList: true,
+  }),
+});
+
+async function schedulePushNotification(habitName: string, reminder: Date, weekdays: number[]) {
+  const reminderTime = new Date(reminder);
+
+  for (const weekday of weekdays) {
+    const dayIndex = weekday; // 0 for Sunday, 1 for Monday, etc.
+
+    const trigger = {
+      type: 'weekly' as const,
+      channelId: 'default',
+      weekday: dayIndex + 1,
+      hour: reminderTime.getHours(),
+      minute: reminderTime.getMinutes(),
+    };
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Lembrete de Hábito",
+        body: `Está na hora de: ${habitName}`,
+        data: { habit: habitName },
+      },
+      trigger,
+    });
+    console.log(trigger);
+  }
+}
 
 type Habit = {
   id: string;
   name: string;
   time: any;
   reminders?: Date[];
+  weekdays?: number[];
 };
 
-function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void}) {
+const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder, selectedWeekdays, onToggleWeekday} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void, selectedWeekdays: number[], onToggleWeekday: (dayIndex: number) => void}) {
   
   const handleReminderPress = (index: number) => {
     Alert.alert(
@@ -68,7 +108,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
             </View  >
             <View style={styles.reminderButton}>
             <CustomButton
-              title="Adicionar Lembrete"
+              title="Adicionar Horário"
               onPress={onAddReminder}
               backgroundColor={colors.lighterBlue}
               textColor={colors.lightBlue2}
@@ -76,6 +116,13 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               height={28}
               borderRadius={30}
             />
+            </View>
+            <View style={styles.weekdaysContainer}>
+              {weekDays.map((day, index) => (
+                <TouchableOpacity key={index} onPress={() => onToggleWeekday(index)} style={[styles.weekdayButton, selectedWeekdays.includes(index) && styles.weekdayButtonSelected]}>
+                  <Text style={[styles.weekdayText, selectedWeekdays.includes(index) && styles.weekdayTextSelected]}>{day}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           <View style={styles.modalButtons}>
             <CustomButton
@@ -123,6 +170,30 @@ export default function HabitsScreen() {
   const [reminders, setReminders] = useState<Date[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [editingReminderIndex, setEditingReminderIndex] = useState<number | null>(null);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => setExpoPushToken(token ?? ''))
+      .catch((error: any) => setExpoPushToken(`${error}`));
+
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     loadHabitsFromStorage();
@@ -144,6 +215,7 @@ export default function HabitsScreen() {
     setHabitName('');
     setHabitTime(new Date());
     setReminders([]);
+    setSelectedWeekdays([]);
     setIsModalVisible(true);
   }
 
@@ -181,14 +253,41 @@ export default function HabitsScreen() {
     setReminders(updatedReminders);
   };
 
+  const handleToggleWeekday = (dayIndex: number) => {
+    setSelectedWeekdays(prev => 
+      prev.includes(dayIndex) 
+        ? prev.filter(d => d !== dayIndex) 
+        : [...prev, dayIndex]
+    );
+  };
+
   const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
-      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders });
+      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
     } else {
       // Add new habit
-      await addHabit({ name: habitName, time: habitTime, reminders: reminders });
+      await addHabit({ name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
     }
+
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    const allHabits = await listHabits() as Habit[];
+    if (allHabits) {
+      for (const habit of allHabits) {
+        if (habit.reminders && habit.weekdays && habit.weekdays.length > 0) {
+          const reminderDates = habit.reminders.map(r =>
+            r && typeof (r as any).seconds === 'number'
+              ? new Date((r as any).seconds * 1000)
+              : new Date(r)
+          );
+          for (const reminderDate of reminderDates) {
+            console.log(reminderDate)
+            await schedulePushNotification(habit.name, reminderDate, habit.weekdays);
+          }
+        }
+      }
+    }
+
     setHabitName('');
     onModalClose();
 
@@ -216,6 +315,7 @@ export default function HabitsScreen() {
     } else {
       setReminders([]);
     }
+    setSelectedWeekdays(habit.weekdays || []);
     setIsModalVisible(true);
   };
 
@@ -279,6 +379,8 @@ export default function HabitsScreen() {
         reminders={reminders}
         onEditReminder={handleEditReminder}
         onDeleteReminder={handleDeleteReminder}
+        selectedWeekdays={selectedWeekdays}
+        onToggleWeekday={handleToggleWeekday}
       />
       {showTimePicker && (
         <DateTimePicker
@@ -348,6 +450,31 @@ const styles = StyleSheet.create ({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: -10
+  },
+  weekdaysContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+    gap: 5,
+  },
+  weekdayButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.lightBlue,
+  },
+  weekdayButtonSelected: {
+    backgroundColor: colors.lightBlue,
+  },
+  weekdayText: {
+    color: colors.lightBlue,
+  },
+  weekdayTextSelected: {
+    color: '#FFFFFF',
   },
   modalButtons: {
     justifyContent: 'center',
