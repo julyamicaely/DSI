@@ -9,9 +9,11 @@ interface CustomButtonProps {
   textColor?: string;
   borderColor?: string;
   outline?: boolean;
-  width?: DimensionValue;
+  width?: DimensionValue; 
   borderWidth?: number;
   height?: DimensionValue;
+  borderRadius?: number;
+  padding?: number;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -23,18 +25,20 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   outline = false,
   width = 350,
   height = 50,
-  borderWidth = 4,
+  borderWidth = 0,
+  padding = 0,
 }) => {
   return (
     <TouchableOpacity
       style={[
         styles.button,
         {
-          backgroundColor: outline ? "transparent" : backgroundColor,
+          backgroundColor: backgroundColor,
           borderColor: borderColor,
-          borderWidth: outline ? borderWidth : 0,
+          borderWidth: borderWidth,
           width,
           height,
+          padding,
         },
       ]}
       onPress={onPress}

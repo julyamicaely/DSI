@@ -5,20 +5,59 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
+import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
+import * as Notifications from 'expo-notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true, 
+    shouldShowList: true,
+  }),
+});
+
+async function schedulePushNotification(habitName: string, reminder: Date, weekdays: number[]) {
+  const reminderTime = new Date(reminder);
+
+  for (const weekday of weekdays) {
+    const dayIndex = weekday; // 0 for Sunday, 1 for Monday, etc.
+
+    const trigger = {
+      type: 'weekly' as const,
+      channelId: 'default',
+      weekday: dayIndex + 1,
+      hour: reminderTime.getHours(),
+      minute: reminderTime.getMinutes(),
+    };
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Lembrete de Hábito",
+        body: `Está na hora de: ${habitName}`,
+        data: { habit: habitName },
+      },
+      trigger,
+    });
+  }
+}
 
 type Habit = {
   id: string;
   name: string;
   time: any;
   reminders?: Date[];
+  weekdays?: number[];
 };
 
-function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void}) {
+const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder, selectedWeekdays, onToggleWeekday} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void, selectedWeekdays: number[], onToggleWeekday: (dayIndex: number) => void}) {
   
   const handleReminderPress = (index: number) => {
     Alert.alert(
       'Editar Lembrete',
-      'O que você gostaria de fazer?',
+      'Editar ou excluir este lembrete?',
       [
         {
           text: 'Cancelar',
@@ -51,6 +90,7 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               backgroundColor={colors.white}
               borderRadius={8}
             />
+          </View>
             <View style={styles.remindersContainer}>
               {reminders.map((reminder, index) => (
                   <CustomButton
@@ -58,36 +98,47 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
                     title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     onPress={() => handleReminderPress(index)}
                     backgroundColor={'#FFFFFF'}
-                    textColor={colors.ligthBlue}
+                    textColor={colors.lightBlue}
                     width={'auto'}
-                    borderWidth={5}
-                    borderColor={colors.ligthBlue}/>
+                    borderWidth={2}
+                    borderColor={colors.lightBlue}
+                    padding={8}/>
               ))}
             </View  >
+            <View style={styles.reminderButton}>
             <CustomButton
-              title="Adicionar Lembrete"
+              title="Adicionar Horário"
               onPress={onAddReminder}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
-              width={'85%'}
-              height={40}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
+              width={'95%'}
+              height={28}
+              borderRadius={30}
             />
+            </View>
+            <View style={styles.weekdaysContainer}>
+              {weekDays.map((day, index) => (
+                <TouchableOpacity key={index} onPress={() => onToggleWeekday(index)} style={[styles.weekdayButton, selectedWeekdays.includes(index) && styles.weekdayButtonSelected]}>
+                  <Text style={[styles.weekdayText, selectedWeekdays.includes(index) && styles.weekdayTextSelected]}>{day}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           <View style={styles.modalButtons}>
             <CustomButton
               title={'Voltar'}
               onPress = {onClose}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
               width={'50%'}
-              height={40}
+              height={28}
             />
             <CustomButton
-              title={editingHabit ? 'Salvar Hábito' : 'Adicionar Hábito'}
+              title={editingHabit ? 'Salvar' : 'Adicionar'}
               onPress={onSave}
-              backgroundColor={'#FFFFFF'}
-              textColor={colors.ligthBlue}
+              backgroundColor={colors.lighterBlue}
+              textColor={colors.lightBlue2}
               width={'50%'}
-              height={40}
+              height={28}
             />
           </View>
           {editingHabit && (
@@ -95,14 +146,13 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
               <CustomButton
                 title="Excluir Hábito"
                 onPress={onDelete}
-                backgroundColor={'#FFFFFF'}
+                backgroundColor={colors.lighterBlue}
                 textColor={colors.red}
-                width={'90%'}
-                height={40}
+                width={'95%'}
+                height={28}
               />
             </View>
           )}
-        </View>
         </View>
       </Modal>
     </View>
@@ -119,6 +169,30 @@ export default function HabitsScreen() {
   const [reminders, setReminders] = useState<Date[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [editingReminderIndex, setEditingReminderIndex] = useState<number | null>(null);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => setExpoPushToken(token ?? ''))
+      .catch((error: any) => setExpoPushToken(`${error}`));
+
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     loadHabitsFromStorage();
@@ -140,6 +214,7 @@ export default function HabitsScreen() {
     setHabitName('');
     setHabitTime(new Date());
     setReminders([]);
+    setSelectedWeekdays([]);
     setIsModalVisible(true);
   }
 
@@ -177,14 +252,40 @@ export default function HabitsScreen() {
     setReminders(updatedReminders);
   };
 
+  const handleToggleWeekday = (dayIndex: number) => {
+    setSelectedWeekdays(prev => 
+      prev.includes(dayIndex) 
+        ? prev.filter(d => d !== dayIndex) 
+        : [...prev, dayIndex]
+    );
+  };
+
   const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
-      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders });
+      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
     } else {
       // Add new habit
-      await addHabit({ name: habitName, time: habitTime, reminders: reminders });
+      await addHabit({ name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
     }
+
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    const allHabits = await listHabits() as Habit[];
+    if (allHabits) {
+      for (const habit of allHabits) {
+        if (habit.reminders && habit.weekdays && habit.weekdays.length > 0) {
+          const reminderDates = habit.reminders.map(r =>
+            r && typeof (r as any).seconds === 'number'
+              ? new Date((r as any).seconds * 1000)
+              : new Date(r)
+          );
+          for (const reminderDate of reminderDates) {
+            await schedulePushNotification(habit.name, reminderDate, habit.weekdays);
+          }
+        }
+      }
+    }
+
     setHabitName('');
     onModalClose();
 
@@ -212,6 +313,7 @@ export default function HabitsScreen() {
     } else {
       setReminders([]);
     }
+    setSelectedWeekdays(habit.weekdays || []);
     setIsModalVisible(true);
   };
 
@@ -233,8 +335,17 @@ export default function HabitsScreen() {
           <View style={styles.habitItem}>
             <View style={styles.habitButtons}>
               <TouchableOpacity onPress={() => handleEditHabit(item)} style={styles.editButton}>
-                <Text style={styles.habitText} >{item.name}</Text>
-                <Image source={require('../../assets/editButton.svg')}/>
+                <Text style={styles.habitText1} >{item.name}</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
+      {/*             <Text style={styles.habitText2} >{item.reminders && item.reminders.length > 0 ? item.reminders.slice(0, 2).map(r => {
+                      if (r && typeof (r as any).seconds === 'number') {
+                          return new Date((r as any).seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      }
+                      return new Date(r).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }).join(', ') : ''}</Text> */}
+                  {editingHabit ? 
+                  <Image source={require('../../assets/Vector 78.png')} style={styles.habitIcon}/> : <Image source={require('../../assets/Iconezitos.png')}/>}
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -245,7 +356,7 @@ export default function HabitsScreen() {
       />
       <View style={styles.button}>
         <CustomButton
-          title='Adicionar Hábito'
+          title='Novo Hábito'
           onPress={onAddHabit}
           backgroundColor={colors.red}
           textColor={colors.lightRed}
@@ -266,6 +377,8 @@ export default function HabitsScreen() {
         reminders={reminders}
         onEditReminder={handleEditReminder}
         onDeleteReminder={handleDeleteReminder}
+        selectedWeekdays={selectedWeekdays}
+        onToggleWeekday={handleToggleWeekday}
       />
       {showTimePicker && (
         <DateTimePicker
@@ -285,6 +398,7 @@ const styles = StyleSheet.create ({
     flex: 1,
     paddingTop: 30,
     gap: 5,
+    backgroundColor: '#fff',
   },
     scrollContent: {
     paddingBottom: 70,
@@ -304,13 +418,13 @@ const styles = StyleSheet.create ({
   modalContent: {
     width: '90%',
     height: 'auto',
-    backgroundColor: colors.lighterBlue,
+    backgroundColor: colors.lightestBlue,
     marginHorizontal: '5%',
     borderRadius: 30,
     position: 'absolute',
     bottom: '30%',
     borderWidth: 1,
-    borderColor: colors.ligthBlue,
+    borderColor: colors.lightBlue,
     borderStyle: 'dashed',
     gap: -5,
   },
@@ -330,18 +444,46 @@ const styles = StyleSheet.create ({
     gap: 10,
     marginTop: 10,
   },
+  reminderButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: -10
+  },
+  weekdaysContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+    gap: 5,
+  },
+  weekdayButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.lightBlue,
+  },
+  weekdayButtonSelected: {
+    backgroundColor: colors.lightBlue,
+  },
+  weekdayText: {
+    color: colors.lightBlue,
+  },
+  weekdayTextSelected: {
+    color: '#FFFFFF',
+  },
   modalButtons: {
     justifyContent: 'center',
     flexDirection: 'row',
     marginTop: -10,
     padding: 15,
-    gap: 15,
-    width: '90%',
+    gap: 10,
   },
   deleteButtonContainer: {
     alignItems: 'center',
-    marginTop: -10,
-    width: '100%',
+    marginTop: -20,
   },
   list: {
     alignSelf: 'center'
@@ -351,11 +493,18 @@ const styles = StyleSheet.create ({
   habitButtons: {
     columnGap: 10
   },
-    habitText: {
+    habitText1: {
       lineHeight: 22,
       fontSize: 16,
       fontWeight: 'bold',
-
+  },
+  habitText2: {
+    lineHeight: 22,
+    fontSize: 14,
+    fontWeight: '300',
+  },
+  habitIcon: {
+    tintColor: colors.red
   },
   editButton: {
     flexDirection: 'row',
@@ -365,7 +514,7 @@ const styles = StyleSheet.create ({
     height: 50,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: colors.lighterBlue
+    backgroundColor: colors.lighterBlue,
   },
   deleteButton: {
 

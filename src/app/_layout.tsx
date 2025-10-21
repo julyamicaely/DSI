@@ -4,10 +4,11 @@ import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
 import colors from '../com/Colors'
+import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
 
 export default function RootLayout() {
   
-    const routerButton = useRouter();
+  const routerButton = useRouter();
 
   return (
     <AuthProvider>
