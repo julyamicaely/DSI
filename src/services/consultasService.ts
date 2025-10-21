@@ -1,4 +1,8 @@
-import { db } from "../../../../firebaseConfig";
+// @ts-nocheck
+export default function IgnoreRoute() {
+  return null;
+}
+import { db } from "../../firebaseConfig";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
 
 const consultasRef = collection(db, "consultas");

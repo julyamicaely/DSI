@@ -5,6 +5,7 @@ import { User } from 'firebase/auth';
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
+  logout: () => void; // ✅ adicionamos essa função
 }
 
 // Cria o contexto com valores iniciais
@@ -14,8 +15,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
+  // ✅ Função de logout
+  function logout() {
+    setUser(null);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
