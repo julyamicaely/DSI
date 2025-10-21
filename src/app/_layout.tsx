@@ -3,10 +3,12 @@ import * as React from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
+import colors from '../com/Colors'
+import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
 
 export default function RootLayout() {
   
-    const routerButton = useRouter();
+  const routerButton = useRouter();
 
   return (
     <AuthProvider>
@@ -33,7 +35,7 @@ export default function RootLayout() {
             )
           },
           headerStyle: {
-            backgroundColor: '#E53935',
+            backgroundColor: colors.red,
           },
         }}
         
@@ -58,7 +60,7 @@ export default function RootLayout() {
               )
             },
             headerStyle: {
-              backgroundColor: '#E53935',
+              backgroundColor: colors.red,
             },
         }}
 
@@ -88,7 +90,7 @@ export default function RootLayout() {
             </TouchableOpacity>
           ),
           headerStyle: {
-            backgroundColor: '#E53935',
+            backgroundColor: colors.red,
           },
         }}
         />

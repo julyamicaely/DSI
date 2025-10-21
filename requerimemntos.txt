@@ -4,4 +4,7 @@ npm install expo-router
 npm install expo-image
 npx expo install react-native-screens 
 react-native-safe-area-context
+npx expo install firebase expo-auth-session
+npx expo install expo-linear-gradient
+
 bibliotecapra poder 

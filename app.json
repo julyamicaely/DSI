@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "login",
-    "slug": "login",
+    "slug": "lifebeat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "scheme": "lifebeat-scheme",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/LogoLifeBeat.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,8 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.login"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -31,6 +30,13 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0ce884cb-34fb-46c1-9221-7be319309baa"
+      }
+    },
+    "owner": "hexenkatze"
   }
 }

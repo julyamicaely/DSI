@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView, Button } from 'react-native';
 import { useRouter } from 'expo-router';
+import { auth } from '../../../firebaseConfig';
+import { useState, useEffect } from 'react';
 import NotificationCard from '../../com/NotificationCard';
 import ImpactCard from '../../com/ImpactCard';
-// In your home.tsx or any other component
-import { auth } from '../../../firebaseConfig'; // Adjust the import path if needed
-import { useState, useEffect } from 'react';
+import colors from '../../com/Colors'
 
 // --- Componente Reutilizável para Itens de Ação ---
 
@@ -28,7 +28,7 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
 export default function HomeScreen() {
 
   const [userName, setUserName] = useState('');
-
+  
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
@@ -47,10 +47,9 @@ export default function HomeScreen() {
           <View style={styles.profileCircle}></View>
           <View>
             <Text style={styles.welcomeText}>{userName}</Text>
-            <Text style={styles.welcomeSubtext}>Bem vinda ao LifeBeat.</Text>
           </View>
         </View>
-
+        
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
             <NotificationCard
@@ -58,30 +57,29 @@ export default function HomeScreen() {
               title="Metas de Atividade Física"
               subtitle="Atividade recente"
               dateOrValue="Set 15, 2025"
-              cardColor="#F0F2FF"
+              cardColor={colors.lightestBlue}
             />
             <NotificationCard
+              onPress={() => routerButton.push('/habits')}
               title="Hábitos Inteligentes"
               subtitle="Próximo Item"
               dateOrValue="Caminhada das q..."
-              cardColor="#F0F2FF"
+              cardColor={colors.lightestBlue}
             />
           </View>
           <View style={styles.gridRow}>
-            <TouchableOpacity onPress={() => routerButton.push('/dados-clinicos')} activeOpacity={0.8}>
-  <NotificationCard
-    title="Dados Clínicos"
-    subtitle="Último registro"
-    dateOrValue="Set 15, 2025"
-    cardColor="#F0F2FF"
-  />
-</TouchableOpacity>
-
+            <NotificationCard
+              onPress={() => routerButton.push('/clinicalData')}
+              title="Dados Clínicos"
+              subtitle="Último registro"
+              dateOrValue="Set 15, 2025"
+              cardColor={colors.lightestBlue}
+            />
             <NotificationCard
               title="Hospitais Próximos"
               subtitle="Endereço atual"
               dateOrValue="Rua Acadêmico H..."
-              cardColor="#F0F2FF"
+              cardColor={colors.lightestBlue}
             />
           </View>
         </View>
