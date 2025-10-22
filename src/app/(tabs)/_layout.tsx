@@ -111,7 +111,6 @@ export default function TabLayout() {
       />
 
       {/* 🚫 Esconde rotas que não devem aparecer na barra */}
-      <Tabs.Screen name="DadosClinicos" options={{ href: null }} />
       <Tabs.Screen name="profiles_backup" options={{ href: null }} />
       <Tabs.Screen name="services" options={{ href: null }} />
     </Tabs>

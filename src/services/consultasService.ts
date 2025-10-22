@@ -1,38 +1,14 @@
-<<<<<<<< HEAD:src/services/consultasService.ts
-// @ts-nocheck
-export default function IgnoreRoute() {
-  return null;
-}
 import { db } from "../../firebaseConfig";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
-========
-import { db, auth } from "../../../../firebaseConfig";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-} from "firebase/firestore";
->>>>>>>> 9d1a4496ef0ffca415dea49af37b88039f98e115:src/app/(cards)/services/consultasService.ts
 
 const consultasRef = collection(db, "consultas");
 
 export const adicionarConsulta = async (dados: any) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Usuário não autenticado");
-  await addDoc(consultasRef, { ...dados, userId: user.uid });
+  await addDoc(consultasRef, dados);
 };
 
 export const listarConsultas = async () => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Usuário não autenticado");
-
-  const q = query(consultasRef, where("userId", "==", user.uid));
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(consultasRef);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
