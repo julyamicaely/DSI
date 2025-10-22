@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from "react-native";
-import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "./services/consultasService";
+import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
+
 
 interface Consulta {
   id?: string;
