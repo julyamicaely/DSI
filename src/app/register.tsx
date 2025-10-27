@@ -30,9 +30,29 @@ export default function RegisterScreen() {
       Alert.alert("Sucesso", "Conta criada com sucesso!");
       router.replace("/home");
     } catch (error: any) {
-      console.log(error);
-      const message = error instanceof Error ? error.message : String(error);
-      Alert.alert("Erro", message);
+      // --- CORREÇÃO DE SEGURANÇA APLICADA ---
+      let errorMessage = "Ocorreu um erro ao criar sua conta. Por favor, revise os dados ou tente novamente.";
+
+      // 1. Loga o erro no console para fins de depuração
+      console.log("Erro de Cadastro do Firebase:", error.code, error.message);
+
+      // 2. Trata os erros de validação que o usuário DEVE resolver
+      if (error.code === 'auth/weak-password') {
+          // Senha deve ter pelo menos 6 caracteres
+          errorMessage = "A senha deve ter pelo menos 6 caracteres. Por favor, insira uma senha mais forte.";
+      } 
+      // 3. Trata o erro de enumeração de conta (Email já existe)
+      else if (error.code === 'auth/email-already-in-use') {
+          // MENSAGEM GENÉRICA: Não avisa o usuário que o e-mail JÁ está em uso.
+          errorMessage = "Não foi possível cadastrar. Verifique seu e-mail ou tente Entrar.";
+      }
+      // 4. Trata erros de formato de e-mail (email inválido)
+      else if (error.code === 'auth/invalid-email') {
+          errorMessage = "O formato do e-mail é inválido. Por favor, verifique seu e-mail.";
+      }
+      
+      // Exibe a mensagem de erro tratada (genérica ou específica de validação)
+      Alert.alert("Erro no Cadastro", errorMessage);
     }
   }
 
