@@ -7,7 +7,6 @@ const colors = {
     lighterBlue: '#E5E8FF',
     lightestBlue: '#F0F2FF',
     white: '#FFFFFF',
-
 };
 
 export default colors;
