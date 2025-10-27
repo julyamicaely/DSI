@@ -7,6 +7,7 @@ import { auth } from "../../firebaseConfig";
 // Componentes customizados
 import CustomTextInput from "../com/CustomTextInput";
 import CustomButton from "../com/CustomButton";
+import TemporaryMessage from "../com/TemporaryMessage";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -16,10 +17,11 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleRegister() {
     if (!email || !senha || !nomeUsuario) {
-      Alert.alert("Erro", "Preencha todos os campos!");
+      setErrorMessage("Preencha todos os campos!");
       return;
     }
 
@@ -30,15 +32,20 @@ export default function RegisterScreen() {
       Alert.alert("Sucesso", "Conta criada com sucesso!");
       router.replace("/home");
     } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        setErrorMessage("Este e-mail já está cadastrado.");
+      } else {
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Erro", message);
+      }
       console.log(error);
-      const message = error instanceof Error ? error.message : String(error);
-      Alert.alert("Erro", message);
     }
   }
 
   return (
 
     <View style={styles.container}>
+      {errorMessage && <TemporaryMessage message={errorMessage} onHide={() => setErrorMessage(null)} />}
       {/* Cabeçalho simples */}
       <Text style={styles.appTitle}>LifeBeat</Text>
 
