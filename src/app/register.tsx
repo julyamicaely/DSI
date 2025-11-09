@@ -34,7 +34,15 @@ export default function RegisterScreen() {
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setErrorMessage("Este e-mail já está cadastrado.");
-      } else {
+
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMessage("O e-mail fornecido é inválido.");
+
+      } else if (error.code === 'auth/weak-password') {
+        setErrorMessage("A senha deve ter pelo menos 6 caracteres.");
+      }
+      
+      else {
         const message = error instanceof Error ? error.message : String(error);
         Alert.alert("Erro", message);
       }
