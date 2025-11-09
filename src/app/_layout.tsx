@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
 import colors from '../com/Colors'
 import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
+import { PaperProvider } from 'react-native-paper';
 
 export default function RootLayout() {
   
@@ -12,37 +13,13 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack
-        screenOptions={{headerShown: false}}
-      >
-        <Stack.Screen 
-          name="index" 
-          options={{
-          headerShown: true,
-          headerTitle: () => (
-            <View style={{ flexDirection: 'row' }}>
-              <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
-              <Text style={styles.title} >Lifebeat</Text>
-            </View>
-            ),
-          headerRight: () => {
-            return (
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
-                  <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
-                </TouchableOpacity>
-              </View>
-            )
-          },
-          headerStyle: {
-            backgroundColor: colors.red,
-          },
-        }}
-        
-        />
-        <Stack.Screen 
-          name="login"
-          options={{
+      <PaperProvider>
+        <Stack
+          screenOptions={{headerShown: false}}
+        >
+          <Stack.Screen 
+            name="index" 
+            options={{
             headerShown: true,
             headerTitle: () => (
               <View style={{ flexDirection: 'row' }}>
@@ -62,39 +39,65 @@ export default function RootLayout() {
             headerStyle: {
               backgroundColor: colors.red,
             },
-        }}
+          }}
+          
+          />
+          <Stack.Screen 
+            name="login"
+            options={{
+              headerShown: true,
+              headerTitle: () => (
+                <View style={{ flexDirection: 'row' }}>
+                  <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
+                  <Text style={styles.title} >Lifebeat</Text>
+                </View>
+                ),
+              headerRight: () => {
+                return (
+                  <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                      <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                    </TouchableOpacity>
+                  </View>
+                )
+              },
+              headerStyle: {
+                backgroundColor: colors.red,
+              },
+          }}
 
-        />
-        <Stack.Screen 
-          name="register"
-          options={{
-          headerShown: true,
-          headerTitle: () => (
-            <View style={{ flexDirection: 'row' }}>
-              <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
-              <Text style={styles.title} >Lifebeat</Text>
-            </View>
-            ),
-          headerRight: () => {
-            return (
+          />
+          <Stack.Screen 
+            name="register"
+            options={{
+            headerShown: true,
+            headerTitle: () => (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
-                  <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
-                </TouchableOpacity>
+                <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
+                <Text style={styles.title} >Lifebeat</Text>
               </View>
-            )
-          },
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => routerButton.back()}>
-              <Image source={require('../assets/buttonBack.svg')} style={styles.headerButtonsLeft} />
-            </TouchableOpacity>
-          ),
-          headerStyle: {
-            backgroundColor: colors.red,
-          },
-        }}
-        />
-    </Stack>
+              ),
+            headerRight: () => {
+              return (
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity style={styles.headerButtonsRight} onPress={() => {}} >
+                    <Image source={require('../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
+                  </TouchableOpacity>
+                </View>
+              )
+            },
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => routerButton.back()}>
+                <Image source={require('../assets/buttonBack.svg')} style={styles.headerButtonsLeft} />
+              </TouchableOpacity>
+            ),
+            headerStyle: {
+              backgroundColor: colors.red,
+            },
+          }}
+          />
+      </Stack>
+    </PaperProvider>
   </AuthProvider>
   );
 }
