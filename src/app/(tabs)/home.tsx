@@ -76,6 +76,7 @@ export default function HomeScreen() {
               cardColor={colors.lightestBlue}
             />
             <NotificationCard
+              onPress={() => routerButton.push('/hospitais-proximos')}
               title="Hospitais Próximos"
               subtitle="Endereço atual"
               dateOrValue="Rua Acadêmico H..."
