@@ -10,7 +10,7 @@ interface CustomTextInputProps extends TextInputProps {
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({ placeholder, backgroundColor, borderRadius, ...props }) => {
   return (
-    <View style={[styles.container, { backgroundColor: backgroundColor || colors.ligthestBlue, borderRadius }]}>
+    <View style={[styles.container, { backgroundColor: backgroundColor || colors.lightestBlue, borderRadius }]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
