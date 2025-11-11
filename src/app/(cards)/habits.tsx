@@ -1,12 +1,14 @@
-import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity, Button, Image, Alert } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
 import colors from '../../com/Colors';
+import Accordion from '../../com/Accordion';
 import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
 import * as Notifications from 'expo-notifications';
+import { List } from 'react-native-paper';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -52,8 +54,24 @@ type Habit = {
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setHabitName, onDelete, habitTime, onTimeChange, onAddReminder, reminders, onEditReminder, onDeleteReminder, selectedWeekdays, onToggleWeekday} : { isVisible: boolean, onClose: () => void, onSave: () => void, editingHabit: Habit | null, habitName: string, setHabitName: (text: string) => void, onDelete: () => void, habitTime: Date | null, onTimeChange: (event: DateTimePickerEvent, selectedDate?: Date) => void, onAddReminder: () => void, reminders: Date[], onEditReminder: (index: number) => void, onDeleteReminder: (index: number) => void, selectedWeekdays: number[], onToggleWeekday: (dayIndex: number) => void}) {
-  
+
+
+export default function HabitsScreen() {
+
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [habitName, setHabitName] = useState<string>('');
+  const [habitTime, setHabitTime] = useState<Date | null>(new Date());
+  const [isNewHabitAccordionExpanded, setIsNewHabitAccordionExpanded] = useState<boolean>(false);
+  const [reminders, setReminders] = useState<Date[]>([]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editingReminderIndex, setEditingReminderIndex] = useState<number | null>(null);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+
   const handleReminderPress = (index: number) => {
     Alert.alert(
       'Editar Lembrete',
@@ -65,115 +83,17 @@ function HabitModal ({ isVisible, onClose, onSave, editingHabit, habitName, setH
         },
         {
           text: 'Excluir',
-          onPress: () => onDeleteReminder(index),
+          onPress: () => handleDeleteReminder(index),
           style: 'destructive',
         },
         {
           text: 'Editar',
-          onPress: () => onEditReminder(index),
+          onPress: () => handleEditReminder(index),
         },
       ],
       { cancelable: true }
     );
   };
-
-  return (
-    <View>
-      <Modal animationType='fade' transparent={true} visible={isVisible}>
-        <View style={styles.modalContent}>
-          <View style={styles.textInputs}>
-            <Text style={styles.modalTitles} >Nome da atividade</Text>
-            <CustomTextInput
-              placeholder='Insira aqui'
-              value={habitName}
-              onChangeText={setHabitName}
-              backgroundColor={colors.white}
-              borderRadius={8}
-            />
-          </View>
-            <View style={styles.remindersContainer}>
-              {reminders.map((reminder, index) => (
-                  <CustomButton
-                    key={index}
-                    title={reminder.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    onPress={() => handleReminderPress(index)}
-                    backgroundColor={'#FFFFFF'}
-                    textColor={colors.lightBlue}
-                    width={'auto'}
-                    borderWidth={2}
-                    borderColor={colors.lightBlue}
-                    padding={8}/>
-              ))}
-            </View  >
-            <View style={styles.reminderButton}>
-            <CustomButton
-              title="Adicionar Horário"
-              onPress={onAddReminder}
-              backgroundColor={colors.lighterBlue}
-              textColor={colors.lightBlue2}
-              width={'95%'}
-              height={28}
-              borderRadius={30}
-            />
-            </View>
-            <View style={styles.weekdaysContainer}>
-              {weekDays.map((day, index) => (
-                <TouchableOpacity key={index} onPress={() => onToggleWeekday(index)} style={[styles.weekdayButton, selectedWeekdays.includes(index) && styles.weekdayButtonSelected]}>
-                  <Text style={[styles.weekdayText, selectedWeekdays.includes(index) && styles.weekdayTextSelected]}>{day}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          <View style={styles.modalButtons}>
-            <CustomButton
-              title={'Voltar'}
-              onPress = {onClose}
-              backgroundColor={colors.lighterBlue}
-              textColor={colors.lightBlue2}
-              width={'50%'}
-              height={28}
-            />
-            <CustomButton
-              title={editingHabit ? 'Salvar' : 'Adicionar'}
-              onPress={onSave}
-              backgroundColor={colors.lighterBlue}
-              textColor={colors.lightBlue2}
-              width={'50%'}
-              height={28}
-            />
-          </View>
-          {editingHabit && (
-            <View style={styles.deleteButtonContainer}>
-              <CustomButton
-                title="Excluir Hábito"
-                onPress={onDelete}
-                backgroundColor={colors.lighterBlue}
-                textColor={colors.red}
-                width={'95%'}
-                height={28}
-              />
-            </View>
-          )}
-        </View>
-      </Modal>
-    </View>
-  );
-};
-
-export default function HabitsScreen() {
-
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-  const [habitName, setHabitName] = useState<string>('');
-  const [habitTime, setHabitTime] = useState<Date | null>(new Date());
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [reminders, setReminders] = useState<Date[]>([]);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [editingReminderIndex, setEditingReminderIndex] = useState<number | null>(null);
-  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -210,16 +130,30 @@ export default function HabitsScreen() {
   };
 
   const onAddHabit = () => {
-    setEditingHabit(null);
+    // Check if there's already a new habit being created
+    if (habits.find(h => h.id.startsWith('new-'))) {
+      return; // Or show an alert to the user
+    }
+
+    const newHabit: Habit = {
+      id: `new-${Date.now()}`,
+      name: 'Novo Hábito',
+      time: new Date(),
+      reminders: [],
+      weekdays: []
+    };
+
+    setHabits(prev => [newHabit, ...prev]);
+    setEditingHabit(newHabit);
     setHabitName('');
     setHabitTime(new Date());
     setReminders([]);
     setSelectedWeekdays([]);
-    setIsModalVisible(true);
+    setIsNewHabitAccordionExpanded(false);
   }
 
   const onModalClose = () => {
-    setIsModalVisible(false);
+    setIsNewHabitAccordionExpanded(false);
     setEditingHabit(null);
   };
 
@@ -263,10 +197,12 @@ export default function HabitsScreen() {
   const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
-      await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
-    } else {
-      // Add new habit
-      await addHabit({ name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
+      const isNew = editingHabit.id.startsWith('new-');
+      if (isNew) {
+        await addHabit({ name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
+      } else {
+        await updateHabit(editingHabit.id, { name: habitName, time: habitTime, reminders: reminders, weekdays: selectedWeekdays });
+      }
     }
 
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -293,28 +229,33 @@ export default function HabitsScreen() {
   };
 
   const handleEditHabit = (habit: Habit) => {
-    setEditingHabit(habit);
-    setHabitName(habit.name);
-    if (habit.time && typeof habit.time.seconds === 'number') {
-      setHabitTime(new Date(habit.time.seconds * 1000));
-    } else if (habit.time && typeof habit.time === 'string') {
-      setHabitTime(new Date(habit.time));
+    if (editingHabit?.id === habit.id) {
+      // If the same habit is clicked again, close the accordion
+      setEditingHabit(null);
     } else {
-      setHabitTime(new Date());
+      setEditingHabit(habit);
+      setHabitName(habit.name);
+      if (habit.time && typeof habit.time.seconds === 'number') {
+        setHabitTime(new Date(habit.time.seconds * 1000));
+      } else if (habit.time && typeof habit.time === 'string') {
+        setHabitTime(new Date(habit.time));
+      } else {
+        setHabitTime(new Date());
+      }
+      if (habit.reminders) {
+        const reminderDates = habit.reminders.map(r => {
+          if (r && typeof (r as any).seconds === 'number') {
+            return new Date((r as any).seconds * 1000);
+          }
+          return new Date(r);
+        });
+        setReminders(reminderDates);
+      } else {
+        setReminders([]);
+      }
+      setSelectedWeekdays(habit.weekdays || []);
+      setIsNewHabitAccordionExpanded(false); // Close "Novo Hábito" accordion if open
     }
-    if (habit.reminders) {
-      const reminderDates = habit.reminders.map(r => {
-        if (r && typeof (r as any).seconds === 'number') {
-          return new Date((r as any).seconds * 1000);
-        }
-        return new Date(r);
-      });
-      setReminders(reminderDates);
-    } else {
-      setReminders([]);
-    }
-    setSelectedWeekdays(habit.weekdays || []);
-    setIsModalVisible(true);
   };
 
   const handleDeleteHabit = async () => {
@@ -332,54 +273,122 @@ export default function HabitsScreen() {
       <FlatList
         data={habits}
         renderItem={({ item }) => (
-          <View style={styles.habitItem}>
-            <View style={styles.habitButtons}>
-              <TouchableOpacity onPress={() => handleEditHabit(item)} style={styles.editButton}>
-                <Text style={styles.habitText1} >{item.name}</Text>
-                <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
-      {/*             <Text style={styles.habitText2} >{item.reminders && item.reminders.length > 0 ? item.reminders.slice(0, 2).map(r => {
-                      if (r && typeof (r as any).seconds === 'number') {
-                          return new Date((r as any).seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      }
-                      return new Date(r).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                  }).join(', ') : ''}</Text> */}
-                  {editingHabit ? 
-                  <Image source={require('../../assets/Vector 78.png')} style={styles.habitIcon}/> : <Image source={require('../../assets/Iconezitos.png')}/>}
+          <List.Section key={item.id} style={styles.listSection}>
+            <Accordion
+              title={item.name}
+              isExpanded={editingHabit?.id === item.id}
+              onPress={() => handleEditHabit(item)}
+            >
+              <View>
+                <View style={styles.textInputs}>
+                  <Text style={styles.modalTitles}>Nome da atividade</Text>
+                  <CustomTextInput
+                    placeholder="Insira aqui"
+                    value={habitName}
+                    onChangeText={setHabitName}
+                    backgroundColor={colors.white}
+                    borderRadius={8}
+                  />
                 </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+                <View style={styles.remindersContainer}>
+                  {reminders.map((reminder, index) => (
+                    <CustomButton
+                      key={index}
+                      title={reminder.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      onPress={() => handleReminderPress(index)}
+                      backgroundColor={'#FFFFFF'}
+                      textColor={colors.lightBlue}
+                      width={'auto'}
+                      borderWidth={2}
+                      borderColor={colors.lightBlue}
+                      padding={8}
+                    />
+                  ))}
+                </View>
+                <View style={styles.reminderButton}>
+                  <CustomButton
+                    title="Adicionar Horário"
+                    onPress={handleAddReminder}
+                    backgroundColor={colors.lighterBlue}
+                    textColor={colors.lightBlue2}
+                    width={'95%'}
+                    height={28}
+                    borderRadius={30}
+                  />
+                </View>
+                <View style={styles.weekdaysContainer}>
+                  {weekDays.map((day, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => handleToggleWeekday(index)}
+                      style={[
+                        styles.weekdayButton,
+                        selectedWeekdays.includes(index) &&
+                          styles.weekdayButtonSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.weekdayText,
+                          selectedWeekdays.includes(index) &&
+                            styles.weekdayTextSelected,
+                        ]}
+                      >
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={styles.modalButtons}>
+                  <CustomButton
+                    title={'Voltar'}
+                    onPress={onModalClose}
+                    backgroundColor={colors.lighterBlue}
+                    textColor={colors.lightBlue2}
+                    width={'50%'}
+                    height={28}
+                  />
+                  <CustomButton
+                    title={editingHabit?.id.startsWith('new-') ? 'Adicionar' : 'Salvar'}
+                    onPress={handleSaveHabits}
+                    backgroundColor={colors.lighterBlue}
+                    textColor={colors.lightBlue2}
+                    width={'50%'}
+                    height={28}
+                  />
+                </View>
+                {editingHabit && (
+                  <View style={styles.deleteButtonContainer}>
+                    <CustomButton
+                      title="Excluir Hábito"
+                      onPress={handleDeleteHabit}
+                      backgroundColor={colors.lighterBlue}
+                      textColor={colors.lightBlue2}
+                      width={'95%'}
+                      height={28}
+                    />
+                  </View>
+                )}
+              </View>
+            </Accordion>
+          </List.Section>
         )}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         style={styles.column}
-        contentContainerStyle={{ gap: 10 }}
+        contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
       />
       <View style={styles.button}>
         <CustomButton
-          title='Novo Hábito'
-          onPress={onAddHabit}
-          backgroundColor={colors.red}
-          textColor={colors.lightRed}
-          width={326}
+            title="Novo Hábito"
+            onPress={onAddHabit}
+            backgroundColor={colors.red}
+            textColor={colors.white}
+            width={326}
         />
       </View>
-      <HabitModal 
-        isVisible={isModalVisible} 
-        onClose={onModalClose}
-        onSave={handleSaveHabits}
-        editingHabit={editingHabit}
-        habitName={habitName}
-        setHabitName={setHabitName}
-        onDelete={handleDeleteHabit}
-        habitTime={habitTime}
-        onTimeChange={onTimeChange}
-        onAddReminder={handleAddReminder}
-        reminders={reminders}
-        onEditReminder={handleEditReminder}
-        onDeleteReminder={handleDeleteReminder}
-        selectedWeekdays={selectedWeekdays}
-        onToggleWeekday={handleToggleWeekday}
-      />
       {showTimePicker && (
         <DateTimePicker
           value={habitTime || new Date()}
@@ -413,7 +422,7 @@ const styles = StyleSheet.create ({
   },
   button: {
     alignSelf: 'center',
-    marginBottom: 50,
+    marginBottom: 70,
   },
   modalContent: {
     width: '90%',
@@ -427,6 +436,9 @@ const styles = StyleSheet.create ({
     borderColor: colors.lightBlue,
     borderStyle: 'dashed',
     gap: -5,
+  },
+  accordion: {
+    width: '90%',
   },
   modalTitles: {
     top: 5,
@@ -484,11 +496,10 @@ const styles = StyleSheet.create ({
   deleteButtonContainer: {
     alignItems: 'center',
     marginTop: -20,
+    textDecorationStyle: 'dashed',
   },
   list: {
     alignSelf: 'center'
-  },
-  habitItem: {
   },
   habitButtons: {
     columnGap: 10
@@ -521,5 +532,9 @@ const styles = StyleSheet.create ({
   },
   column: {
     alignSelf: 'center'
+  },
+  listSection: {
+    width: 350,
+    marginEnd: 30,
   },
 })

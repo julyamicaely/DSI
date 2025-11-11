@@ -7,6 +7,7 @@ import { auth } from "../../firebaseConfig";
 // Componentes customizados
 import CustomTextInput from "../com/CustomTextInput";
 import CustomButton from "../com/CustomButton";
+import TemporaryMessage from "../com/TemporaryMessage";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -16,10 +17,11 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleRegister() {
     if (!email || !senha || !nomeUsuario) {
-      Alert.alert("Erro", "Preencha todos os campos!");
+      setErrorMessage("Preencha todos os campos!");
       return;
     }
 
@@ -30,35 +32,28 @@ export default function RegisterScreen() {
       Alert.alert("Sucesso", "Conta criada com sucesso!");
       router.replace("/home");
     } catch (error: any) {
-      // --- CORREÇÃO DE SEGURANÇA APLICADA ---
-      let errorMessage = "Ocorreu um erro ao criar sua conta. Por favor, revise os dados ou tente novamente.";
+      if (error.code === 'auth/email-already-in-use') {
+        setErrorMessage("Este e-mail já está cadastrado.");
 
-      // 1. Loga o erro no console para fins de depuração
-      console.log("Erro de Cadastro do Firebase:", error.code, error.message);
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMessage("O e-mail fornecido é inválido.");
 
-      // 2. Trata os erros de validação que o usuário DEVE resolver
-      if (error.code === 'auth/weak-password') {
-          // Senha deve ter pelo menos 6 caracteres
-          errorMessage = "A senha deve ter pelo menos 6 caracteres. Por favor, insira uma senha mais forte.";
-      } 
-      // 3. Trata o erro de enumeração de conta (Email já existe)
-      else if (error.code === 'auth/email-already-in-use') {
-          // MENSAGEM GENÉRICA: Não avisa o usuário que o e-mail JÁ está em uso.
-          errorMessage = "Não foi possível cadastrar. Verifique seu e-mail ou tente Entrar.";
-      }
-      // 4. Trata erros de formato de e-mail (email inválido)
-      else if (error.code === 'auth/invalid-email') {
-          errorMessage = "O formato do e-mail é inválido. Por favor, verifique seu e-mail.";
+      } else if (error.code === 'auth/weak-password') {
+        setErrorMessage("A senha deve ter pelo menos 6 caracteres.");
       }
       
-      // Exibe a mensagem de erro tratada (genérica ou específica de validação)
-      Alert.alert("Erro no Cadastro", errorMessage);
+      else {
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Erro", message);
+      }
+      console.log(error);
     }
   }
 
   return (
 
     <View style={styles.container}>
+      {errorMessage && <TemporaryMessage message={errorMessage} onHide={() => setErrorMessage(null)} />}
       {/* Cabeçalho simples */}
       <Text style={styles.appTitle}>LifeBeat</Text>
 
