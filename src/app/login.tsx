@@ -3,14 +3,16 @@ import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import CustomButton from '../../src/com/CustomButton';
-import CustomTextInput from '../../src/com/CustomTextInput';
+import CustomButton from '../com/CustomButton';
+import CustomTextInput from '../com/CustomTextInput';
+import TemporaryMessage from '../com/TemporaryMessage';
 
 export default function IndexScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   async function handleLogin() {
     if (!email || !senha) {
@@ -22,9 +24,11 @@ export default function IndexScreen() {
     try {
       await signInWithEmailAndPassword(auth, email, senha);
       router.replace('/home');
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Erro no login", "E-mail ou senha incorretos.");
+    } catch (error: any) {
+      if (error.code !== 'auth/invalid-credential') {
+        console.error(error);
+      }
+      setErrorMessage('E-mail ou senha incorretos.');
     } finally {
       setLoading(false);
     }
@@ -33,7 +37,7 @@ export default function IndexScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      
+      {errorMessage && <TemporaryMessage message={errorMessage} onHide={() => setErrorMessage('')} />}
       <Text style={styles.subtitle}>E-mail</Text>
       <CustomTextInput
         placeholder="Insira seu e-mail"
