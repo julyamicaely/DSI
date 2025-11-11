@@ -8,3 +8,4 @@ export { FavoriteButton } from './FavoriteButton';
 export { HospitalMarker } from './HospitalMarker';
 export { LoadingOverlay } from './LoadingOverlay';
 export { ErrorMessage } from './ErrorMessage';
+export { FavoritesSection } from './FavoritesSection';

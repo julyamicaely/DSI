@@ -132,7 +132,7 @@ export interface FavoriteHospital {
   rating?: number;
   photoReference?: string;
   addedAt: string; // ISO date string
-  notes?: string; // Notas pessoais do usuário
+  notes?: string; // Notas pessoais do usuário (max 280 chars)
 }
 
 /**

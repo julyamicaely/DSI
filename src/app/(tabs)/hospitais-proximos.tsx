@@ -12,8 +12,12 @@ import {
   TouchableOpacity,
   Text,
   Alert,
+  ScrollView,
+  ToastAndroid,
+  Platform,
+  Animated,
 } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Region, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,19 +27,19 @@ import googlePlacesService from '../../services/googlePlaces.service';
 import { useFavoritesStore, useIsFavorite } from '../../store/favoritesStore';
 import {
   HospitalCard,
-  HospitalMarker,
   LoadingOverlay,
   ErrorMessage,
+  FavoritesSection,
 } from '../../components';
 import { COLORS, MAP_CONFIG, ERROR_MESSAGES } from '../../config/constants';
 
-type ViewMode = 'map' | 'list';
-
 export default function HospitaisProximos() {
   const mapRef = useRef<MapView>(null);
+  const listRef = useRef<ScrollView>(null);
+  const floatingButtonAnim = useRef(new Animated.Value(0)).current;
 
   // Estado
-  const [viewMode, setViewMode] = useState<ViewMode>('map');
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
@@ -44,8 +48,14 @@ export default function HospitaisProximos() {
   const [region, setRegion] = useState<Region | null>(null);
 
   // Store de favoritos
-  const { initialize, addFavorite, removeFavorite, isFavorite: checkIsFavorite } =
-    useFavoritesStore();
+  const { 
+    initialize, 
+    addFavorite, 
+    removeFavorite, 
+    updateNotes,
+    isFavorite: checkIsFavorite,
+    favorites 
+  } = useFavoritesStore();
 
   // Inicialização
   useEffect(() => {
@@ -168,7 +178,7 @@ export default function HospitaisProximos() {
   };
 
   /**
-   * Toggle de favorito
+   * Toggle de favorito com feedback via toast
    */
   const handleToggleFavorite = async (hospital: Hospital) => {
     try {
@@ -176,7 +186,7 @@ export default function HospitaisProximos() {
 
       if (isFav) {
         await removeFavorite(hospital.id);
-        Alert.alert('Removido', 'Hospital removido dos favoritos');
+        showToast('Removido dos favoritos');
       } else {
         await addFavorite({
           placeId: hospital.id,
@@ -188,10 +198,74 @@ export default function HospitaisProximos() {
           rating: hospital.rating,
           photoReference: hospital.photoReference,
         });
-        Alert.alert('Adicionado', 'Hospital adicionado aos favoritos');
+        showToast('Adicionado aos favoritos');
       }
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Erro ao atualizar favorito');
+      showToast(err instanceof Error ? err.message : 'Erro ao atualizar favorito');
+    }
+  };
+
+  /**
+   * Atualiza nota de um favorito
+   */
+  const handleUpdateNote = async (placeId: string, note: string) => {
+    try {
+      await updateNotes(placeId, note);
+      showToast('Nota salva com sucesso');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Erro ao salvar nota');
+    }
+  };
+
+  /**
+   * Mostra toast (Android) ou Alert (iOS)
+   */
+  const showToast = (message: string) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('', message);
+    }
+  };
+
+  /**
+   * Scroll para a lista
+   */
+  const scrollToList = () => {
+    if (listRef.current) {
+      listRef.current.scrollTo({ y: isMapExpanded ? 0 : 450, animated: true });
+    }
+  };
+
+  /**
+   * Toggle expansão do mapa
+   */
+  const handleToggleMapExpansion = () => {
+    const newExpandedState = !isMapExpanded;
+    setIsMapExpanded(newExpandedState);
+    
+    // Anima o botão flutuante
+    Animated.timing(floatingButtonAnim, {
+      toValue: newExpandedState ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    
+    if (newExpandedState) {
+      // Expandindo: fecha o card selecionado e scroll para o topo
+      setSelectedHospital(null);
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollTo({ y: 0, animated: true });
+        }
+      }, 100);
+    } else {
+      // Recolhendo: scroll para mostrar a lista
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollTo({ y: 450, animated: true });
+        }
+      }, 100);
     }
   };
 
@@ -202,6 +276,16 @@ export default function HospitaisProximos() {
     router.push({
       pathname: '/hospital-details',
       params: { placeId: hospital.id },
+    });
+  };
+
+  /**
+   * Navega para detalhes de um favorito
+   */
+  const handleViewFavoriteDetails = (favorite: any) => {
+    router.push({
+      pathname: '/hospital-details',
+      params: { placeId: favorite.placeId },
     });
   };
 
@@ -228,16 +312,7 @@ export default function HospitaisProximos() {
 
         <Text style={styles.title}>Hospitais Próximos</Text>
 
-        <TouchableOpacity
-          onPress={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-          style={styles.toggleButton}
-        >
-          <Ionicons
-            name={viewMode === 'map' ? 'list' : 'map'}
-            size={24}
-            color={COLORS.black}
-          />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Erro */}
@@ -251,11 +326,14 @@ export default function HospitaisProximos() {
         </View>
       )}
 
-      {/* Conteúdo */}
-      {viewMode === 'map' ? (
-        <>
-          {/* Mapa */}
-          {region && (
+      <ScrollView 
+        ref={listRef}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Mapa - 55-60% da altura ou expandido */}
+        {region && (
+          <View style={[styles.mapContainer, isMapExpanded && styles.mapExpanded]}>
             <MapView
               ref={mapRef}
               provider={PROVIDER_GOOGLE}
@@ -266,58 +344,176 @@ export default function HospitaisProximos() {
               showsCompass
               onRegionChangeComplete={setRegion}
             >
-              {hospitals.map((hospital) => (
-                <HospitalMarker
+              {/* Marcadores dos hospitais próximos - pins azuis */}
+              {hospitals.map((hospital) => {
+                const isFav = checkIsFavorite(hospital.id);
+                return (
+                  <Marker
+                    key={hospital.id}
+                    coordinate={{
+                      latitude: hospital.coordinates.latitude,
+                      longitude: hospital.coordinates.longitude,
+                    }}
+                    pinColor={isFav ? COLORS.error : COLORS.secondary}
+                    onPress={() => {
+                      setSelectedHospital(hospital);
+                      centerMapOn(hospital.coordinates);
+                    }}
+                    title={hospital.name}
+                    description={hospital.address}
+                  />
+                );
+              })}
+              
+              {/* Marcadores dos favoritos que não estão próximos - pins vermelhos */}
+              {favorites.map((favorite) => {
+                // Verifica se o favorito já está na lista de hospitais próximos
+                const isInHospitals = hospitals.some(h => h.id === favorite.placeId);
+                if (isInHospitals) return null;
+                
+                // Cria um objeto Hospital a partir do favorito
+                const favoriteAsHospital: Hospital = {
+                  id: favorite.placeId,
+                  name: favorite.name,
+                  address: favorite.address,
+                  coordinates: {
+                    latitude: favorite.latitude,
+                    longitude: favorite.longitude,
+                  },
+                  rating: favorite.rating,
+                  phone: favorite.phone,
+                  photoReference: favorite.photoReference,
+                };
+                
+                return (
+                  <Marker
+                    key={`favorite-${favorite.placeId}`}
+                    coordinate={{
+                      latitude: favorite.latitude,
+                      longitude: favorite.longitude,
+                    }}
+                    pinColor={COLORS.error}
+                    onPress={() => {
+                      setSelectedHospital(favoriteAsHospital);
+                      centerMapOn(favoriteAsHospital.coordinates);
+                    }}
+                    title={favorite.name}
+                    description={favorite.address}
+                  />
+                );
+              })}
+            </MapView>
+
+            {/* Botão de centralizar */}
+            <TouchableOpacity style={styles.centerButton} onPress={centerOnUser}>
+              <Ionicons name="locate" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+
+            {/* Botão flutuante para colapsar mapa (aparece quando expandido) */}
+            {isMapExpanded && (
+              <Animated.View
+                style={[
+                  styles.floatingCollapseButton,
+                  {
+                    opacity: floatingButtonAnim,
+                    transform: [
+                      {
+                        translateY: floatingButtonAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-50, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  style={styles.collapseButton}
+                  onPress={handleToggleMapExpansion}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="list" size={22} color="#FFF" />
+                  <Text style={styles.collapseButtonText}>Ver Lista</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+
+            {/* Card do hospital selecionado */}
+            {selectedHospital && (
+              <View style={styles.selectedCard}>
+                <TouchableOpacity 
+                  style={styles.closeCardButton}
+                  onPress={() => setSelectedHospital(null)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close-circle" size={28} color={COLORS.white} />
+                </TouchableOpacity>
+                
+                <HospitalCard
+                  hospital={selectedHospital}
+                  onPress={() => handleViewDetails(selectedHospital)}
+                  onFavoritePress={() => handleToggleFavorite(selectedHospital)}
+                  isFavorite={checkIsFavorite(selectedHospital.id)}
+                  showDistance
+                />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Botão Lista - Abaixo do mapa, alinhado à direita */}
+        <View style={styles.listToggleContainer}>
+          <TouchableOpacity 
+            style={styles.listToggleButton} 
+            onPress={handleToggleMapExpansion}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name={isMapExpanded ? 'contract' : 'expand'} 
+              size={20} 
+              color={COLORS.primary} 
+            />
+            <Text style={styles.listToggleText}>
+              {isMapExpanded ? 'Recolher' : 'Expandir'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lista de Hospitais */}
+        {!isMapExpanded && (
+          <View style={styles.listContainer}>
+            <Text style={styles.sectionTitle}>Próximos a você</Text>
+            
+            {hospitals.length === 0 && !loading ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="medical" size={64} color={COLORS.lightGray} />
+                <Text style={styles.emptyText}>Nenhum hospital encontrado</Text>
+              </View>
+            ) : (
+              hospitals.map((hospital) => (
+                <HospitalCard
                   key={hospital.id}
                   hospital={hospital}
-                  onPress={() => {
-                    setSelectedHospital(hospital);
-                    centerMapOn(hospital.coordinates);
-                  }}
-                  isSelected={selectedHospital?.id === hospital.id}
+                  onPress={() => handleViewDetails(hospital)}
+                  onFavoritePress={() => handleToggleFavorite(hospital)}
                   isFavorite={checkIsFavorite(hospital.id)}
+                  showDistance
                 />
-              ))}
-            </MapView>
-          )}
+              ))
+            )}
+          </View>
+        )}
 
-          {/* Botão de centralizar */}
-          <TouchableOpacity style={styles.centerButton} onPress={centerOnUser}>
-            <Ionicons name="locate" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-
-          {/* Card do hospital selecionado */}
-          {selectedHospital && (
-            <View style={styles.selectedCard}>
-              <HospitalCard
-                hospital={selectedHospital}
-                onPress={() => handleViewDetails(selectedHospital)}
-                onFavoritePress={() => handleToggleFavorite(selectedHospital)}
-                isFavorite={checkIsFavorite(selectedHospital.id)}
-                showDistance
-              />
-            </View>
-          )}
-        </>
-      ) : (
-        <>
-          {/* Lista */}
-          <FlatList
-            data={hospitals}
-            keyExtractor={(item) => item.id}
-            renderItem={renderHospitalCard}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              !loading ? (
-                <View style={styles.emptyState}>
-                  <Ionicons name="medical" size={64} color={COLORS.lightGray} />
-                  <Text style={styles.emptyText}>Nenhum hospital encontrado</Text>
-                </View>
-              ) : null
-            }
+        {/* Seção de Favoritos */}
+        {!isMapExpanded && (
+          <FavoritesSection
+            favorites={favorites}
+            onRemove={removeFavorite}
+            onUpdateNote={handleUpdateNote}
+            onPress={handleViewFavoriteDetails}
           />
-        </>
-      )}
+        )}
+      </ScrollView>
 
       {/* Loading */}
       <LoadingOverlay visible={loading} message="Buscando hospitais..." />
@@ -348,18 +544,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.black,
   },
-  toggleButton: {
-    padding: 8,
-  },
   errorContainer: {
     padding: 16,
   },
-  map: {
+  scrollView: {
     flex: 1,
+  },
+  mapContainer: {
+    height: 400, // ~55-60% da altura típica de tela
+    position: 'relative',
+  },
+  mapExpanded: {
+    height: 700, // Maior quando expandido
+  },
+  map: {
+    width: '100%',
+    height: '100%',
   },
   centerButton: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 16,
     right: 16,
     width: 48,
     height: 48,
@@ -377,16 +581,86 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     left: 16,
-    right: 16,
+    right: 70, // Espaço para o botão de centralizar
   },
-  list: {
+  closeCardButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    zIndex: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  floatingCollapseButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  collapseButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  collapseButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  listToggleContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'flex-end',
+    backgroundColor: COLORS.white,
+  },
+  listToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: COLORS.white,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '20',
+  },
+  listToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  listContainer: {
     padding: 16,
   },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.black,
+    marginBottom: 12,
+  },
   emptyState: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 64,
+    paddingVertical: 48,
   },
   emptyText: {
     marginTop: 16,
