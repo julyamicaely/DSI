@@ -1,21 +1,38 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
+import ProfilePhotoPicker from "../../../components/ProfilePhotoPicker";
+import { useState, useEffect } from "react";
+import { auth } from "../../../../firebaseConfig";
 
 export default function ProfileIndex() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, dataUpdateTrigger } = useAuth();
+  const [userName, setUserName] = useState(user?.displayName || "Usuário");
+
+  useEffect(() => {
+    const loadUserName = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await currentUser.reload();
+        setUserName(currentUser.displayName || "Usuário");
+      }
+    };
+    
+    loadUserName();
+  }, [dataUpdateTrigger, user]);
 
   return (
     <View style={styles.container}>
-      {/* Avatar */}
-      <Image
-        source={{ uri: "https://cdn-icons-png.flaticon.com/512/149/149071.png" }}
-        style={styles.avatar}
+      {/* Avatar com opção de editar */}
+      <ProfilePhotoPicker
+        userId={user?.uid || ""}
+        currentPhotoUrl={user?.photoURL || ""}
+        size={100}
       />
 
       {/* Nome do usuário */}
-      <Text style={styles.name}>{user?.displayName || "Usuário"}</Text>
+      <Text style={styles.name}>{userName}</Text>
 
       {/* Opções do perfil */}
       <View style={styles.optionsContainer}>
@@ -55,8 +72,7 @@ export default function ProfileIndex() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", backgroundColor: "#fff", padding: 30 },
-  avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 20 },
-  name: { fontSize: 20, fontWeight: "bold", marginBottom: 30, color: "#333" },
+  name: { fontSize: 20, fontWeight: "bold", marginTop: 15, marginBottom: 30, color: "#333" },
   optionsContainer: { width: "100%", gap: 10 },
   option: {
     backgroundColor: "#f5f5f5",

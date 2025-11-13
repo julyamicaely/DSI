@@ -1,12 +1,15 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; // ajuste o caminho conforme a estrutura do seu projeto
+import { User, onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
 import { View, ActivityIndicator } from 'react-native';
 
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  logout: () => void; // ✅ adicionamos essa função
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  triggerDataUpdate: () => void;
+  dataUpdateTrigger: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dataUpdateTrigger, setDataUpdateTrigger] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -32,13 +36,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  // ✅ Função de logout
-  function logout() {
-    setUser(null);
+  /**
+   * Faz logout do usuário
+   */
+  async function logout(): Promise<void> {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Recarrega os dados do usuário atual
+   * Útil após atualizar perfil, foto, etc.
+   */
+  async function refreshUser(): Promise<void> {
+    try {
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        setUser({ ...auth.currentUser });
+      }
+    } catch (error) {
+      console.error('Erro ao recarregar usuário:', error);
+    }
+  }
+
+  /**
+   * Dispara atualização de dados para outras telas
+   */
+  function triggerDataUpdate(): void {
+    setDataUpdateTrigger(prev => prev + 1);
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, refreshUser, triggerDataUpdate, dataUpdateTrigger }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,7 +4,9 @@ import { auth } from '../../../firebaseConfig';
 import { useState, useEffect } from 'react';
 import NotificationCard from '../../com/NotificationCard';
 import ImpactCard from '../../com/ImpactCard';
-import colors from '../../com/Colors'
+import colors from '../../com/Colors';
+import { getUserData } from '../../services/firebase.service';
+import { useAuth } from '../../context/AuthContext';
 
 // --- Componente Reutilizável para Itens de Ação ---
 
@@ -28,13 +30,34 @@ const ActionItem = ({ iconName, title, subtitle }: ActionItemProps) => (
 export default function HomeScreen() {
 
   const [userName, setUserName] = useState('');
+  const [photoURL, setPhotoURL] = useState<string | null>(null);
+  const { dataUpdateTrigger } = useAuth();
   
-  useEffect(() => {
+  const loadUserData = async () => {
     const user = auth.currentUser;
     if (user) {
-      setUserName(user.displayName || ''); // Get the display name
+      // Recarregar dados do Firebase Auth
+      await user.reload();
+      setUserName(user.displayName || '');
+      
+      // Buscar dados do Firestore
+      try {
+        const userData = await getUserData(user.uid);
+        if (userData?.photoURL) {
+          setPhotoURL(userData.photoURL);
+        } else {
+          setPhotoURL(user.photoURL);
+        }
+      } catch (error) {
+        console.log('Erro ao carregar dados:', error);
+        setPhotoURL(user.photoURL);
+      }
     }
-  }, []);
+  };
+  
+  useEffect(() => {
+    loadUserData();
+  }, [dataUpdateTrigger]); // Recarrega quando dataUpdateTrigger muda
 
   const routerButton = useRouter();
 
@@ -44,7 +67,11 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         <View style={styles.welcomeContainer}>
-          <View style={styles.profileCircle}></View>
+          {photoURL ? (
+            <Image source={{ uri: photoURL }} style={styles.profileCircle} />
+          ) : (
+            <View style={styles.profileCircle} />
+          )}
           <View>
             <Text style={styles.welcomeText}>{userName}</Text>
           </View>
