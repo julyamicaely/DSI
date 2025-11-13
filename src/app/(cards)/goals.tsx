@@ -1,90 +1,92 @@
+// src/app/(cards)/goals.tsx
+import * as React from 'react';
 import { Text, View, StyleSheet, Modal, FlatList, TouchableOpacity } from 'react-native';
 import CustomButton from '../../com/CustomButton';
 import CustomTextInput from '../../com/CustomTextInput';
-import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadGoals, saveGoals, type Goal } from '../../lib/goals';
 
-type Props = {
-    isVisible: boolean;
-    onClose: () => void;
-};
+import { migrateOldGoalsToV2 } from '../../lib/migrateGoals';
 
-type Goal = {
-  id: string;
-  name: string;
-  time: string;
-};
 
-function GoalModal ({ isVisible, onClose, onSave, editingGoal, goalName, setGoalName, goalTime, setGoalTime } : { isVisible: boolean, onClose: () => void, onSave: () => void, editingGoal: Goal | null, goalName: string, setGoalName: (text: string) => void, goalTime: string, setGoalTime: (text: string) => void }) {
+function GoalModal({
+  isVisible,
+  onClose,
+  onSave,
+  editingGoal,
+  goalName,
+  setGoalName,
+  goalTime,
+  setGoalTime,
+}: {
+  isVisible: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  editingGoal: Goal | null;
+  goalName: string;
+  setGoalName: (text: string) => void;
+  goalTime: string;
+  setGoalTime: (text: string) => void;
+}) {
   return (
-    <View>
-      <Modal animationType='slide' transparent={true} visible={isVisible}>
-        <View style={styles.modalContent}>
-          <View style={styles.textInputs}>
-            <Text style={styles.modalTitles} >Nome da atividade</Text>
-            <CustomTextInput
-              placeholder='Insira aqui'
-              value={goalName}
-              onChangeText={setGoalName}
-            />
-            <Text style={styles.modalTitles} >Meta de tempo</Text>
-            <CustomTextInput
-               placeholder='Insira aqui'
-               value={goalTime}
-               onChangeText={setGoalTime}
-            />
-          </View>
-          <View style={styles.modalButtons}>
-            <CustomButton
-              title='Voltar'
-              onPress = {onClose}
-              backgroundColor="#5B79FF"
-              textColor="#FFFFFF"
-              width={147}
-            />
-            <CustomButton
-              title={editingGoal ? 'Salvar Meta' : 'Adicionar Meta'}
-              onPress={onSave}
-              backgroundColor="#5B79FF"
-              textColor="#FFFFFF"
-              width={147}
-            />
-          </View>
+    <Modal animationType="slide" transparent visible={isVisible}>
+      <View style={styles.modalContent}>
+        <View style={styles.textInputs}>
+          <Text style={styles.modalTitles}>Nome da atividade</Text>
+          <CustomTextInput
+            placeholder="Insira aqui"
+            value={goalName}
+            onChangeText={setGoalName}
+          />
+          <Text style={styles.modalTitles}>Meta de tempo</Text>
+          <CustomTextInput
+            placeholder="Insira aqui"
+            value={goalTime}
+            onChangeText={setGoalTime}
+          />
         </View>
-      </Modal>
-    </View>
+        <View style={styles.modalButtons}>
+          <CustomButton
+            title="Voltar"
+            onPress={onClose}
+            backgroundColor="#5B79FF"
+            textColor="#FFFFFF"
+            width={147}
+          />
+          <CustomButton
+            title={editingGoal ? 'Salvar Meta' : 'Adicionar Meta'}
+            onPress={onSave}
+            backgroundColor="#5B79FF"
+            textColor="#FFFFFF"
+            width={147}
+          />
+        </View>
+      </View>
+    </Modal>
   );
-};
+}
 
 export default function GoalsScreen() {
+  const [goals, setGoals] = React.useState<Goal[]>([]);
+  const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null);
+  const [goalName, setGoalName] = React.useState('');
+  const [goalTime, setGoalTime] = React.useState('');
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
 
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [goalName, setGoalName] = useState('');
-  const [goalTime, setGoalTime] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-
-  useEffect(() => {
-    loadGoalsFromStorage();
+  // ⬇️ coloque o useEffect aqui (depois dos useState)
+  React.useEffect(() => {
+    (async () => {
+      try {
+        // comente esta linha se você NÃO criou o migrateGoals.ts
+        await migrateOldGoalsToV2();
+      } catch {}
+      const stored = await loadGoals();
+      setGoals(stored);
+    })();
   }, []);
 
-  const loadGoalsFromStorage = async () => {
-    try {
-      const storedGoals = await AsyncStorage.getItem('goals');
-      if (storedGoals !== null) {
-        setGoals(JSON.parse(storedGoals));
-      }
-    } catch (error) {
-      console.error('Failed to load goals from storage', error);
-    }
-  };
-
-  const saveGoalsToStorage = async (goalsToSave: Goal[]) => {
-    try {
-      await AsyncStorage.setItem('goals', JSON.stringify(goalsToSave));
-    } catch (error) {
-      console.error('Failed to save goals to storage', error);
-    }
+  const persistGoals = async (next: Goal[]) => {
+    setGoals(next);
+    await saveGoals(next);
   };
 
   const onAddGoal = () => {
@@ -92,30 +94,35 @@ export default function GoalsScreen() {
     setGoalName('');
     setGoalTime('');
     setIsModalVisible(true);
-  }
+  };
 
   const onModalClose = () => {
     setIsModalVisible(false);
     setEditingGoal(null);
   };
 
-  const handleSaveGoal = () => {
-    let updatedGoals;
+  const handleSaveGoal = async () => {
+    if (!goalName.trim()) return;
+    let updated: Goal[];
     if (editingGoal) {
-      // Update existing goal
-      updatedGoals = goals.map(g => g.id === editingGoal.id ? { ...g, name: goalName, time: goalTime } : g);
-      setGoals(updatedGoals);
+      updated = goals.map(g =>
+        g.id === editingGoal.id ? { ...g, name: goalName, time: goalTime } : g
+      );
     } else {
-      // Add new goal
       const newGoal: Goal = {
         id: Date.now().toString(),
         name: goalName,
         time: goalTime,
+        targetPerWeek: 3,
+        planWeekdays: [],
+        reminders: [],
+        history: [],
+        createdAt: Date.now(),
       };
-      updatedGoals = [...goals, newGoal];
-      setGoals(updatedGoals);
+
+      updated = [...goals, newGoal];
     }
-    saveGoalsToStorage(updatedGoals);
+    await persistGoals(updated);
     setGoalName('');
     setGoalTime('');
     onModalClose();
@@ -124,31 +131,34 @@ export default function GoalsScreen() {
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
     setGoalName(goal.name);
-    setGoalTime(goal.time);
+    setGoalTime(goal.time ?? '');
     setIsModalVisible(true);
   };
 
-  const handleDeleteGoal = (goalId: string) => {
-    const updatedGoals = goals.filter(g => g.id !== goalId);
-    setGoals(updatedGoals);
-    saveGoalsToStorage(updatedGoals);
+  const handleDeleteGoal = async (goalId: string) => {
+    const next = goals.filter(g => g.id !== goalId);
+    await persistGoals(next);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Metas de atividade física</Text>
+
       <View style={styles.button}>
         <CustomButton
-          title='Adicionar Meta de Atividade'
+          title="Adicionar Meta de Atividade"
           onPress={onAddGoal}
           backgroundColor="#E94040"
           textColor="#FFE6E6"
           width={326}
-          />
-        </View>
+        />
+      </View>
 
       <FlatList
         data={goals}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.grid}
         renderItem={({ item }) => (
           <View style={styles.goalItem}>
             <Text style={styles.goalText}>{item.name}</Text>
@@ -163,13 +173,10 @@ export default function GoalsScreen() {
             </View>
           </View>
         )}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        style={styles.grid}
       />
 
-      <GoalModal 
-        isVisible={isModalVisible} 
+      <GoalModal
+        isVisible={isModalVisible}
         onClose={onModalClose}
         onSave={handleSaveGoal}
         editingGoal={editingGoal}
@@ -178,22 +185,12 @@ export default function GoalsScreen() {
         goalTime={goalTime}
         setGoalTime={setGoalTime}
       />
-
-    
     </View>
-  );  
+  );
 }
 
-
-const styles = StyleSheet.create ({
-  container: {
-    flex: 1,
-    paddingTop: 30,
-    gap: 5,
-  },
-    scrollContent: {
-    paddingBottom: 70,
-  },
+const styles = StyleSheet.create({
+  container: { flex: 1, paddingTop: 30, gap: 5 },
   title: {
     marginLeft: 10,
     fontSize: 20,
@@ -202,9 +199,7 @@ const styles = StyleSheet.create ({
     marginBottom: 20,
     alignSelf: 'center',
   },
-  button: {
-    alignSelf: 'center',
-  },
+  button: { alignSelf: 'center' },
   modalContent: {
     width: '90%',
     height: '35%',
@@ -220,31 +215,20 @@ const styles = StyleSheet.create ({
     alignSelf: 'flex-start',
     marginHorizontal: 30,
   },
-  textInputs: {
-    alignItems: 'center'
-  },
-  modalButtons: {
-    justifyContent: 'center',
-    flexDirection: 'row',
-    padding: 15,
-    gap: 15
-  },
+  textInputs: { alignItems: 'center' },
+  modalButtons: { justifyContent: 'center', flexDirection: 'row', padding: 15, gap: 15 },
   goalItem: {
-
+    flex: 1,
+    backgroundColor: '#F8F9FF',
+    margin: 6,
+    padding: 10,
+    borderRadius: 10,
+    borderColor: '#E1E6FF',
+    borderWidth: 1,
   },
-  goalText: {
-
-  },
-  goalButtons: {
-
-  },
-  editButton: {
-
-  },
-  deleteButton: {
-
-  },
-  grid: {
-
-  },
-})
+  goalText: { fontSize: 14, fontWeight: '500', color: '#333' },
+  goalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  editButton: { color: '#5B79FF', fontWeight: '600' },
+  deleteButton: { color: '#E94040', fontWeight: '600' },
+  grid: { paddingBottom: 100 },
+});
