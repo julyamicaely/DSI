@@ -1,93 +1,84 @@
-// dsi/src/lib/goals.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type DOW = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Dom..6=Sáb
-
-export type Reminder = {
-  id: string;
-  time24h: string;   // 'HH:MM'
-  weekdays: DOW[];
-};
-
 export type Goal = {
   id: string;
-  name: string;
-  time?: string; // texto livre (opcional) - migracao de formato antigo usa isto
-  targetPerWeek: number; // 1..7
-  planWeekdays: DOW[];
-  reminders: Reminder[];
-  history: string[];     // 'YYYY-MM-DD'
+  habitId: string;
+  habitName: string;
+  target: string;
+  deadline: Date;
+  progress: string[];
   createdAt: number;
 };
+export type GoalFormValues = {
+  habitId: string;
+  habitName: string;
+  target: string;
+  deadline: Date;
+  progress?: string[];
+};
 
-export const STORAGE_KEY = 'goals.v2';
+export const pad2 = (value: number) => (value < 10 ? `0${value}` : `${value}`);
 
-// utils de data
-export const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-export const dateKey = (d: Date) =>
-  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+export const dateKey = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 
-export function getWeekStart(d: Date) {
-  const res = new Date(d);
-  const diff = res.getDay(); // 0..6 (Dom..Sáb)
-  res.setDate(res.getDate() - diff);
-  res.setHours(0, 0, 0, 0);
-  return res;
-}
-export function rangeDays(start: Date, count: number) {
-  const arr: Date[] = [];
-  for (let i = 0; i < count; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    arr.push(d);
-  }
-  return arr;
-}
-export function monthMatrix(year: number, monthIndex0: number) {
-  const first = new Date(year, monthIndex0, 1);
-  const start = getWeekStart(first);
-  return rangeDays(start, 42); // 6 semanas
-}
+export const parseDateKey = (key: string) => {
+  const [year, month, day] = key.split('-').map(Number);
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+};
 
-export async function loadGoals(): Promise<Goal[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as Goal[]; } catch { return []; }
-}
-export async function saveGoals(goals: Goal[]) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
-}
+export const isSameDay = (a: Date, b: Date) => dateKey(a) === dateKey(b);
 
-export const weekdayLabels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+export const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
 
-export function doneCountThisWeek(goal: Goal, now = new Date()) {
-  const start = getWeekStart(now);
-  const keys = new Set(rangeDays(start, 7).map(dateKey));
-  return goal.history.filter((d) => keys.has(d)).length;
-}
+export const addMonths = (date: Date, amount: number) =>
+  new Date(date.getFullYear(), date.getMonth() + amount, 1);
 
-export function nextReminderInstances(
-  goal: Goal,
-  time?: string,
-  horizonDays = 7,
-  from = new Date()
-) {
-  const out: { when: Date; goal: Goal; reminder: Reminder }[] = [];
-  const base = new Date(from); base.setSeconds(0, 0);
+export const getMonthMatrix = (monthDate: Date) => {
+  const firstDay = startOfMonth(monthDate);
+  const startWeekDay = firstDay.getDay();
+  const gridStart = new Date(firstDay);
+  gridStart.setDate(firstDay.getDate() - startWeekDay);
 
-  for (const r of goal.reminders) {
-    const [hh, mm] = r.time24h.split(':').map(Number);
-    for (let i = 0; i < horizonDays; i++) {
-      const d = new Date(base);
-      d.setDate(base.getDate() + i);
-      const weekday = d.getDay() as DOW;
-      if (r.weekdays.includes(weekday)) {
-        d.setHours(hh, mm ?? 0, 0, 0);
-        if (d.getTime() >= base.getTime()) {
-          out.push({ when: d, goal, reminder: r });
-        }
-      }
+  const matrix: Date[][] = [];
+  const cursor = new Date(gridStart);
+
+  for (let week = 0; week < 6; week++) {
+    const days: Date[] = [];
+    for (let day = 0; day < 7; day++) {
+      days.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
     }
+    matrix.push(days);
   }
-  return out.sort((a, b) => a.when.getTime() - b.when.getTime());
-}
+  return matrix;
+};
+
+const MONTH_NAMES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
+export const getMonthLabel = (date: Date) => `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+
+export const formatDisplayDate = (date: Date) =>
+  `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+
+export const calculateMonthlyProgress = (goal: Goal, referenceMonth: Date = new Date()) => {
+  const year = referenceMonth.getFullYear();
+  const monthIndex = referenceMonth.getMonth();
+  const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+  if (!totalDays) return 0;
+
+  const monthPrefix = `${year}-${pad2(monthIndex + 1)}`;
+  const completedThisMonth = goal.progress.filter((day) => day.startsWith(monthPrefix)).length;
+  return Math.min(100, Math.round((completedThisMonth / totalDays) * 100));
+};
