@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import { uploadProfilePhoto, updateUserPhoto } from "../services/firebase.service";
 import { useAuth } from "../context/AuthContext";
 
