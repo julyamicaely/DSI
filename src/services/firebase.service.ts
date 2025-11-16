@@ -24,7 +24,7 @@ import {
   deleteObject,
   uploadBytes,
 } from "firebase/storage";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 // ============================================
 // 1. PERFIL E FOTO DE PERFIL
@@ -61,7 +61,7 @@ export async function uploadProfilePhoto(
     const token = await user.getIdToken();
     console.log("✅ Token obtido (primeiros 50 chars):", token.substring(0, 50) + "...");
 
-    // Ler o arquivo como base64
+    // Ler o arquivo como base64 (usando API legacy do expo-file-system)
     const base64 = await FileSystem.readAsStringAsync(imageUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
