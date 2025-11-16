@@ -1,0 +1,199 @@
+================================================================================
+🎯 GUIA RÁPIDO: USAR MODELO RANDOM FOREST NO APP MOBILE REACT NATIVE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Modelos .joblib não rodam em JavaScript/React Native             │
+│  SOLUÇÃO: Criar API REST em Python que expõe o modelo                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+📋 PASSO A PASSO
+================================================================================
+
+1️⃣  INSTALAR DEPENDÊNCIAS DO BACKEND
+   
+   cd api
+   pip install -r requirements.txt
+   
+   Ou manualmente:
+   pip install fastapi uvicorn pydantic joblib scikit-learn pandas
+
+2️⃣  INICIAR SERVIDOR PYTHON (BACKEND)
+   
+   python api_server.py
+   
+   ✅ Servidor rodará em: http://localhost:8000
+   📚 Documentação automática: http://localhost:8000/docs
+
+3️⃣  TESTAR API NO NAVEGADOR
+   
+   Abra: http://localhost:8000/docs
+   
+   Teste o endpoint POST /predict/simple com:
+   
+   {
+     "gender": 1,
+     "age_years": 52,
+     "height_cm": 175,
+     "weight_kg": 85,
+     "ap_hi": 140,
+     "ap_lo": 90
+   }
+
+4️⃣  INTEGRAR NO REACT NATIVE
+   
+   A. Copie o serviço:
+      cp api/react_native_example.tsx src/services/CardioAPIService.tsx
+   
+   B. Configure a URL da API:
+      - Emulador: http://localhost:8000
+      - Celular físico: http://SEU_IP:8000 (ex: http://192.168.1.10:8000)
+   
+   C. Use no seu componente:
+   
+   import CardioAPIService from './services/CardioAPIService';
+   
+   const result = await CardioAPIService.predictSimple({
+     gender: 1,
+     age_years: 52,
+     height_cm: 175,
+     weight_kg: 85,
+     ap_hi: 140,
+     ap_lo: 90
+   });
+   
+   console.log('Probabilidade:', result.probability + '%');
+   console.log('Risco:', result.risk_level);
+
+================================================================================
+📡 ENDPOINTS DISPONÍVEIS
+================================================================================
+
+GET  /health              → Verifica se API está online
+GET  /model/info          → Informações do modelo e features
+POST /predict             → Predição completa (10 campos)
+POST /predict/simple      → Predição simplificada (calcula IMC)
+
+================================================================================
+🎨 EXEMPLO DE RESPOSTA DA API
+================================================================================
+
+{
+  "success": true,
+  "probability": 67.23,          ← Probabilidade de doença (%)
+  "risk_level": "alto",          ← baixo / médio / alto
+  "risk_category": "alto_risco", ← sem_risco / risco_moderado / alto_risco
+  "confidence": 67.23,           ← Confiança da predição (%)
+  "recommendation": "Procure um cardiologista urgentemente...",
+  "top_risk_factors": [
+    "Pressão sistólica elevada",
+    "Obesidade (IMC alto)",
+    "Idade avançada",
+    "Colesterol alto"
+  ]
+}
+
+================================================================================
+📊 FEATURES NECESSÁRIAS (EM ORDEM!)
+================================================================================
+
+1.  gender              → 0=feminino, 1=masculino
+2.  ap_hi               → Pressão sistólica (80-250 mmHg)
+3.  ap_lo               → Pressão diastólica (40-180 mmHg)
+4.  smoke               → 0=não fuma, 1=fuma
+5.  alco                → 0=não bebe, 1=bebe
+6.  active              → 0=sedentário, 1=ativo
+7.  age_years           → Idade em anos (18-120)
+8.  bmi                 → IMC calculado (ou use /predict/simple)
+9.  cholesterol_high    → 0=normal, 1=alto
+10. gluc_high           → 0=normal, 1=alto
+
+⚠️  IMPORTANTE: Dados devem estar EXATAMENTE nesta ordem!
+
+================================================================================
+🚀 VANTAGENS DESTA ARQUITETURA
+================================================================================
+
+✅ Modelo não precisa ser convertido para JavaScript
+✅ Fácil de atualizar o modelo (só substituir o .joblib)
+✅ Funciona com qualquer frontend (React Native, Flutter, Web)
+✅ Backend pode adicionar lógica de negócio extra
+✅ Modelo fica protegido (não vai no app)
+✅ API pode servir múltiplos apps simultaneamente
+
+================================================================================
+🔐 PARA PRODUÇÃO
+================================================================================
+
+1. Configure CORS com domínios específicos (não usar "*")
+2. Use HTTPS (SSL/TLS)
+3. Adicione autenticação (JWT tokens)
+4. Implemente rate limiting (limitar requisições/minuto)
+5. Faça deploy em servidor (Heroku, Railway, AWS, etc.)
+
+================================================================================
+🐛 TROUBLESHOOTING
+================================================================================
+
+❌ "API não está acessível"
+   → Verifique se o servidor Python está rodando
+   → Teste: curl http://localhost:8000/health
+   → No celular físico, use IP da máquina, não localhost
+
+❌ "CORS policy blocked"
+   → API já está configurada para aceitar qualquer origem
+   → Se persistir, adicione seu domínio específico
+
+❌ "Modelo não encontrado"
+   → Verifique se existe: classification/models/random_forest_pipeline.joblib
+   → Modelo tem 190.34 MB
+
+❌ Predições estranhas
+   → Valide pressão: ap_lo < ap_hi
+   → Valide ranges: idade 18-120, IMC 10-60, pressão 80-250/40-180
+
+================================================================================
+📚 ARQUIVOS CRIADOS
+================================================================================
+
+api/
+├── api_server.py              → Servidor FastAPI (BACKEND)
+├── react_native_example.tsx   → Serviço para React Native (FRONTEND)
+├── requirements.txt           → Dependências Python
+├── install.ps1               → Script de instalação (Windows)
+└── README.md                 → Documentação completa
+
+classification/models/
+└── random_forest_pipeline.joblib → Modelo treinado (190.34 MB)
+
+================================================================================
+💡 RESUMO TÉCNICO
+================================================================================
+
+Modelo:         RandomForestClassifier
+Pipeline:       RobustScaler → RandomForest
+Features:       10 variáveis
+Tamanho:        190.34 MB
+Acurácia:       72.08%
+ROC-AUC:        0.7836
+Treinado em:    15/11/2025 00:04:54
+Portabilidade:  100% (apenas scikit-learn padrão)
+
+================================================================================
+🎯 PRÓXIMOS PASSOS
+================================================================================
+
+1. Instale as dependências: pip install -r api/requirements.txt
+2. Inicie o servidor: python api/api_server.py
+3. Teste no navegador: http://localhost:8000/docs
+4. Integre no seu app React Native usando o CardioAPIService
+5. (Opcional) Faça deploy em produção
+
+================================================================================
+
+📖 Documentação completa: api/README.md
+🔬 Teste interativo: http://localhost:8000/docs
+💬 Dúvidas? Veja exemplos em react_native_example.tsx
+
+================================================================================

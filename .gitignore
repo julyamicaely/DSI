@@ -43,3 +43,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Machine Learning models (large binary files)
+*.joblib
+*.pkl
+*.h5
+*.pth
+ml/random_forest_pipeline.joblib

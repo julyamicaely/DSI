@@ -43,8 +43,8 @@ export default function HomeScreen() {
       // Buscar dados do Firestore
       try {
         const userData = await getUserData(user.uid);
-        if (userData?.photoURL) {
-          setPhotoURL(userData.photoURL);
+        if (userData?.photoUrl) {
+          setPhotoURL(userData.photoUrl);
         } else {
           setPhotoURL(user.photoURL);
         }
