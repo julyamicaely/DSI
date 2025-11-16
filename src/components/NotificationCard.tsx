@@ -49,9 +49,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   cardDate: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#000', 
+    color: colors.blue, 
     marginTop: 10,
   },
    tag: {
