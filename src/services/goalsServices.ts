@@ -12,8 +12,8 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { auth, db } from '../../../../firebaseConfig';
-import type { Goal, GoalFormValues } from '../../../lib/goals';
+import { auth, db } from '../../firebaseConfig';
+import type { Goal, GoalFormValues } from '../lib/goals';
 
 const goalsRef = collection(db, 'goals');
 

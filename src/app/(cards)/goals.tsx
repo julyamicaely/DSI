@@ -31,8 +31,8 @@ import {
   listGoals,
   markGoalAsCompleted,
   updateGoal,
-} from './services/goalsServices';
-import { listHabits } from './services/habitsServices';
+} from '../../services/goalsServices';
+import { listHabits } from '../../services/habitsServices';
 import { migrateLegacyGoals } from '../../lib/migrateGoals';
 
 type HabitOption = {

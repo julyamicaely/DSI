@@ -35,6 +35,7 @@
     ],
     "extra": {
       "router": {},
+      "googlePlacesApiKey": "AIzaSyBkUwj1VK2KuVge6Qtaq4bq3uWZ1k_HHSo",
       "eas": {
         "projectId": "0ce884cb-34fb-46c1-9221-7be319309baa"
       }

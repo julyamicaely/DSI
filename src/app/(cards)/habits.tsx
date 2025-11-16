@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
-import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
+import { addHabit, listHabits, updateHabit, deleteHabit } from "../../services/habitsServices";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';

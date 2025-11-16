@@ -18,6 +18,7 @@ import {
   PLACE_TYPES,
   MAP_CONFIG 
 } from '../config/constants';
+import Logger from '../utils/logger';
 
 /**
  * Resposta da API de busca próxima
@@ -66,7 +67,7 @@ class GooglePlacesService {
       // Monta a URL da requisição
       const url = this.buildNearbySearchUrl({ location, radius, type });
 
-      console.log('[GooglePlacesService] Buscando hospitais próximos:', { latitude, longitude, radius, type });
+      Logger.debug('[GooglePlacesService] Buscando hospitais próximos:', { latitude, longitude, radius, type });
 
       // Faz a requisição
       const response = await fetch(url);
@@ -83,12 +84,85 @@ class GooglePlacesService {
       // Converte os resultados para o formato Hospital
       const hospitals = this.convertPlacesToHospitals(data.results);
 
-      console.log('[GooglePlacesService] Hospitais encontrados:', hospitals.length);
+      Logger.info('[GooglePlacesService] Hospitais encontrados:', hospitals.length);
 
       return hospitals;
 
     } catch (error) {
-      console.error('[GooglePlacesService] Erro ao buscar hospitais:', error);
+      Logger.error('[GooglePlacesService] Erro ao buscar hospitais:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Busca hospitais com suporte a paginação
+   * @param params - Parâmetros de busca (localização, raio, tipo, token de página)
+   * @returns Lista de hospitais e token da próxima página
+   * @throws Error em caso de falha na requisição
+   */
+  async nearbySearchWithPagination(
+    params: NearbySearchParams & { pageToken?: string }
+  ): Promise<{ hospitals: Hospital[]; nextPageToken: string | null }> {
+    try {
+      const { 
+        location, 
+        radius = MAP_CONFIG.DEFAULT_RADIUS, 
+        type = PLACE_TYPES.HOSPITAL,
+        pageToken 
+      } = params;
+      const { latitude, longitude } = location;
+
+      // Se é uma requisição de próxima página, aguarda 2 segundos (requisito da API)
+      if (pageToken) {
+        Logger.debug('[GooglePlacesService] Aguardando 2s para próxima página...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } else {
+        // Validação apenas na primeira requisição
+        this.validateCoordinates(location);
+        this.validateRadius(radius);
+      }
+
+      // Monta a URL da requisição
+      const url = this.buildNearbySearchUrlWithPagination({ 
+        location, 
+        radius, 
+        type, 
+        pageToken 
+      });
+
+      Logger.debug('[GooglePlacesService] Buscando hospitais com paginação:', { 
+        latitude, 
+        longitude, 
+        radius, 
+        type,
+        hasPageToken: !!pageToken 
+      });
+
+      // Faz a requisição
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data: NearbySearchResponse = await response.json();
+
+      // Trata o status da resposta
+      this.handleApiStatus(data.status, data.error_message);
+
+      // Converte os resultados para o formato Hospital
+      const hospitals = this.convertPlacesToHospitals(data.results);
+
+      Logger.info('[GooglePlacesService] Hospitais encontrados:', hospitals.length);
+      Logger.debug('[GooglePlacesService] Próxima página:', !!data.next_page_token);
+
+      return {
+        hospitals,
+        nextPageToken: data.next_page_token || null,
+      };
+
+    } catch (error) {
+      Logger.error('[GooglePlacesService] Erro ao buscar hospitais com paginação:', error);
       throw this.handleError(error);
     }
   }
@@ -109,7 +183,7 @@ class GooglePlacesService {
       // Monta a URL da requisição
       const url = this.buildPlaceDetailsUrl(placeId);
 
-      console.log('[GooglePlacesService] Buscando detalhes do lugar:', placeId);
+      Logger.debug('[GooglePlacesService] Buscando detalhes do lugar:', placeId);
 
       // Faz a requisição
       const response = await fetch(url);
@@ -123,12 +197,12 @@ class GooglePlacesService {
       // Trata o status da resposta
       this.handleApiStatus(data.status, data.error_message);
 
-      console.log('[GooglePlacesService] Detalhes obtidos com sucesso');
+      Logger.info('[GooglePlacesService] Detalhes obtidos com sucesso');
 
       return data.result;
 
     } catch (error) {
-      console.error('[GooglePlacesService] Erro ao buscar detalhes:', error);
+      Logger.error('[GooglePlacesService] Erro ao buscar detalhes:', error);
       throw this.handleError(error);
     }
   }
@@ -195,6 +269,28 @@ class GooglePlacesService {
     });
 
     return `${API_URLS.PLACES_NEARBY}?${urlParams.toString()}`;
+  }
+
+  /**
+   * Constrói URL para busca de lugares próximos com paginação
+   */
+  private buildNearbySearchUrlWithPagination(
+    params: NearbySearchParams & { pageToken?: string }
+  ): string {
+    const { location, radius, type, pageToken } = params;
+
+    // Se tem pageToken, usa apenas ele
+    if (pageToken) {
+      const urlParams = new URLSearchParams({
+        pagetoken: pageToken,
+        key: this.apiKey,
+        language: 'pt-BR',
+      });
+      return `${API_URLS.PLACES_NEARBY}?${urlParams.toString()}`;
+    }
+
+    // Primeira requisição: usa os parâmetros normais
+    return this.buildNearbySearchUrl({ location, radius, type });
   }
 
   /**
