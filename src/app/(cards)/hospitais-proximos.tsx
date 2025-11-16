@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Region, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import Ionicons from "@react-native-vector-icons/ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from 'expo-router';
 
 import { Hospital, Coordinates } from '../../types/hospital.types';
