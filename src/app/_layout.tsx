@@ -6,17 +6,10 @@ import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
 import colors from '../com/Colors'
 import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
 import { PaperProvider } from 'react-native-paper';
-import * as FileSystem from 'expo-file-system';
 
 export default function RootLayout() {
   
   const routerButton = useRouter();
-
-  // DEBUG para testar FileSystem
-  React.useEffect(() => {
-    console.log('DEBUG - FileSystem:', FileSystem);
-    console.log('DEBUG - EncodingType:', FileSystem.EncodingType);
-  }, []);
 
   return (
     <AuthProvider>
