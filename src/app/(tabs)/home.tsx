@@ -2,9 +2,9 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView, But
 import { useRouter } from 'expo-router';
 import { auth } from '../../../firebaseConfig';
 import { useState, useEffect } from 'react';
-import NotificationCard from '../../com/NotificationCard';
-import ImpactCard from '../../com/ImpactCard';
-import colors from '../../com/Colors';
+import NotificationCard from '../../components/NotificationCard';
+import ImpactCard from '../../components/ImpactCard';
+import colors from '../../components/Colors';
 import { getUserData } from '../../services/firebase.service';
 import { useAuth } from '../../context/AuthContext';
 
@@ -90,7 +90,7 @@ export default function HomeScreen() {
               onPress={() => routerButton.push('/habits')}
               title="Hábitos Inteligentes"
               subtitle="Próximo Item"
-              dateOrValue="Caminhada das q..."
+              dateOrValue=''
               cardColor={colors.lightestBlue}
             />
           </View>

@@ -1,13 +1,13 @@
-import { View, Text, Alert, StyleSheet } from "react-native";
+import { View, Text, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
 
 // Componentes customizados
-import CustomTextInput from "../com/CustomTextInput";
-import CustomButton from "../com/CustomButton";
-import TemporaryMessage from "../com/TemporaryMessage";
+import CustomTextInput from "../components/CustomTextInput";
+import CustomButton from "../components/CustomButton";
+import TemporaryMessage from "../components/TemporaryMessage";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -52,7 +52,10 @@ export default function RegisterScreen() {
 
   return (
 
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       {errorMessage && <TemporaryMessage message={errorMessage} onHide={() => setErrorMessage(null)} />}
       {/* Cabeçalho simples */}
       <Text style={styles.appTitle}>LifeBeat</Text>
@@ -87,7 +90,7 @@ export default function RegisterScreen() {
       <Text style={styles.linkText} onPress={() => router.push("/")}>
         Já tem uma conta? Entrar
       </Text>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

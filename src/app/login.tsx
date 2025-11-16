@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import CustomButton from '../com/CustomButton';
-import CustomTextInput from '../com/CustomTextInput';
-import TemporaryMessage from '../com/TemporaryMessage';
+import CustomButton from '../components/CustomButton';
+import CustomTextInput from '../components/CustomTextInput';
+import TemporaryMessage from '../components/TemporaryMessage';
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function IndexScreen() {
 
   async function handleLogin() {
     if (!email || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos!");
+      setErrorMessage("Preencha todos os campos!");
       return;
     }
 
@@ -35,7 +35,10 @@ export default function IndexScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <Text style={styles.title}>Login</Text>
       {errorMessage && <TemporaryMessage message={errorMessage} onHide={() => setErrorMessage('')} />}
       <Text style={styles.subtitle}>E-mail</Text>
@@ -78,7 +81,7 @@ export default function IndexScreen() {
           Ainda não tem uma conta? <Text style={styles.registerLink}>Cadastre-se aqui</Text>
         </Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,14 +1,15 @@
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "./services/habitsServices";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import CustomButton from '../../com/CustomButton';
-import CustomTextInput from '../../com/CustomTextInput';
-import colors from '../../com/Colors';
-import Accordion from '../../com/Accordion';
+import CustomButton from '../../components/CustomButton';
+import CustomTextInput from '../../components/CustomTextInput';
+import colors from '../../components/Colors';
+import Accordion from '../../components/Accordion';
 import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
 import * as Notifications from 'expo-notifications';
 import { List } from 'react-native-paper';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -54,8 +55,6 @@ type Habit = {
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-
-
 export default function HabitsScreen() {
 
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -71,27 +70,52 @@ export default function HabitsScreen() {
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(
     undefined
   );
+  const [isHabitNameFocused, setIsHabitNameFocused] = useState(false);
+  const [selectedHabits, setSelectedHabits] = useState<string[]>([]);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalActions, setModalActions] = useState<React.ReactNode | null>(null);
+
+  const openModal = (title: string, message: string, actions: React.ReactNode) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalActions(actions);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalActions(null);
+  };
 
   const handleReminderPress = (index: number) => {
-    Alert.alert(
+    openModal(
       'Editar Lembrete',
       'Editar ou excluir este lembrete?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Excluir',
-          onPress: () => handleDeleteReminder(index),
-          style: 'destructive',
-        },
-        {
-          text: 'Editar',
-          onPress: () => handleEditReminder(index),
-        },
-      ],
-      { cancelable: true }
+      <>
+        <CustomButton title="Cancelar" onPress={closeModal} backgroundColor={colors.lightGray} textColor={colors.black} width={'30%'} />
+        <CustomButton
+          title="Excluir"
+          onPress={() => {
+            handleDeleteReminder(index);
+            closeModal();
+          }}
+          backgroundColor={colors.red}
+          textColor={colors.white}
+          width={'30%'}
+        />
+        <CustomButton
+          title="Editar"
+          onPress={() => {
+            handleEditReminder(index);
+            closeModal();
+          }}
+          backgroundColor={colors.lightBlue}
+          textColor={colors.white}
+          width={'30%'}
+        />
+      </>
     );
   };
 
@@ -194,6 +218,48 @@ export default function HabitsScreen() {
     );
   };
 
+  const handleToggleSelect = (habitId: string) => {
+    setSelectedHabits(prev => 
+      prev.includes(habitId) 
+        ? prev.filter(id => id !== habitId)
+        : [...prev, habitId]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    const title = selectedHabits.length === 1 ? 'Excluir Hábito' : 'Excluir Hábitos';
+    const message = selectedHabits.length === 1 
+      ? 'Tem certeza que deseja excluir o hábito selecionado?'
+      : `Tem certeza que deseja excluir os ${selectedHabits.length} hábitos selecionados?`;
+
+    openModal(
+      title,
+      message,
+      <>
+        <CustomButton title="Cancelar" onPress={closeModal} backgroundColor={colors.lightGray} textColor={colors.black} width={'45%'} />
+        <CustomButton
+          title="Excluir"
+          onPress={async () => {
+            try {
+              await Promise.all(selectedHabits.map(id => deleteHabit(id)));
+              setSelectedHabits([]);
+              loadHabitsFromStorage();
+              closeModal();
+            } catch (error) {
+              closeModal();
+              openModal('Erro', 'Não foi possível excluir os hábitos selecionados.', 
+                <CustomButton title="OK" onPress={closeModal} backgroundColor={colors.lightBlue} textColor={colors.white} />
+              );
+            }
+          }}
+          backgroundColor={colors.red}
+          textColor={colors.white}
+          width={'45%'}
+        />
+      </>
+    );
+  };
+
   const handleSaveHabits = async () => {
     if (editingHabit) {
       // Update existing habit
@@ -278,6 +344,8 @@ export default function HabitsScreen() {
               title={item.name}
               isExpanded={editingHabit?.id === item.id}
               onPress={() => handleEditHabit(item)}
+              isSelected={selectedHabits.includes(item.id)}
+              onSelect={() => handleToggleSelect(item.id)}
             >
               <View>
                 <View style={styles.textInputs}>
@@ -286,7 +354,6 @@ export default function HabitsScreen() {
                     placeholder="Insira aqui"
                     value={habitName}
                     onChangeText={setHabitName}
-                    backgroundColor={colors.white}
                     borderRadius={8}
                   />
                 </View>
@@ -299,10 +366,10 @@ export default function HabitsScreen() {
                         minute: '2-digit',
                       })}
                       onPress={() => handleReminderPress(index)}
-                      backgroundColor={'#FFFFFF'}
+                      backgroundColor={colors.white}
                       textColor={colors.lightBlue}
                       width={'auto'}
-                      borderWidth={2}
+                      borderWidth={1}
                       borderColor={colors.lightBlue}
                       padding={8}
                     />
@@ -317,6 +384,8 @@ export default function HabitsScreen() {
                     width={'95%'}
                     height={28}
                     borderRadius={30}
+                    borderWidth={1}
+                    borderColor={colors.lightBlue2}
                   />
                 </View>
                 <View style={styles.weekdaysContainer}>
@@ -344,34 +413,19 @@ export default function HabitsScreen() {
                 </View>
                 <View style={styles.modalButtons}>
                   <CustomButton
-                    title={'Voltar'}
-                    onPress={onModalClose}
-                    backgroundColor={colors.lighterBlue}
-                    textColor={colors.lightBlue2}
-                    width={'50%'}
-                    height={28}
-                  />
-                  <CustomButton
                     title={editingHabit?.id.startsWith('new-') ? 'Adicionar' : 'Salvar'}
                     onPress={handleSaveHabits}
                     backgroundColor={colors.lighterBlue}
                     textColor={colors.lightBlue2}
-                    width={'50%'}
+                    width={'95%'}
                     height={28}
+                    borderWidth={1}
+                    borderColor={colors.lightBlue2}
                   />
                 </View>
-                {editingHabit && (
-                  <View style={styles.deleteButtonContainer}>
-                    <CustomButton
-                      title="Excluir Hábito"
-                      onPress={handleDeleteHabit}
-                      backgroundColor={colors.lighterBlue}
-                      textColor={colors.lightBlue2}
-                      width={'95%'}
-                      height={28}
-                    />
-                  </View>
-                )}
+                <Text style={styles.deleteHintText}>
+                  Pressione o hábito para excluí-lo
+                </Text>
               </View>
             </Accordion>
           </List.Section>
@@ -381,13 +435,23 @@ export default function HabitsScreen() {
         contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
       />
       <View style={styles.button}>
-        <CustomButton
+        {selectedHabits.length > 0 ? (
+          <CustomButton
+            title={selectedHabits.length === 1 ? 'Excluir Hábito' : `Excluir ${selectedHabits.length} Hábitos`}
+            onPress={handleDeleteSelected}
+            backgroundColor={colors.red}
+            textColor={colors.white}
+            width={326}
+          />
+        ) : (
+          <CustomButton
             title="Novo Hábito"
             onPress={onAddHabit}
             backgroundColor={colors.red}
             textColor={colors.white}
             width={326}
-        />
+          />
+        )}
       </View>
       {showTimePicker && (
         <DateTimePicker
@@ -398,6 +462,14 @@ export default function HabitsScreen() {
           onChange={onTimeChange}
         />
       )}
+      <ConfirmationModal
+        visible={isModalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={closeModal}
+      >
+        {modalActions}
+      </ConfirmationModal>
     </View>
   );  
 }
@@ -459,7 +531,7 @@ const styles = StyleSheet.create ({
   reminderButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: -10
+    marginBottom: -10,
   },
   weekdaysContainer: {
     flexDirection: 'row',
@@ -490,19 +562,20 @@ const styles = StyleSheet.create ({
     justifyContent: 'center',
     flexDirection: 'row',
     marginTop: -10,
-    padding: 15,
     gap: 10,
+    marginBottom: 20,
+  },
+  deleteHintText: {
+    textAlign: 'center',
+    color: colors.blue,
+    fontSize: 12,
+    marginBottom: 15,
+    marginTop: -15
   },
   deleteButtonContainer: {
     alignItems: 'center',
     marginTop: -20,
     textDecorationStyle: 'dashed',
-  },
-  list: {
-    alignSelf: 'center'
-  },
-  habitButtons: {
-    columnGap: 10
   },
     habitText1: {
       lineHeight: 22,
@@ -514,9 +587,6 @@ const styles = StyleSheet.create ({
     fontSize: 14,
     fontWeight: '300',
   },
-  habitIcon: {
-    tintColor: colors.red
-  },
   editButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -526,9 +596,6 @@ const styles = StyleSheet.create ({
     padding: 12,
     borderRadius: 8,
     backgroundColor: colors.lighterBlue,
-  },
-  deleteButton: {
-
   },
   column: {
     alignSelf: 'center'

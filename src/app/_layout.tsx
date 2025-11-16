@@ -3,25 +3,27 @@ import * as React from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text,  TouchableOpacity, View, StyleSheet } from 'react-native';
-import colors from '../com/Colors'
+import colors from '../components/Colors'
 import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
 import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   
   const routerButton = useRouter();
 
   return (
-    <AuthProvider>
-      <PaperProvider>
-        <Stack
-          screenOptions={{headerShown: false}}
-        >
-          <Stack.Screen 
-            name="index" 
-            options={{
-            headerShown: true,
-            headerTitle: () => (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <PaperProvider>
+          <Stack
+            screenOptions={{headerShown: false}}
+          >
+            <Stack.Screen 
+              name="index" 
+              options={{
+              headerShown: true,
+              headerTitle: () => (
               <View style={{ flexDirection: 'row' }}>
                 <Image style={styles.image} source={require('../assets/Lifebeat-Logo.svg')} />
                 <Text style={styles.title} >Lifebeat</Text>
@@ -99,6 +101,7 @@ export default function RootLayout() {
       </Stack>
     </PaperProvider>
   </AuthProvider>
+  </SafeAreaProvider>
   );
 }
 
