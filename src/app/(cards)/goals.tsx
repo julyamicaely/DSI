@@ -11,8 +11,8 @@ import {
   View,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import CustomButton from '../../com/CustomButton';
-import CustomTextInput from '../../com/CustomTextInput';
+import CustomButton from '../../components/CustomButton';
+import CustomTextInput from '../../components/CustomTextInput';
 
 import {
   Goal,

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, ImageBackground, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import CustomButton from '../../src/com/CustomButton';  
-import colors from '../com/Colors'
+import CustomButton from '../../src/components/CustomButton';  
+import colors from '../components/Colors'
 
 export default function IndexScreen() {
 
