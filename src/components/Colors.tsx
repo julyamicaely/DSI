@@ -7,7 +7,10 @@ const colors = {
     lighterBlue: '#E5E8FF',
     lightestBlue: '#F0F2FF',
     white: '#FFFFFF',
+    gray: '#7F8C8D',
     lightGray: '#d3d3d3',
+    darkGray: '#2C3E50',
+    darkGray2: '#34495E',
     black: '#000000',
 };
 
