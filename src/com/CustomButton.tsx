@@ -16,7 +16,7 @@ interface CustomButtonProps {
   padding?: number;
 }
 
-const CustomButton: React.FC<CustomButtonProps> = ({
+const CustomButton = ({
   title,
   onPress,
   backgroundColor = colors.red,
@@ -27,7 +27,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   height = 50,
   borderWidth = 0,
   padding = 0,
-}) => {
+}: CustomButtonProps) => {
   return (
     <TouchableOpacity
       style={[
