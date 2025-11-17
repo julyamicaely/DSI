@@ -25,16 +25,15 @@ import {
   deleteGoal,
   listGoals,
   updateGoal,
-} from './services/goalsServices';
-import { listHabits } from './services/habitsServices';
+} from '../../services/goalsServices';
+import { listHabits } from '../../services/habitsServices';
 import { migrateLegacyGoals } from '../../lib/migrateGoals';
 import {
   getTodayProgress,
   mergeDailyProgressIntoGoal,
   suggestDailyTarget,
-} from './services/goalProgressServices';
-import * as goalProgressServices from './services/goalProgressServices';
-import { useGoalsSync } from '../../hooks/useGoalsSync';
+} from '../../services/goalProgressServices';
+import * as goalProgressServices from '../../services/goalProgressServices';
 
 type HabitOption = Habit;
 
@@ -42,12 +41,14 @@ const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
 export default function GoalsScreen() {
   
+  console.log('🚀 GoalsScreen: Componente montado - VERSÃO COMPLETA');
+  
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<HabitOption[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(false);
 
-  const { goals: syncedGoals, habits: syncedHabits, loading: syncLoading } = useGoalsSync();
+  // REMOVIDO: useGoalsSync - estava travando o componente
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showHabitList, setShowHabitList] = useState(false);
@@ -78,20 +79,27 @@ export default function GoalsScreen() {
   const [dailyTime, setDailyTime] = useState(new Date());
 
   const loadData = useCallback(async () => {
+    console.log('🔄 loadData: Iniciando...');
     setRefreshing(true);
     try {
+      console.log('📋 Buscando hábitos...');
       const fetchedHabits = (await listHabits()) as HabitOption[];
+      console.log('✅ Hábitos carregados:', fetchedHabits.length);
       setHabits(fetchedHabits);
 
+      console.log('🔧 Migrando metas antigas...');
       await migrateLegacyGoals(fetchedHabits).catch(() => ({ migrated: 0 }));
 
+      console.log('🎯 Buscando metas...');
       const fetchedGoals = await listGoals();
+      console.log('✅ Metas carregadas:', fetchedGoals.length);
       setGoals(fetchedGoals.map((goal) => normalizeGoalForUI(goal)));
     } catch (error) {
-      console.error('Erro ao carregar metas', error);
+      console.error('❌ Erro ao carregar metas:', error);
     } finally {
       setRefreshing(false);
       setInitialLoading(false);
+      console.log('✅ loadData: Finalizado');
     }
   }, [normalizeGoalForUI]);
 
@@ -101,13 +109,7 @@ export default function GoalsScreen() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    if (!syncLoading) {
-      setGoals(syncedGoals);
-      setHabits(syncedHabits);
-      setInitialLoading(false);
-    }
-  }, [syncedGoals, syncedHabits, syncLoading]);
+  // REMOVIDO: useEffect do useGoalsSync - estava travando o componente
 
   const resetForm = () => {
     setEditingGoal(null);
@@ -255,7 +257,6 @@ export default function GoalsScreen() {
   };
 
   const handleOpenDayProgress = (goal: Goal, day: Date) => {
-  const handleOpenDayProgress = (goal: Goal, day: Date) => {
     const habit = habits.find((h) => h.id === goal.habitId) ?? null;
     if (!isValidDayForHabit(habit, day)) {
       Alert.alert('Não é possível criar meta para dias sem hábito');
@@ -395,48 +396,67 @@ export default function GoalsScreen() {
   };
 
   const renderGoalCard = ({ item }: { item: Goal }) => {
-    const habit = habits.find((h) => h.id === item.habitId) ?? null;
-    const todayProgress = getTodayProgress(item, new Date(), item.dailyTarget ?? 1);
-    const progressPercentage = calculateMonthlyProgress(
-      item,
-      new Date(),
-      habit?.weekdays,
-      item.deadline
-    );
+    try {
+      console.log('🎴 Renderizando card da meta:', item.id, item.habitName);
+      const habit = habits.find((h) => h.id === item.habitId) ?? null;
+      const todayProgress = getTodayProgress(item, new Date(), item.dailyTarget ?? 1);
+      const progressPercentage = calculateMonthlyProgress(
+        item,
+        new Date(),
+        habit?.weekdays,
+        item.deadline
+      );
 
-    return (
-      <Pressable style={styles.goalCard} onPress={() => openProgressModal(item)}>
-        <Text style={styles.goalTitle}>{item.habitName}</Text>
-        <Text style={styles.goalSubtitle}>{item.target}</Text>
+      return (
+        <Pressable style={styles.goalCard} onPress={() => openProgressModal(item)}>
+          <Text style={styles.goalTitle}>{item.habitName}</Text>
+          <Text style={styles.goalSubtitle}>{item.target}</Text>
 
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
+            </View>
+            <Text style={styles.progressLabel}>{`${progressPercentage}% concluído`}</Text>
           </View>
-          <Text style={styles.progressLabel}>{`${progressPercentage}% concluído`}</Text>
-        </View>
 
-        <View style={styles.dailyProgressContainer}>
-          <Text style={styles.dailyProgressLabel}>Progresso de hoje</Text>
-          <View style={styles.dailyProgressBar}>
-            <View style={[styles.dailyProgressFill, { width: `${todayProgress.percentage}%` }]} />
+          <View style={styles.dailyProgressContainer}>
+            <Text style={styles.dailyProgressLabel}>Progresso de hoje</Text>
+            <View style={styles.dailyProgressBar}>
+              <View style={[styles.dailyProgressFill, { width: `${todayProgress.percentage}%` }]} />
+            </View>
+            <Text style={styles.dailyProgressText}>
+              {todayProgress.percentage}% ({todayProgress.value}/{todayProgress.target})
+            </Text>
           </View>
-          <Text style={styles.dailyProgressText}>
-            {todayProgress.percentage}% ({todayProgress.value}/{todayProgress.target})
-          </Text>
-        </View>
 
-        <Text style={styles.cardHint}>Toque para detalhar o progresso.</Text>
-      </Pressable>
-    );
+          <Text style={styles.cardHint}>Toque para detalhar o progresso.</Text>
+        </Pressable>
+      );
+    } catch (error) {
+      console.error('❌ Erro ao renderizar card:', error);
+      return <Text style={{ color: 'red', padding: 10 }}>Erro ao renderizar meta</Text>;
+    }
   };
 
-  const monthMatrix = useMemo(() => getMonthMatrix(calendarMonth), [calendarMonth]);
+  // Simplificado - removido useMemo que estava travando
+  const monthMatrix = getMonthMatrix(calendarMonth);
   const todayKey = dateKey(new Date());
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Metas de atividade física</Text>
+  console.log('🎨 Renderizando tela - goals:', goals.length, 'habits:', habits.length, 'initialLoading:', initialLoading);
+
+  try {
+    if (initialLoading) {
+      console.log('⏳ Exibindo tela de loading...');
+      return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ fontSize: 18, color: '#666' }}>Carregando metas...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Metas de atividade física</Text>
 
       <View style={styles.addButtonWrapper}>
         <CustomButton
@@ -749,6 +769,19 @@ export default function GoalsScreen() {
       </Modal>
     </View>
   );
+  } catch (error) {
+    console.error('💥 Erro fatal ao renderizar GoalsScreen:', error);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 18, color: 'red', textAlign: 'center' }}>
+          Erro ao carregar a tela de metas
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', marginTop: 10, textAlign: 'center' }}>
+          {String(error)}
+        </Text>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -1082,4 +1115,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: '#5B79FF',
   },
-});}
+});

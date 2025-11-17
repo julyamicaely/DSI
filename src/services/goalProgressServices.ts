@@ -1,5 +1,5 @@
 // Update the import path if the file exists elsewhere, for example:
-import { DailyProgressEntry, calculateDailyPercentage, dateKey, type Goal } from '../../../lib/goals';
+import { DailyProgressEntry, calculateDailyPercentage, dateKey, type Goal } from '../lib/goals';
 
 export type DailyProgressSnapshot = Record<string, DailyProgressEntry>;
 

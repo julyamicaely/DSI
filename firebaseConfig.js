@@ -1,8 +1,9 @@
 // Importa funções do Firebase
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -17,8 +18,20 @@ const firebaseConfig = {
 // Inicializa o Firebase apenas se ainda não foi inicializado
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// Inicializa Auth com persistência AsyncStorage
+/** @type {import('firebase/auth').Auth} */
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+} catch (error) {
+  // Se já foi inicializado, apenas obtém a instância
+  auth = getAuth(app);
+}
+
 // Exporta os serviços
-export const auth = getAuth(app);
+export { auth };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export default app;

@@ -12,7 +12,7 @@ import {
   Modal
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../(cards)/services/consultasService";
+import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
 import { 
   predictCardiovascularRisk, 
   formatPredictionForDisplay,

@@ -1,4 +1,4 @@
-import { db, auth } from "../../../../firebaseConfig";
+import { db, auth } from "../../firebaseConfig";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
 import { deleteGoalsByHabit } from "./goalsServices";
 
