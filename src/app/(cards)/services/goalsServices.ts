@@ -39,6 +39,7 @@ const mapSnapshotToGoal = (snapshot: QueryDocumentSnapshot<DocumentData>): Goal 
     target: data.target ?? '',
     deadline,
     progress: Array.isArray(data.progress) ? data.progress : [],
+    dailyProgress: data.dailyProgress ?? {},
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
   };
 };
@@ -52,6 +53,7 @@ export const addGoal = async (goalData: GoalFormValues): Promise<Goal> => {
     target: goalData.target,
     deadline: Timestamp.fromDate(goalData.deadline),
     progress: goalData.progress ?? [],
+    dailyProgress: goalData.dailyProgress ?? {},
     createdAt,
     userId: user.uid,
   };
@@ -65,6 +67,7 @@ export const addGoal = async (goalData: GoalFormValues): Promise<Goal> => {
     target: payload.target,
     deadline: goalData.deadline,
     progress: payload.progress,
+    dailyProgress: payload.dailyProgress,
     createdAt,
   };
 };
@@ -95,6 +98,10 @@ export const updateGoal = async (id: string, goalData: GoalFormValues) => {
     updates.progress = goalData.progress;
   }
 
+  if (goalData.dailyProgress) {
+    updates.dailyProgress = goalData.dailyProgress;
+  }
+
   await updateDoc(ref, updates);
 };
 
@@ -102,6 +109,15 @@ export const deleteGoal = async (id: string) => {
   ensureUser();
   const ref = doc(db, 'goals', id);
   await deleteDoc(ref);
+};
+
+export const deleteGoalsByHabit = async (habitId: string) => {
+  const user = ensureUser();
+  const q = query(goalsRef, where('userId', '==', user.uid), where('habitId', '==', habitId));
+  const snapshot = await getDocs(q);
+
+  const deletions = snapshot.docs.map((goalDoc) => deleteDoc(goalDoc.ref));
+  await Promise.all(deletions);
 };
 
 export const markGoalAsCompleted = async (goalId: string, date: string) => {
@@ -132,3 +148,6 @@ export const markGoalAsCompleted = async (goalId: string, date: string) => {
 };
 
 export type { Goal };
+export default function GoalsServicesRoutePlaceholder() {
+  return null;
+}
