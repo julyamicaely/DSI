@@ -9,11 +9,7 @@ interface CustomButtonProps {
   textColor?: string;
   borderColor?: string;
   outline?: boolean;
-  width?: DimensionValue; 
-  borderWidth?: number;
-  height?: DimensionValue;
-  borderRadius?: number;
-  padding?: number;
+  width?: DimensionValue;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -24,21 +20,16 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   borderColor = colors.red,
   outline = false,
   width = 350,
-  height = 50,
-  borderWidth = 0,
-  padding = 0,
 }) => {
   return (
     <TouchableOpacity
       style={[
         styles.button,
         {
-          backgroundColor: backgroundColor,
+          backgroundColor: outline ? "transparent" : backgroundColor,
           borderColor: borderColor,
-          borderWidth: borderWidth,
+          borderWidth: outline ? 2 : 0,
           width,
-          height,
-          padding,
         },
       ]}
       onPress={onPress}
@@ -56,12 +47,12 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 };
 
 export default CustomButton;
+
 const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
   },
   text: {
     fontSize: 18,

@@ -17,7 +17,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { FavoriteHospital } from '../types/hospital.types';
 import { COLORS } from '../config/constants';
 import googlePlacesService from '../services/googlePlaces.service';

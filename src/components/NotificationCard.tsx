@@ -1,23 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import colors from './Colors';
 
 
 interface NotificationCardProps {
   onPress?: () => void;
   title: string;
   subtitle: string;
-  dateOrValue: string;
-  cardColor: string;
+  dateOrValue?: string;
+  children?: React.ReactNode;
+  cardColor?: string;
 }
 
-const NotificationCard = ({ onPress, title, subtitle, dateOrValue, cardColor }: NotificationCardProps) => ( 
-  <View style={[styles.notificationCard, { backgroundColor: cardColor }]}>
+const NotificationCard = ({ onPress, title, subtitle, dateOrValue, children, cardColor }: NotificationCardProps) => ( 
+  <View style={[styles.notificationCard, { backgroundColor: cardColor}]}>
     <Pressable onPress={onPress}>
-    <View style={styles.tag}>
-      <Text style={styles.tagText}>Notificação</Text>
-    </View>
     <Text style={styles.cardTitle}>{title}</Text>
     <Text style={styles.cardSubtitle}>{subtitle}</Text>
-    <Text style={styles.cardDate}>{dateOrValue}</Text>
+    {dateOrValue && <Text style={styles.cardDate}>{dateOrValue}</Text>}
+    {children}
     </Pressable>
   </View>
 );
@@ -49,9 +49,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   cardDate: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#000', 
+    color: colors.blue, 
     marginTop: 10,
   },
    tag: {

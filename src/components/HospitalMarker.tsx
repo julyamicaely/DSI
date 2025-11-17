@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { Hospital } from '../types/hospital.types';
 import { COLORS } from '../config/constants';
 

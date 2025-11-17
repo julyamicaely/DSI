@@ -2,8 +2,8 @@ import * as React from 'react';
 const { useCallback, useEffect, useMemo, useState } = React;
 import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import CustomButton from '../../com/CustomButton';
-import CustomTextInput from '../../com/CustomTextInput';
+import CustomButton from '../../components/CustomButton';
+import CustomTextInput from '../../components/CustomTextInput';
 
 import {
   DailyProgressEntry,

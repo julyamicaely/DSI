@@ -1,9 +1,11 @@
 import { Image } from 'expo-image';
 import { Tabs, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const routerButton = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -18,13 +20,13 @@ export default function TabLayout() {
         ),
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: 70, // 🔹 Aumenta um pouco para centralizar
-          paddingBottom: 10,
+          height: 70 + insets.bottom,
+          paddingBottom: 10 + insets.bottom,
           paddingTop: 5,
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
-          justifyContent: 'center', // 🔹 Centraliza verticalmente
-          alignItems: 'center', // 🔹 Centraliza horizontalmente
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         tabBarActiveTintColor: '#E53935',
         tabBarInactiveTintColor: '#999',
@@ -83,7 +85,8 @@ export default function TabLayout() {
       />
 
       {/* 📊 Aba Gerenciamento */}
-      <Tabs.Screen
+      
+     {/*  <Tabs.Screen
         name="management"
         options={{
           title: 'Gerenciamento',
@@ -94,7 +97,7 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
 
       {/* 👤 Aba Conta */}
       <Tabs.Screen
@@ -113,7 +116,6 @@ export default function TabLayout() {
       {/* 🚫 Esconde rotas que não devem aparecer na barra */}
       <Tabs.Screen name="profiles_backup" options={{ href: null }} />
       <Tabs.Screen name="services" options={{ href: null }} />
-      <Tabs.Screen name="hospitais-proximos" options={{ href: null }} />
     </Tabs>
   );
 }

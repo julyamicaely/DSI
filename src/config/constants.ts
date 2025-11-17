@@ -56,7 +56,9 @@ export const PLACE_TYPES = {
  * Mensagens de erro padrão
  */
 export const ERROR_MESSAGES = {
-  NO_PERMISSION: 'Permissão de localização negada. Por favor, habilite nas configurações.',
+  NO_PERMISSION: 'Permissão de localização negada.',
+  NO_PERMISSION_DENIED: 'Você negou a permissão de localização. Para usar este recurso, habilite nas configurações do dispositivo.',
+  NO_PERMISSION_RESTRICTED: 'A permissão de localização está restrita. Verifique as configurações de privacidade.',
   NO_LOCATION: 'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
   NO_RESULTS: 'Nenhum hospital encontrado nas proximidades.',
   API_ERROR: 'Erro ao buscar hospitais. Tente novamente.',
@@ -64,6 +66,20 @@ export const ERROR_MESSAGES = {
   OVER_QUERY_LIMIT: 'Limite de requisições excedido. Tente novamente mais tarde.',
   INVALID_REQUEST: 'Erro na requisição. Tente novamente.',
   DB_ERROR: 'Erro ao acessar favoritos. Tente novamente.',
+  GEOCODING_ERROR: 'Erro ao buscar endereço. Verifique se está correto.',
+} as const;
+
+/**
+ * Duração do cache de busca (10 minutos)
+ */
+export const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos em ms
+
+/**
+ * Opções de filtro
+ */
+export const FILTER_OPTIONS = {
+  MIN_RATING: [0, 3.0, 3.5, 4.0, 4.5] as const,
+  OPEN_NOW: true,
 } as const;
 
 /**

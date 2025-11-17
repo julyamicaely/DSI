@@ -15,14 +15,14 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { PlaceDetails } from '../types/hospital.types';
-import googlePlacesService from '../services/googlePlaces.service';
-import { useFavoritesStore } from '../store/favoritesStore';
-import { FavoriteButton, LoadingOverlay, ErrorMessage } from '../components';
-import { COLORS, ERROR_MESSAGES } from '../config/constants';
+import { PlaceDetails } from '../../types/hospital.types';
+import googlePlacesService from '../../services/googlePlaces.service';
+import { useFavoritesStore } from '../../store/favoritesStore';
+import { FavoriteButton, LoadingOverlay, ErrorMessage } from '../../components';
+import { COLORS, ERROR_MESSAGES } from '../../config/constants';
 
 export default function HospitalDetails() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
