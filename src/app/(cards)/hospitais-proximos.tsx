@@ -47,6 +47,7 @@ import { COLORS, MAP_CONFIG, ERROR_MESSAGES } from '../../config/constants';
 import useLocationPermission from '../../hooks/useLocationPermission';
 import useNearbyHospitals from '../../hooks/useNearbyHospitals';
 import Logger from '../../utils/logger';
+import colors from '../../components/Colors';
 
 export default function HospitaisProximos() {
   const mapRef = useRef<MapView>(null);
@@ -369,7 +370,7 @@ export default function HospitaisProximos() {
             <Ionicons 
               name="expand" 
               size={20} 
-              color={COLORS.primary} 
+              color={colors.red} 
             />
             <Text style={styles.listToggleText}>Expandir Mapa</Text>
           </TouchableOpacity>
@@ -449,9 +450,6 @@ export default function HospitaisProximos() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.black} />
-        </TouchableOpacity>
 
         <Text style={styles.title}>Hospitais Próximos</Text>
 
@@ -548,7 +546,7 @@ export default function HospitaisProximos() {
             style={[styles.centerButton, { bottom: 16 + insets.bottom }]} 
             onPress={centerOnUser}
           >
-            <Ionicons name="locate" size={24} color={COLORS.primary} />
+            <Ionicons name="locate" size={24} color={colors.red} />
           </TouchableOpacity>
 
           {/* Botão flutuante para recolher mapa (quando expandido) com SafeArea */}
@@ -650,9 +648,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -666,6 +661,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.black,
+    alignSelf: 'center',
   },
   errorContainer: {
     padding: 16,
@@ -711,7 +707,7 @@ const styles = StyleSheet.create({
     top: -10,
     right: -10,
     zIndex: 10,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.red,
     borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -731,7 +727,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   collapseButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.red,
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 25,
@@ -764,12 +760,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
     borderWidth: 1,
-    borderColor: COLORS.primary + '20',
+    borderColor: colors.red + '20',
   },
   listToggleText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.primary,
+    color: colors.red,
   },
   listContainer: {
     padding: 16,

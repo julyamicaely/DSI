@@ -5,6 +5,7 @@ const colors = {
     lightBlue: '#7F96FF',
     lightBlue2: '#6C87FF',
     lighterBlue: '#E5E8FF',
+    lighterBlue2: '#A6B6FF',
     lightestBlue: '#F0F2FF',
     white: '#FFFFFF',
     gray: '#7F8C8D',

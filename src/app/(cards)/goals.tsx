@@ -1,6 +1,7 @@
 import * as React from 'react';
 const { useCallback, useEffect, useMemo, useState } = React;
 import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
@@ -448,338 +449,346 @@ export default function GoalsScreen() {
     if (initialLoading) {
       console.log('⏳ Exibindo tela de loading...');
       return (
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <Text style={{ fontSize: 18, color: '#666' }}>Carregando metas...</Text>
-        </View>
+        </SafeAreaView>
       );
     }
 
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Metas de atividade física</Text>
 
-      <View style={styles.addButtonWrapper}>
-        <CustomButton
-          title="Adicionar Meta de Atividade"
-          onPress={openCreateModal}
-          backgroundColor="#E94040"
-          textColor="#FFE6E6"
-          width={326}
-        />
-      </View>
-
-      <FlatList
-        data={goals}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
- 
-        refreshing={refreshing}
-        onRefresh={loadData}
-        contentContainerStyle={[styles.grid, goals.length === 0 && styles.emptyListContainer]}
-        renderItem={renderGoalCard}
-        ListEmptyComponent={
-          !initialLoading ? (
-            <Text style={styles.emptyText}>
-              Crie uma meta para acompanhar seu progresso junto aos hábitos.
-            </Text>
-          ) : null
-        }
-      />
-
-
-      <Modal animationType="slide" transparent visible={isModalVisible}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                {editingGoal ? 'Editar meta vinculada' : 'Nova meta vinculada'}
-              </Text>
-
-              <Text style={styles.modalLabel}>Hábito</Text>
-              <Pressable
-                style={styles.selectField}
-                onPress={() => setShowHabitList((prev) => !prev)}
-              >
-                <Text style={styles.selectFieldText}>
-                  {selectedHabit ? selectedHabit.name : 'Selecione um hábito'}
-                </Text>
-              </Pressable>
-
-              {showHabitList && (
-                <View style={styles.dropdownList}>
-                  <FlatList
-                    data={habits}
-                    keyExtractor={(habit) => habit.id}
-                    scrollEnabled={habits.length > 6}
-                    renderItem={({ item: habit }) => (
-                      <Pressable
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setSelectedHabitId(habit.id);
-                          setShowHabitList(false);
-                        }}
-                      >
-                        <Text style={styles.dropdownItemText}>{habit.name}</Text>
-                      </Pressable>
-                    )}
-                    ListEmptyComponent={
-                      <Text style={styles.dropdownEmpty}>Cadastre hábitos para vincular metas.</Text>
-                    }
-                  />
-                </View>
-              )}
-
-              <Text style={styles.modalLabel}>Meta</Text>
-              <CustomTextInput
-                placeholder="Descreva sua meta (ex: 30 minutos)"
-                value={target}
-                onChangeText={setTarget}
-              />
-              <Text style={styles.modalLabel}>Meta diária</Text>
-              <CustomTextInput
-                placeholder="Ex: 1 vez por dia (sugerido)"
-                value={dailyTarget}
-                onChangeText={setDailyTarget}
-                keyboardType="numeric"
-              />
-              <Text style={styles.modalHelper}>
-                A porcentagem diária é calculada automaticamente. Marque o dia no calendário ou
-                registre o progresso para ver o avanço de hoje.
-              </Text>
-
-              <Text style={styles.modalLabel}>Prazo</Text>
-              <Pressable style={styles.selectField} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.selectFieldText}>{formatDisplayDate(deadline)}</Text>
-              </Pressable>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={deadline}
-                  mode="date"
-                  display="spinner"
-                  onChange={handleDeadlineChange}
-                  minimumDate={new Date()}
-                />
-              )}
-
-              <View style={styles.modalActions}>
-                <CustomButton
-                  title="Cancelar"
-                  onPress={closeModal}
-                  backgroundColor="#5B79FF"
-                  textColor="#FFFFFF"
-                  width={147}
-                />
-                <CustomButton
-                  title={editingGoal ? 'Salvar Meta' : 'Criar Meta'}
-                  onPress={handleSaveGoal}
-                  backgroundColor="#5B79FF"
-                  textColor="#FFFFFF"
-                  width={147}
-                />
-              </View>
-             </View>
-          </View>
+        <View style={styles.addButtonWrapper}>
+          <CustomButton
+            iconName='add'
+            title="Nova Meta"
+            onPress={openCreateModal}
+            backgroundColor="#E94040"
+            textColor="#FFE6E6"
+            width={326}
+          />
         </View>
-      </Modal>
 
-      <Modal animationType="fade" transparent visible={progressModalVisible}>
-        <View style={styles.progressOverlay}>
-          <View style={styles.progressContainer}>
-            {selectedGoal && (
-              <>
-                <Text style={styles.progressTitle}>{selectedGoal.habitName}</Text>
-                <Text style={styles.progressSubtitle}>{selectedGoal.target}</Text>
-                <Text style={styles.progressDeadline}>
-                  Prazo: {formatDisplayDate(selectedGoal.deadline)}
+        <FlatList
+          data={goals}
+          keyExtractor={(item) => item.id}
+          numColumns={1}
+
+          refreshing={refreshing}
+          onRefresh={loadData}
+          contentContainerStyle={[styles.grid, goals.length === 0 && styles.emptyListContainer]}
+          renderItem={renderGoalCard}
+          ListEmptyComponent={
+            !initialLoading ? (
+              <Text style={styles.emptyText}>
+                Crie uma meta para acompanhar o progresso de seus hábitos!
+              </Text>
+            ) : null
+          }
+        />
+
+        <Modal animationType="slide" transparent visible={isModalVisible}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+               <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>
+                  {editingGoal ? 'Editar meta vinculada' : 'Nova meta vinculada'}
                 </Text>
 
-                <View style={styles.calendarHeader}>
-                  <Pressable onPress={() => setCalendarMonth(addMonths(calendarMonth, -1))}>
-                    <Text style={styles.calendarNavigation}>◀</Text>
-                  </Pressable>
-                  <Text style={styles.calendarTitle}>{getMonthLabel(calendarMonth)}</Text>
-                  <Pressable onPress={() => setCalendarMonth(addMonths(calendarMonth, 1))}>
-                    <Text style={styles.calendarNavigation}>▶</Text>
-                  </Pressable>
-                </View>
-
-                <View style={styles.weekHeader}>
-                  {WEEKDAY_LABELS.map((label, index) => (
-                    <Text key={`${label}-${index}`} style={styles.weekHeaderText}>
-                      {label}
-                    </Text>
-                  ))}
-                </View>
-
-                {monthMatrix.map((week) => (
-                  <View key={week.map(dateKey).join('-')} style={styles.weekRow}>
-                    {week.map((day) => {
-                      const key = dateKey(day);
-                      const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
-                      const isCompleted = selectedGoal.progress.includes(key);
-                      const isToday = key === todayKey;
-                      const afterDeadline = day > selectedGoal.deadline;
-                      const habit = habits.find((h) => h.id === selectedGoal.habitId) ?? null;
-                      const allowedDay = isValidDayForHabit(habit, day);
-
-                      return (
-                        <Pressable
-                          key={key}
-                          style={[
-                            styles.dayCell,
-                            !isCurrentMonth && styles.dayCellMuted,
-                            isCompleted && styles.dayCellCompleted,
-                            afterDeadline && styles.dayCellDisabled,
-                            isToday && styles.dayCellToday,
-                            !allowedDay && styles.dayCellDisabled,
-                          ]}
-                          disabled={!isCurrentMonth || afterDeadline || !allowedDay}
-                          onPress={() => handleOpenDayProgress(selectedGoal, day)}
-                        >
-                          <Text
-                            style={[
-                              styles.dayCellText,
-                              (!isCurrentMonth || afterDeadline || !allowedDay) && styles.dayCellTextMuted,
-                              isCompleted && styles.dayCellTextCompleted,
-                            ]}
-                          >
-                            {day.getDate()}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                ))}
-
-                <Text style={styles.calendarHint}>Toque nos dias para registrar o progresso diário.</Text>
-
-                <View style={styles.dailySummaryBox}>
-                  <Text style={styles.dailySummaryTitle}>Progresso de hoje</Text>
-                  <Text style={styles.dailySummaryText}>
-                    {selectedGoal.dailyProgress?.[todayKey]
-                      ? `${selectedGoal.dailyProgress[todayKey].percentage}% (${selectedGoal.dailyProgress[todayKey].value}/${selectedGoal.dailyProgress[todayKey].target})`
-                      : 'Nenhum progresso registrado hoje'}
+                <Text style={styles.modalLabel}>Hábito</Text>
+                <Pressable
+                  style={styles.selectField}
+                  onPress={() => setShowHabitList((prev) => !prev)}
+                >
+                  <Text style={styles.selectFieldText}>
+                    {selectedHabit ? selectedHabit.name : 'Selecione um hábito'}
                   </Text>
-                </View>
+                </Pressable>
+
+                {showHabitList && (
+                  <View style={styles.dropdownList}>
+                    <FlatList
+                      data={habits}
+                      keyExtractor={(habit) => habit.id}
+                      scrollEnabled={habits.length > 6}
+                      renderItem={({ item: habit }) => (
+                        <Pressable
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setSelectedHabitId(habit.id);
+                            setShowHabitList(false);
+                          }}
+                        >
+                          <Text style={styles.dropdownItemText}>{habit.name}</Text>
+                        </Pressable>
+                      )}
+                      ListEmptyComponent={
+                        <Text style={styles.dropdownEmpty}>Cadastre hábitos para vincular metas.</Text>
+                      }
+                    />
+                  </View>
+                )}
+
+                <Text style={styles.modalLabel}>Meta</Text>
+                <CustomTextInput
+                  placeholder="Descreva sua meta (ex: 30 minutos)"
+                  value={target}
+                  onChangeText={setTarget}
+                  containerStyle={{ width: '100%' }}
+                />
+                <Text style={styles.modalLabel}>Meta diária</Text>
+                <CustomTextInput
+                  placeholder="Ex: 1 vez por dia (sugerido)"
+                  value={dailyTarget}
+                  onChangeText={setDailyTarget}
+                  keyboardType="numeric"
+                  containerStyle={{ width: '100%' }}
+                />
+                <Text style={styles.modalHelper}>
+                  A porcentagem diária é calculada automaticamente. Marque o dia no calendário ou
+                  registre o progresso para ver o avanço de hoje.
+                </Text>
+
+                <Text style={styles.modalLabel}>Prazo</Text>
+                <Pressable style={styles.selectField} onPress={() => setShowDatePicker(true)}>
+                  <Text style={styles.selectFieldText}>{formatDisplayDate(deadline)}</Text>
+                </Pressable>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={deadline}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDeadlineChange}
+                    minimumDate={new Date()}
+                  />
+                )}
 
                 <View style={styles.modalActions}>
                   <CustomButton
-                    title="Editar meta"
-                    onPress={() => {
-                      openEditModal(selectedGoal);
-                      setProgressModalVisible(false);
-                    }}
+                    title="Cancelar"
+                    onPress={closeModal}
                     backgroundColor="#5B79FF"
                     textColor="#FFFFFF"
-                    width={147}
+                    width={140}
                   />
                   <CustomButton
-                    title="Excluir"
-                    onPress={() => handleDeleteGoal(selectedGoal)}
-                    backgroundColor="#E94040"
+                    iconName='save-outline'
+                    title={editingGoal ? 'Salvar Meta' : 'Criar Meta'}
+                    onPress={handleSaveGoal}
+                    backgroundColor="#5B79FF"
                     textColor="#FFFFFF"
-                    width={147}
+                    width={140}
+                  />
+                </View>
+               </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal animationType="fade" transparent visible={progressModalVisible}>
+          <View style={styles.progressOverlay}>
+            <View style={styles.progressContainer}>
+              <ScrollView contentContainerStyle={styles.progressScrollContent}>
+                {selectedGoal && (
+                  <>
+                    <Text style={styles.progressTitle}>{selectedGoal.habitName}</Text>
+                    <Text style={styles.progressSubtitle}>{selectedGoal.target}</Text>
+                    <Text style={styles.progressDeadline}>
+                      Prazo: {formatDisplayDate(selectedGoal.deadline)}
+                    </Text>
+
+                    <View style={styles.calendarHeader}>
+                      <Pressable onPress={() => setCalendarMonth(addMonths(calendarMonth, -1))}>
+                        <Text style={styles.calendarNavigation}>◀</Text>
+                      </Pressable>
+                      <Text style={styles.calendarTitle}>{getMonthLabel(calendarMonth)}</Text>
+                      <Pressable onPress={() => setCalendarMonth(addMonths(calendarMonth, 1))}>
+                        <Text style={styles.calendarNavigation}>▶</Text>
+                      </Pressable>
+                    </View>
+
+                    <View style={styles.weekHeader}>
+                      {WEEKDAY_LABELS.map((label, index) => (
+                        <Text key={`${label}-${index}`} style={styles.weekHeaderText}>
+                          {label}
+                        </Text>
+                      ))}
+                    </View>
+
+                    {monthMatrix.map((week) => (
+                      <View key={week.map(dateKey).join('-')} style={styles.weekRow}>
+                        {week.map((day) => {
+                          const key = dateKey(day);
+                          const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+                          const isCompleted = selectedGoal.progress.includes(key);
+                          const isToday = key === todayKey;
+                          const afterDeadline = day > selectedGoal.deadline;
+                          const habit = habits.find((h) => h.id === selectedGoal.habitId) ?? null;
+                          const allowedDay = isValidDayForHabit(habit, day);
+
+                          return (
+                            <Pressable
+                              key={key}
+                              style={[
+                                styles.dayCell,
+                                !isCurrentMonth && styles.dayCellMuted,
+                                isCompleted && styles.dayCellCompleted,
+                                afterDeadline && styles.dayCellDisabled,
+                                isToday && styles.dayCellToday,
+                                !allowedDay && styles.dayCellDisabled,
+                              ]}
+                              disabled={!isCurrentMonth || afterDeadline || !allowedDay}
+                              onPress={() => handleOpenDayProgress(selectedGoal, day)}
+                            >
+                              <Text
+                                style={[
+                                  styles.dayCellText,
+                                  (!isCurrentMonth || afterDeadline || !allowedDay) && styles.dayCellTextMuted,
+                                  isCompleted && styles.dayCellTextCompleted,
+                                ]}
+                              >
+                                {day.getDate()}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    ))}
+
+                    <Text style={styles.calendarHint}>Toque nos dias para registrar o progresso diário.</Text>
+
+                    <View style={styles.dailySummaryBox}>
+                      <Text style={styles.dailySummaryTitle}>Progresso de hoje</Text>
+                      <Text style={styles.dailySummaryText}>
+                        {selectedGoal.dailyProgress?.[todayKey]
+                          ? `${selectedGoal.dailyProgress[todayKey].percentage}% (${selectedGoal.dailyProgress[todayKey].value}/${selectedGoal.dailyProgress[todayKey].target})`
+                          : 'Nenhum progresso registrado hoje'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.modalActions}>
+                      <CustomButton
+                        title="Editar meta"
+                        onPress={() => {
+                          openEditModal(selectedGoal);
+                          setProgressModalVisible(false);
+                        }}
+                        backgroundColor="#5B79FF"
+                        textColor="#FFFFFF"
+                        width="47%"
+                      />
+                      <CustomButton
+                        title="Excluir"
+                        onPress={() => handleDeleteGoal(selectedGoal)}
+                        backgroundColor="#E94040"
+                        textColor="#FFFFFF"
+                        width='47%'
+                      />
+                    </View>
+
+                    <CustomButton
+                      title="Fechar"
+                      onPress={closeProgressModal}
+                      backgroundColor="#5B79FF"
+                      textColor="#FFFFFF"
+                      width='100%'
+                    />
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+
+        <Modal animationType="slide" transparent visible={dailyProgressModalVisible}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                <Text style={styles.modalTitle}>Progresso diário</Text>
+                <Text style={styles.modalLabel}>
+                  {progressDateKey ? `Dia ${formatDisplayDate(parseDateKey(progressDateKey))}` : ''}
+                </Text>
+
+                <Text style={styles.modalLabel}>Valor atual</Text>
+                <CustomTextInput
+                  keyboardType="numeric"
+                  value={dailyValue}
+                  onChangeText={setDailyValue}
+                  placeholder="Ex: 1 (km) ou minutos"
+                  containerStyle={{ width: '100%' }}
+                />
+
+                <Text style={styles.modalLabel}>Meta diária</Text>
+                <CustomTextInput
+                  keyboardType="numeric"
+                  value={dailyProgressTarget}
+                  onChangeText={setDailyProgressTarget}
+                  placeholder="Ex: 2 (km) ou minutos"
+                  containerStyle={{ width: '100%' }}
+                />
+
+                <Pressable style={styles.selectField} onPress={() => setDailyPickerVisible(true)}>
+                  <Text style={styles.selectFieldText}>Registrar por tempo</Text>
+                </Pressable>
+
+                {dailyPickerVisible && (
+                  <DateTimePicker
+                    value={dailyTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={handleDailyTimeChange}
+                  />
+                )}
+
+                <View style={styles.modalActions}>
+                  <CustomButton
+                    title="Cancelar"
+                    onPress={() => setDailyProgressModalVisible(false)}
+                    backgroundColor="#5B79FF"
+                    textColor="#FFFFFF"
+                    width='50%'
+                  />
+                  <CustomButton
+                    iconName='save-outline'
+                    title="Salvar"
+                    onPress={handleSaveDailyProgress}
+                    backgroundColor="#5B79FF"
+                    textColor="#FFFFFF"
+                    width='50%'
                   />
                 </View>
 
-                <CustomButton
-                  title="Fechar"
-                  onPress={closeProgressModal}
-                  backgroundColor="#5B79FF"
-                  textColor="#FFFFFF"
-                  width={326}
-                />
-              </>
-            )}
+                {progressDateKey && selectedGoal?.dailyProgress?.[progressDateKey] && (
+                  <View style={styles.deleteRow}>
+                    <CustomButton
+                      title="Remover registro"
+                      onPress={handleRemoveDailyProgress}
+                      backgroundColor="#E94040"
+                      textColor="#FFFFFF"
+                      width='100%'
+                    />
+                  </View>
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </Modal>
-
-      
-      <Modal animationType="slide" transparent visible={dailyProgressModalVisible}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <ScrollView contentContainerStyle={styles.modalContent}>
-              <Text style={styles.modalTitle}>Progresso diário</Text>
-              <Text style={styles.modalLabel}>
-                {progressDateKey ? `Dia ${formatDisplayDate(parseDateKey(progressDateKey))}` : ''}
-              </Text>
-
-              <Text style={styles.modalLabel}>Valor atual</Text>
-              <CustomTextInput
-                keyboardType="numeric"
-                value={dailyValue}
-                onChangeText={setDailyValue}
-                placeholder="Ex: 1 (km) ou minutos"
-              />
-
-              <Text style={styles.modalLabel}>Meta diária</Text>
-              <CustomTextInput
-                keyboardType="numeric"
-                value={dailyProgressTarget}
-                onChangeText={setDailyProgressTarget}
-                placeholder="Ex: 2 (km) ou minutos"
-              />
-
-              <Pressable style={styles.selectField} onPress={() => setDailyPickerVisible(true)}>
-                <Text style={styles.selectFieldText}>Registrar por tempo</Text>
-              </Pressable>
-
-              {dailyPickerVisible && (
-                <DateTimePicker
-                  value={dailyTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={handleDailyTimeChange}
-                />
-              )}
-
-              <View style={styles.modalActions}>
-                <CustomButton
-                  title="Cancelar"
-                  onPress={() => setDailyProgressModalVisible(false)}
-                  backgroundColor="#5B79FF"
-                  textColor="#FFFFFF"
-                  width={147}
-                />
-                <CustomButton
-                  title="Salvar"
-                  onPress={handleSaveDailyProgress}
-                  backgroundColor="#5B79FF"
-                  textColor="#FFFFFF"
-                  width={147}
-                />
-              </View>
-
-              {progressDateKey && selectedGoal?.dailyProgress?.[progressDateKey] && (
-                <View style={styles.deleteRow}>
-                  <CustomButton
-                    title="Remover registro"
-                    onPress={handleRemoveDailyProgress}
-                    backgroundColor="#E94040"
-                    textColor="#FFFFFF"
-                    width={326}
-                  />
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
+        </Modal>
+      </SafeAreaView>
+    );
   } catch (error) {
     console.error('💥 Erro fatal ao renderizar GoalsScreen:', error);
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
         <Text style={{ fontSize: 18, color: 'red', textAlign: 'center' }}>
           Erro ao carregar a tela de metas
         </Text>
         <Text style={{ fontSize: 14, color: '#666', marginTop: 10, textAlign: 'center' }}>
           {String(error)}
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 }
@@ -787,7 +796,6 @@ export default function GoalsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
     paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
   },
@@ -945,6 +953,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 8,
   },
+  modalInput: {
+    width: 300,
+  },
   modalHelper: {
     color: '#5B79FF',
     fontSize: 12,
@@ -992,8 +1003,9 @@ const styles = StyleSheet.create({
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
+    justifyContent: 'space-evenly',
+    gap: 8,
+
   },
   deleteRow: {
     marginTop: 12,
@@ -1009,10 +1021,13 @@ const styles = StyleSheet.create({
   progressContainer: {
     width: '100%',
     maxWidth: 360,
+    maxHeight: '90%',
     backgroundColor: '#F8F9FF',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E1E6FF',
+  },
+  progressScrollContent: {
     padding: 20,
     gap: 12,
   },

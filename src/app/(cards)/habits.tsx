@@ -429,6 +429,27 @@ export default function HabitsScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hábitos Inteligentes</Text>
+      <View style={styles.button}>
+        {selectedHabits.length > 0 ? (
+          <CustomButton
+            iconName='trash-outline'
+            title={selectedHabits.length === 1 ? 'Excluir Hábito' : `Excluir ${selectedHabits.length} Hábitos`}
+            onPress={handleDeleteSelected}
+            backgroundColor={Colors.red}
+            textColor={Colors.white}
+            width={326}
+          />
+        ) : (
+          <CustomButton
+            iconName='add'
+            title="Novo Hábito"
+            onPress={onAddHabit}
+            backgroundColor={Colors.red}
+            textColor={Colors.white}
+            width={326}
+          />
+        )}
+      </View>
       <FlatList
         data={habits}
         renderItem={({ item }) => (
@@ -570,27 +591,6 @@ export default function HabitsScreen() {
         style={styles.column}
         contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
       />
-      <View style={styles.button}>
-        {selectedHabits.length > 0 ? (
-          <CustomButton
-            iconName='trash-outline'
-            title={selectedHabits.length === 1 ? 'Excluir Hábito' : `Excluir ${selectedHabits.length} Hábitos`}
-            onPress={handleDeleteSelected}
-            backgroundColor={Colors.red}
-            textColor={Colors.white}
-            width={326}
-          />
-        ) : (
-          <CustomButton
-            iconName='add'
-            title="Novo Hábito"
-            onPress={onAddHabit}
-            backgroundColor={Colors.red}
-            textColor={Colors.white}
-            width={326}
-          />
-        )}
-      </View>
       {showTimePicker && (
         <DateTimePicker
           value={habitTime || new Date()}
@@ -623,16 +623,15 @@ const styles = StyleSheet.create ({
     paddingBottom: 70,
   },
   title: {
-    marginLeft: 10,
     fontSize: 20,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
     marginBottom: 20,
-    alignSelf: 'center',
   },
   button: {
     alignSelf: 'center',
-    marginBottom: 70,
+    marginBottom: 12,
   },
   modalContent: {
     width: '90%',
