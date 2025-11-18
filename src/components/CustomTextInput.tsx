@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, TextInputProps } from 'react-native';
+import { StyleSheet, TextInput, View, TextInputProps, StyleProp, ViewStyle } from 'react-native';
 import colors from './Colors';
 
 interface CustomTextInputProps extends TextInputProps {
   placeholder?: string;
   backgroundColor?: string;
   borderRadius?: number;
+  containerStyle?: StyleProp<ViewStyle>;
+  placeholderTextColor?: string;
+  onFocus?: (e: any) => void;
+  onBlur?: (e: any) => void;
+  outlineColor?: string;
+  focusedBackgroundColor?: string;
+  blurredBackgroundColor?: string;
 }
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({ 
@@ -14,6 +21,11 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   borderRadius, 
   onFocus, 
   onBlur, 
+  containerStyle,
+  placeholderTextColor,
+  outlineColor,
+  focusedBackgroundColor,
+  blurredBackgroundColor,
   ...props 
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -33,17 +45,19 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   };
 
   const containerBackgroundColor = isFocused 
-    ? colors.white 
-    : (backgroundColor || colors.lightestBlue);
+    ? (focusedBackgroundColor || colors.white) 
+    : (blurredBackgroundColor || backgroundColor || colors.lightestBlue);
+
+  const borderColor = isFocused ? (outlineColor || colors.blue) : (outlineColor || '#A6B6FF');
 
   return (
-    <View style={[styles.container, { backgroundColor: containerBackgroundColor, borderRadius: borderRadius || 8 }]}>
+    <View style={[styles.container, { backgroundColor: containerBackgroundColor, borderRadius: borderRadius || 8, borderColor: borderColor }, containerStyle]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor="#A6B6FF"
         onFocus={handleFocus}
         onBlur={handleBlur}
+        placeholderTextColor={placeholderTextColor || colors.lightBlue}
         {...props}
       />
     </View>
@@ -55,7 +69,6 @@ const styles = StyleSheet.create({
     width: 322,
     height: 44,
     borderWidth: 1,
-    borderColor: '#A6B6FF',
     justifyContent: 'center',
     paddingHorizontal: 12,
     marginVertical: 6,

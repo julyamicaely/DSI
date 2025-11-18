@@ -21,6 +21,8 @@ type Habit = {
   time: any;
   reminders?: Date[];
   weekdays?: number[];
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  selectedDates?: { [date: string]: { selected: true; } };
 };
 
 // --- Componente Reutilizável para Itens de Ação ---
@@ -52,6 +54,99 @@ export default function HomeScreen() {
   const [lastClinicalData, setLastClinicalData] = useState<string>('');
   const [closestFavoriteHospital, setClosestFavoriteHospital] = useState<string>('');
   const { favorites, initialize: initializeFavorites } = useFavoritesStore();
+  const [impactDays, setImpactDays] = useState<number>(0);
+  const [impactChange, setImpactChange] = useState<string>("");
+  const [impactTitle, setImpactTitle] = useState<string>("Atividades");
+  const [habitImpactTitle, setHabitImpactTitle] = useState<string>("Nenhum hábito");
+  const [habitImpactValue, setHabitImpactValue] = useState<number>(0);
+  const [habitImpactChange, setHabitImpactChange] = useState<string>("");
+    // Helper to get week range
+    function getWeekRange(date: Date) {
+      const day = date.getDay();
+      const start = new Date(date);
+      start.setDate(date.getDate() - day);
+      start.setHours(0,0,0,0);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23,59,59,999);
+      return { start, end };
+    }
+
+    // Count completed days in a week
+    function countCompletedDays(goals: Goal[], start: Date, end: Date) {
+      let total = 0;
+      for (const goal of goals) {
+        total += goal.progress.filter(key => {
+          const d = new Date(key);
+          return d >= start && d <= end;
+        }).length;
+      }
+      return total;
+    }
+
+    // Count activations for a habit in a week range
+    function countActivationsForHabit(habit: Habit, start: Date, end: Date): number {
+      if (habit.frequency === 'daily') {
+        return 7; // Full week
+      } else if (habit.frequency === 'weekly') {
+        return habit.weekdays ? habit.weekdays.length : 0;
+      } else if (habit.frequency === 'monthly' || habit.frequency === 'yearly') {
+        return habit.selectedDates ? Object.keys(habit.selectedDates).filter(dateStr => {
+          const d = new Date(dateStr);
+          return d >= start && d <= end;
+        }).length : 0;
+      }
+      return 0;
+    }
+
+    const loadImpactStats = async () => {
+      const goals = await listGoals();
+      const habits = await listHabits() as Habit[];
+      if (!goals || goals.length === 0) {
+        setImpactTitle("Ops, nenhuma atividade registrada em Metas.");
+        setImpactDays(0);
+        setImpactChange("");
+      } else {
+        setImpactTitle("Atividades");
+        const now = new Date();
+        const { start: weekStart, end: weekEnd } = getWeekRange(now);
+        const { start: prevWeekStart, end: prevWeekEnd } = getWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
+        const currentWeekCount = countCompletedDays(goals, weekStart, weekEnd);
+        const prevWeekCount = countCompletedDays(goals, prevWeekStart, prevWeekEnd);
+        setImpactDays(currentWeekCount);
+        setImpactChange(
+          prevWeekCount === 0 ? "" : `${currentWeekCount - prevWeekCount >= 0 ? "+" : ""}${currentWeekCount - prevWeekCount} em relação à semana anterior.`
+        );
+      }
+
+      // For second card: habit with most activations this week
+      if (!habits || habits.length === 0) {
+        setHabitImpactTitle("Ops, nenhum hábito registrado em Hábitos.");
+        setHabitImpactValue(0);
+        setHabitImpactChange("");
+        return;
+      }
+      const now = new Date();
+      const { start: weekStart, end: weekEnd } = getWeekRange(now);
+      const { start: prevWeekStart, end: prevWeekEnd } = getWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
+      let maxHabit: Habit | null = null;
+      let maxCount = 0;
+      let prevMaxCount = 0;
+      for (const habit of habits) {
+        const currentCount = countActivationsForHabit(habit, weekStart, weekEnd);
+        const prevCount = countActivationsForHabit(habit, prevWeekStart, prevWeekEnd);
+        if (currentCount > maxCount) {
+          maxCount = currentCount;
+          maxHabit = habit;
+          prevMaxCount = prevCount;
+        }
+      }
+      setHabitImpactTitle(maxHabit ? maxHabit.name : "Hábitos");
+      setHabitImpactValue(maxCount);
+      setHabitImpactChange(
+        (prevMaxCount === 0 || maxCount === 0) ? "" : `${maxCount - prevMaxCount >= 0 ? "+" : ""}${maxCount - prevMaxCount} em relação à semana anterior.`
+      );
+    };
   
   const loadUserData = async () => {
     const user = auth.currentUser;
@@ -80,6 +175,7 @@ export default function HomeScreen() {
     loadNextHabit();
     loadNextGoal();
     loadLastClinicalData();
+    loadImpactStats();
     initializeFavorites().then(() => {
       loadClosestFavoriteHospital();
     });
@@ -194,8 +290,7 @@ export default function HomeScreen() {
         goalsWithReminders.sort((a, b) => a.nextReminder.getTime() - b.nextReminder.getTime());
         const nextGoalInfo = goalsWithReminders[0];
         const timeString = nextGoalInfo.nextReminder.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const dayString = nextGoalInfo.nextReminder.toLocaleDateString('pt-BR', { weekday: 'short' });
-        setNextGoal(`${nextGoalInfo.goalName} - ${dayString}, ${timeString}`);
+        setNextGoal(`${nextGoalInfo.goalName}, às ${timeString}`);
       } else {
         const goalWithMostProgress = goals.reduce((max, goal) => (goal.progress.length > max.progress.length ? goal : max), goals[0]);
         setNextGoal(`${goalWithMostProgress.habitName}`);
@@ -284,22 +379,22 @@ export default function HomeScreen() {
             <View style={styles.profileCircle} />
           )}
           <View>
-            <Text style={styles.welcomeText}>{userName}</Text>
+            <Text style={styles.welcomeText}>Olá, {userName}.</Text>
+            <Text style={styles.welcomeSubtext}>Sempre bom te ver de volta!</Text>
           </View>
         </View>
-        
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
             <NotificationCard
               onPress={() => routerButton.push('/goals')}
-              title="Metas de Atividade Física"
-              subtitle="Próxima atividade"
+              title="Metas "
+              subtitle="Próxima meta"
               dateOrValue={nextGoal}
               cardColor={colors.lightestBlue}
             />
             <NotificationCard
               onPress={() => routerButton.push('/habits')}
-              title="Hábitos Inteligentes"
+              title="Hábitos"
               subtitle="Próximo lembrete"
               dateOrValue={nextHabit}
               cardColor={colors.lightestBlue}
@@ -315,7 +410,7 @@ export default function HomeScreen() {
             />
             <NotificationCard
               onPress={() => routerButton.push('/hospitais-proximos')}
-              title="Hospitais Próximos"
+              title="Emergência"
               subtitle="Hospital mais próximo"
               dateOrValue={closestFavoriteHospital}
               cardColor={colors.lightestBlue}
@@ -329,21 +424,21 @@ export default function HomeScreen() {
         </View>
         <View style={styles.impactCardsRow}>
           <ImpactCard
-            title="Atividades Físicas"
-            value={25}
-            change="+5 em relação a ago."
+            title={impactTitle}
+            value={impactDays > 0 ? `${impactDays} dias!` : ""}
+            change={impactChange}
           />
           <ImpactCard
-            title="Hábito X"
-            value="50 dias"
-            change="+10 em relação a ago."
+            title={habitImpactTitle}
+            value={habitImpactValue > 0 ? `${habitImpactValue} vezes!` : ""}
+            change={habitImpactChange}
           />
         </View>
 
-        <View style={styles.outrasAcoesHeader}>
+        {/* <View style={styles.outrasAcoesHeader}>
           <Text style={styles.outrasAcoesTitle}>Outras Ações</Text>
         </View>
-        <View style={styles.actionsList}>
+        {/* <View style={styles.actionsList}>
           <ActionItem
             iconName="hand-left-outline" 
             title="Feedback"
@@ -355,7 +450,7 @@ export default function HomeScreen() {
             title="Compartilhar"
             subtitle="Envie atividades, lista de hábitos e muito mais aos..."
           />
-        </View>
+        </View> */}
         
         </ScrollView>
     </View>
@@ -394,6 +489,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
+    width: 250,
+    textAlign: 'left',
   },
   welcomeSubtext: {
     fontSize: 16,

@@ -1,6 +1,7 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, DimensionValue } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, DimensionValue, View } from "react-native";
 import colors from './Colors'
+import { Ionicons } from '@expo/vector-icons';
 
 interface CustomButtonProps {
   title: string;
@@ -14,6 +15,8 @@ interface CustomButtonProps {
   height?: DimensionValue;
   borderRadius?: number;
   padding?: number;
+  iconName?: React.ComponentProps<typeof Ionicons>['name'];
+  iconColor?: string;
 }
 
 const CustomButton = ({
@@ -27,6 +30,8 @@ const CustomButton = ({
   height = 50,
   borderWidth = 0,
   padding = 0,
+  iconName,
+  iconColor,
 }: CustomButtonProps) => {
   return (
     <TouchableOpacity
@@ -43,14 +48,17 @@ const CustomButton = ({
       ]}
       onPress={onPress}
     >
-      <Text
-        style={[
-          styles.text,
-          { color: outline ? borderColor : textColor },
-        ]}
-      >
-        {title}
-      </Text>
+      <View style={styles.content}>
+        {iconName && <Ionicons name={iconName} size={20} color={iconColor || textColor} style={styles.icon} />}
+        <Text
+          style={[
+            styles.text,
+            { color: outline ? borderColor : textColor },
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -62,6 +70,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 10,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: 8,
   },
   text: {
     fontSize: 18,

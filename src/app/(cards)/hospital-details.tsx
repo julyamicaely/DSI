@@ -23,6 +23,7 @@ import googlePlacesService from '../../services/googlePlaces.service';
 import { useFavoritesStore } from '../../store/favoritesStore';
 import { FavoriteButton, LoadingOverlay, ErrorMessage } from '../../components';
 import { COLORS, ERROR_MESSAGES } from '../../config/constants';
+import colors from '../../components/Colors';
 
 export default function HospitalDetails() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -139,9 +140,6 @@ export default function HospitalDetails() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.black} />
-          </TouchableOpacity>
           <Text style={styles.title}>Detalhes</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -160,9 +158,6 @@ export default function HospitalDetails() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.black} />
-        </TouchableOpacity>
 
         <Text style={styles.title}>Detalhes</Text>
 
@@ -225,7 +220,7 @@ export default function HospitalDetails() {
         {/* Endereço */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="location" size={20} color={COLORS.primary} />
+            <Ionicons name="location" size={20} color={colors.red} />
             <Text style={styles.sectionTitle}>Endereço</Text>
           </View>
           <Text style={styles.sectionContent}>{details.formatted_address}</Text>
@@ -235,7 +230,7 @@ export default function HospitalDetails() {
         {details.formatted_phone_number && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="call" size={20} color={COLORS.primary} />
+              <Ionicons name="call" size={20} color={colors.red} />
               <Text style={styles.sectionTitle}>Telefone</Text>
             </View>
             <TouchableOpacity onPress={handleCall}>
@@ -250,7 +245,7 @@ export default function HospitalDetails() {
         {details.website && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="globe" size={20} color={COLORS.primary} />
+              <Ionicons name="globe" size={20} color={colors.red} />
               <Text style={styles.sectionTitle}>Website</Text>
             </View>
             <TouchableOpacity onPress={handleOpenWebsite}>
@@ -265,7 +260,7 @@ export default function HospitalDetails() {
         {details.opening_hours?.weekday_text && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="time" size={20} color={COLORS.primary} />
+              <Ionicons name="time" size={20} color={colors.red} />
               <Text style={styles.sectionTitle}>Horário de Funcionamento</Text>
             </View>
             {details.opening_hours.weekday_text.map((text, index) => (
@@ -433,7 +428,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     gap: 12,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.red,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',

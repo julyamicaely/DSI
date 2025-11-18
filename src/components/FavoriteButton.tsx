@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from '../config/constants';
+import Colors from './Colors';
 
 interface FavoriteButtonProps {
   isFavorite: boolean;
@@ -29,7 +30,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   color,
   style,
 }) => {
-  const iconColor = color || (isFavorite ? COLORS.primary : COLORS.gray);
+  const iconColor = color || (isFavorite ? Colors.red : Colors.gray);
 
   return (
     <TouchableOpacity

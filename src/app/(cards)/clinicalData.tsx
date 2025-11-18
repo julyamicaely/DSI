@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { 
   View, 
   Text, 
-  TextInput, 
   TouchableOpacity, 
   FlatList, 
   StyleSheet, 
@@ -19,6 +18,8 @@ import {
   type PatientClinicalData,
   type PredictionResult 
 } from "../../services/mlPrediction.service";
+import CustomTextInput from "../../components/CustomTextInput";
+import Colors from "../../components/Colors";
 
 interface Consulta {
   id?: string;
@@ -202,15 +203,19 @@ export default function DadosClinicosScreen() {
           <Text style={styles.secaoTitulo}>📋 Dados Demográficos</Text>
           
           <Text style={styles.label}>Idade (anos)</Text>
-          <TextInput 
-            style={styles.input} 
+          <CustomTextInput
+            containerStyle={{ width: '100%' }}
             keyboardType="numeric" 
             placeholder="Ex: 45"
             value={consulta.idade} 
             onChangeText={v => setConsulta({ ...consulta, idade: v })} 
+            backgroundColor={Colors.white}
+            placeholderTextColor={Colors.gray}
+            outlineColor={Colors.gray}
+            blurredBackgroundColor={Colors.lightestBlue}
           />
 
-          <Text style={styles.label}>Gênero</Text>
+          <Text style={styles.label}>Sexo</Text>
           <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={[styles.optionButton, consulta.genero === 'Masculino' && styles.optionButtonSelected]}
@@ -234,42 +239,58 @@ export default function DadosClinicosScreen() {
           <Text style={styles.secaoTitulo}>📏 Medidas Físicas</Text>
 
           <Text style={styles.label}>Altura (cm)</Text>
-          <TextInput 
-            style={styles.input} 
+          <CustomTextInput
+            containerStyle={{ width: '100%' }}
             keyboardType="numeric"
             placeholder="Ex: 175" 
             value={consulta.altura} 
-            onChangeText={v => setConsulta({ ...consulta, altura: v })} 
+            onChangeText={v => setConsulta({ ...consulta, altura: v })}
+            backgroundColor={Colors.white}
+            placeholderTextColor={Colors.gray}
+            outlineColor={Colors.gray}
+            blurredBackgroundColor={Colors.lightestBlue}
           />
 
           <Text style={styles.label}>Peso (kg)</Text>
-          <TextInput 
-            style={styles.input} 
+          <CustomTextInput
+            containerStyle={{ width: '100%' }}
             keyboardType="decimal-pad"
             placeholder="Ex: 80" 
             value={consulta.peso} 
             onChangeText={v => setConsulta({ ...consulta, peso: v })} 
+            backgroundColor={Colors.white}
+            placeholderTextColor={Colors.gray}
+            outlineColor={Colors.gray}
+            blurredBackgroundColor={Colors.lightestBlue}
           />
 
           {/* Seção: Pressão Arterial */}
           <Text style={styles.secaoTitulo}>❤️ Pressão Arterial</Text>
 
           <Text style={styles.label}>Pressão Sistólica (Alta) - mmHg</Text>
-          <TextInput 
-            style={styles.input} 
+          <CustomTextInput
+            containerStyle={{ width: '100%' }}
             keyboardType="numeric"
             placeholder="Ex: 120" 
             value={consulta.pressaoAlta} 
             onChangeText={v => setConsulta({ ...consulta, pressaoAlta: v })} 
+            backgroundColor={Colors.white}
+            placeholderTextColor={Colors.gray}
+            outlineColor={Colors.gray}
+            blurredBackgroundColor={Colors.lightestBlue}
           />
 
           <Text style={styles.label}>Pressão Diastólica (Baixa) - mmHg</Text>
-          <TextInput 
-            style={styles.input} 
+          <CustomTextInput
+            containerStyle={{ width: '100%' }}
             keyboardType="numeric"
             placeholder="Ex: 80" 
             value={consulta.pressaoBaixa} 
             onChangeText={v => setConsulta({ ...consulta, pressaoBaixa: v })} 
+            backgroundColor={Colors.white}
+            placeholderTextColor={Colors.gray}
+            outlineColor={Colors.gray}
+            blurredBackgroundColor={Colors.lightestBlue}
           />
 
           {/* Seção: Exames Laboratoriais */}
@@ -460,7 +481,7 @@ export default function DadosClinicosScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitulo}>Análise de Risco Cardiovascular</Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-                  <Ionicons name="close-circle" size={32} color="#95A5A6" />
+                  <Ionicons name="close-circle" size={32} color={Colors.gray} />
                 </TouchableOpacity>
               </View>
 
@@ -491,7 +512,7 @@ export default function DadosClinicosScreen() {
                             <View style={[
                               styles.severityBadge,
                               { backgroundColor: 
-                                factor.severity === 'CRÍTICO' ? '#E74C3C' :
+                                factor.severity === 'CRÍTICO' ? Colors.red :
                                 factor.severity === 'ALTO' ? '#E67E22' :
                                 factor.severity === 'MODERADO' ? '#F39C12' : '#27AE60'
                               }
@@ -636,19 +657,19 @@ const styles = StyleSheet.create({
     borderColor: "#E5E8FF",
   },
   optionButtonSelected: {
-    backgroundColor: "#E94040",
-    borderColor: "#E94040",
+    backgroundColor: Colors.red,
+    borderColor: Colors.red,
   },
   optionButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#7F8C8D",
+    color: Colors.gray,
   },
   optionButtonTextSelected: {
     color: "#FFF",
   },
   botaoSalvar: {
-    backgroundColor: "#E94040",
+    backgroundColor: Colors.red,
     borderRadius: 8,
     padding: 15,
     alignItems: "center",
@@ -658,7 +679,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   botaoRisco: {
-    backgroundColor: "#5B79FF",
+    backgroundColor: Colors.blue,
     borderRadius: 8,
     padding: 15,
     alignItems: "center",
@@ -714,7 +735,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   botaoEditar: {
-    backgroundColor: "#5B79FF",
+    backgroundColor: Colors.blue,
     padding: 10,
     borderRadius: 8,
     flex: 1,
@@ -724,7 +745,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   botaoExcluir: {
-    backgroundColor: "#E94040",
+    backgroundColor: Colors.red,
     padding: 10,
     borderRadius: 8,
     flex: 1,
@@ -807,12 +828,12 @@ const styles = StyleSheet.create({
   recommendationTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2C3E50",
+    color: Colors.darkGray,
     marginBottom: 10,
   },
   recommendationText: {
     fontSize: 15,
-    color: "#34495E",
+    color: Colors.darkGray2,
     lineHeight: 22,
   },
   // Fatores de Risco
@@ -827,7 +848,7 @@ const styles = StyleSheet.create({
   factorsTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2C3E50",
+    color: Colors.darkGray,
     marginBottom: 15,
   },
   factorItem: {
@@ -845,7 +866,7 @@ const styles = StyleSheet.create({
   factorName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#2C3E50",
+    color: Colors.darkGray,
     flex: 1,
   },
   severityBadge: {
@@ -860,12 +881,12 @@ const styles = StyleSheet.create({
   },
   factorDescription: {
     fontSize: 14,
-    color: "#34495E",
+    color: Colors.darkGray2,
     marginBottom: 8,
   },
   factorRecommendation: {
     fontSize: 13,
-    color: "#7F8C8D",
+    color: Colors.gray,
     fontStyle: "italic",
     marginBottom: 10,
   },
@@ -878,7 +899,7 @@ const styles = StyleSheet.create({
   },
   importanceFill: {
     height: "100%",
-    backgroundColor: "#3498DB",
+    backgroundColor: Colors.lightBlue2,
   },
   importanceText: {
     fontSize: 11,
@@ -897,12 +918,12 @@ const styles = StyleSheet.create({
   featuresTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#2C3E50",
+    color: Colors.darkGray,
     marginBottom: 5,
   },
   featuresSubtitle: {
     fontSize: 13,
-    color: "#7F8C8D",
+    color: Colors.gray,
     marginBottom: 15,
   },
   featureItem: {
@@ -920,12 +941,12 @@ const styles = StyleSheet.create({
   featureRank: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#3498DB",
+    color: Colors.blue,
   },
   featureName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2C3E50",
+    color: Colors.darkGray,
     flex: 1,
   },
   featureDetails: {
@@ -936,12 +957,12 @@ const styles = StyleSheet.create({
   },
   featureValue: {
     fontSize: 14,
-    color: "#34495E",
+    color: Colors.darkGray2,
   },
   featureImportance: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#3498DB",
+    color: Colors.blue,
   },
   featureBar: {
     height: 6,
@@ -951,7 +972,7 @@ const styles = StyleSheet.create({
   },
   featureBarFill: {
     height: "100%",
-    backgroundColor: "#3498DB",
+    backgroundColor: Colors.lightBlue2,
   },
   // Erro
   errorCard: {
@@ -972,7 +993,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalCloseButton: {
-    backgroundColor: "#3498DB",
+    backgroundColor: Colors.lightBlue2,
     borderRadius: 15,
     padding: 15,
     alignItems: "center",

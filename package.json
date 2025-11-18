@@ -11,7 +11,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@radix-ui/react-accordion": "^1.2.12",
-    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-vector-icons/ionicons": "^12.3.0",
     "@react-navigation/native": "^7.1.8",
@@ -41,6 +41,7 @@
     "react-async": "^10.0.1",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-calendars": "^1.1313.0",
     "react-native-dotenv": "^3.4.11",
     "react-native-maps": "1.20.1",
     "react-native-paper": "^5.14.5",
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "@types/react-native-calendars": "^1.1264.7",
     "typescript": "~5.9.2"
   },
   "private": true
