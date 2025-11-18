@@ -7,11 +7,11 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { auth } from "../../../../firebaseConfig";
 import { getUserData, updateUserInfo } from "../../../services/firebase.service";
 import { useAuth } from "../../../context/AuthContext";
+import TemporaryMessage from "../../../components/TemporaryMessage";
 
 export default function MyInfoScreen() {
   const [userName, setUserName] = useState("");
@@ -22,6 +22,7 @@ export default function MyInfoScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { triggerDataUpdate } = useAuth();
+  const [tempMessage, setTempMessage] = useState<string>('');
 
   useEffect(() => {
     loadUserData();
@@ -44,7 +45,7 @@ export default function MyInfoScreen() {
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      Alert.alert("Erro", "Não foi possível carregar suas informações.");
+      setTempMessage("Erro: Não foi possível carregar suas informações.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ export default function MyInfoScreen() {
   const handleSave = async () => {
     // Validações básicas
     if (!userName.trim()) {
-      Alert.alert("Atenção", "O nome não pode estar vazio.");
+      setTempMessage("Atenção: O nome não pode estar vazio.");
       return;
     }
 
@@ -66,7 +67,7 @@ export default function MyInfoScreen() {
         additionalInfo: additionalInfo.trim(),
       });
 
-      Alert.alert("Sucesso", "Informações atualizadas com sucesso!");
+      setTempMessage("Sucesso: Informações atualizadas com sucesso!");
 
       // Notificar outras telas sobre a atualização
       triggerDataUpdate();
@@ -75,7 +76,7 @@ export default function MyInfoScreen() {
       await loadUserData();
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      Alert.alert("Erro", "Não foi possível salvar as informações.");
+      setTempMessage("Erro: Não foi possível salvar as informações.");
     } finally {
       setSaving(false);
     }
@@ -146,6 +147,7 @@ export default function MyInfoScreen() {
           <Text style={styles.saveButtonText}>Salvar informações</Text>
         )}
       </TouchableOpacity>
+      <TemporaryMessage message={tempMessage} onHide={() => setTempMessage('')} />
     </ScrollView>
   );
 }

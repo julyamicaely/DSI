@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
     borderTopWidth: 1,
     borderTopColor: '#eee',
     height: 70, 

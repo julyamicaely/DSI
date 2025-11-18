@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { uploadProfilePhoto, updateUserPhoto } from "../services/firebase.service";
 import { useAuth } from "../context/AuthContext";
+import TemporaryMessage from "./TemporaryMessage";
 
 interface ProfilePhotoPickerProps {
   userId: string;
@@ -28,6 +28,7 @@ export default function ProfilePhotoPicker({
   const [photoUrl, setPhotoUrl] = useState(currentPhotoUrl);
   const [uploading, setUploading] = useState(false);
   const { refreshUser, triggerDataUpdate } = useAuth();
+  const [tempMessage, setTempMessage] = useState<string>('');
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
@@ -37,10 +38,7 @@ export default function ProfilePhotoPicker({
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(
-          "Permissão negada",
-          "Precisamos de acesso à galeria para você escolher uma foto."
-        );
+        setTempMessage("Permissão negada: Precisamos de acesso à galeria para você escolher uma foto.");
         return;
       }
 
@@ -57,7 +55,7 @@ export default function ProfilePhotoPicker({
       }
     } catch (error) {
       console.error("Erro ao selecionar imagem:", error);
-      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
+      setTempMessage("Erro: Não foi possível selecionar a imagem.");
     }
   };
 
@@ -84,10 +82,10 @@ export default function ProfilePhotoPicker({
         onPhotoUpdated(downloadURL);
       }
 
-      Alert.alert("Sucesso", "Foto de perfil atualizada!");
+      setTempMessage("Sucesso: Foto de perfil atualizada!");
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      Alert.alert("Erro", "Não foi possível atualizar a foto de perfil.");
+      setTempMessage("Erro: Não foi possível atualizar a foto de perfil.");
     } finally {
       setUploading(false);
     }
@@ -115,6 +113,7 @@ export default function ProfilePhotoPicker({
           <Ionicons name="camera" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+      <TemporaryMessage message={tempMessage} onHide={() => setTempMessage('')} />
     </View>
   );
 }

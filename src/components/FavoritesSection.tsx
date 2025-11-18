@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  Alert,
   Modal,
   TextInput,
   KeyboardAvoidingView,
@@ -21,6 +20,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { FavoriteHospital } from '../types/hospital.types';
 import { COLORS } from '../config/constants';
 import googlePlacesService from '../services/googlePlaces.service';
+import TemporaryMessage from './TemporaryMessage';
+import ConfirmationModal from './ConfirmationModal';
+import CustomButton from './CustomButton';
+import Colors from './Colors';
 
 interface FavoritesSectionProps {
   favorites: FavoriteHospital[];
@@ -39,6 +42,25 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
 }) => {
   const [editingFavorite, setEditingFavorite] = useState<FavoriteHospital | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [tempMessage, setTempMessage] = useState<string>('');
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalActions, setModalActions] = useState<React.ReactNode | null>(null);
+  const [favoriteToRemove, setFavoriteToRemove] = useState<FavoriteHospital | null>(null);
+
+  const openModal = (title: string, message: string, actions: React.ReactNode) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalActions(actions);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalActions(null);
+    setFavoriteToRemove(null);
+  };
 
   const handleOpenNoteModal = (favorite: FavoriteHospital) => {
     setEditingFavorite(favorite);
@@ -55,17 +77,26 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
   };
 
   const handleRemove = (favorite: FavoriteHospital) => {
-    Alert.alert(
+    setFavoriteToRemove(favorite);
+    openModal(
       'Remover Favorito',
       `Deseja remover "${favorite.name}" dos favoritos?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: () => onRemove(favorite.placeId),
-        },
-      ]
+      <>
+        <CustomButton title="Cancelar" onPress={closeModal} backgroundColor={Colors.lightGray} textColor={Colors.black} width={'45%'} />
+        <CustomButton
+          title="Remover"
+          onPress={() => {
+            if (favoriteToRemove) {
+              onRemove(favoriteToRemove.placeId);
+              setTempMessage(`Favorito "${favoriteToRemove.name}" removido.`);
+            }
+            closeModal();
+          }}
+          backgroundColor={Colors.red}
+          textColor={Colors.white}
+          width={'45%'}
+        />
+      </>
     );
   };
 
@@ -231,6 +262,15 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      <ConfirmationModal
+        visible={isModalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={closeModal}
+      >
+        {modalActions}
+      </ConfirmationModal>
+      <TemporaryMessage message={tempMessage} onHide={() => setTempMessage('')} />
     </>
   );
 };

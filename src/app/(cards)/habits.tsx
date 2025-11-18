@@ -12,6 +12,7 @@ import { List } from 'react-native-paper';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -427,7 +428,7 @@ export default function HabitsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Hábitos Inteligentes</Text>
       <View style={styles.button}>
         {selectedHabits.length > 0 ? (
@@ -608,14 +609,13 @@ export default function HabitsScreen() {
       >
         {modalActions}
       </ConfirmationModal>
-    </View>
+    </SafeAreaView>
   );  
 }
 
 const styles = StyleSheet.create ({
   container: {
     flex: 1,
-    paddingTop: 30,
     gap: 5,
     backgroundColor: '#fff',
   },
@@ -632,22 +632,6 @@ const styles = StyleSheet.create ({
   button: {
     alignSelf: 'center',
     marginBottom: 12,
-  },
-  modalContent: {
-    width: '90%',
-    height: 'auto',
-    backgroundColor: Colors.lightestBlue,
-    marginHorizontal: '5%',
-    borderRadius: 30,
-    position: 'absolute',
-    bottom: '30%',
-    borderWidth: 1,
-    borderColor: Colors.lightBlue,
-    borderStyle: 'dashed',
-    gap: -5,
-  },
-  accordion: {
-    width: '90%',
   },
   modalTitles: {
     fontWeight: '500',

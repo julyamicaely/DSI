@@ -20,6 +20,7 @@ import {
 } from "../../services/mlPrediction.service";
 import CustomTextInput from "../../components/CustomTextInput";
 import Colors from "../../components/Colors";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Consulta {
   id?: string;
@@ -187,7 +188,7 @@ export default function DadosClinicosScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -456,7 +457,7 @@ export default function DadosClinicosScreen() {
 
       {/* Modal de Resultado */}
       {renderResultModal()}
-    </View>
+    </SafeAreaView>
   );
 
   /**
