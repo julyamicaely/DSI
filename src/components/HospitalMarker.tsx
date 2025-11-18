@@ -9,6 +9,7 @@ import { Marker } from 'react-native-maps';
 import { Ionicons } from "@expo/vector-icons";
 import { Hospital } from '../types/hospital.types';
 import { COLORS } from '../config/constants';
+import Colors from './Colors';
 
 interface HospitalMarkerProps {
   hospital: Hospital;
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.primary,
+    backgroundColor: Colors.red,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.1 }],
   },
   favoriteMarker: {
-    borderColor: COLORS.primary,
+    borderColor: Colors.red,
     borderWidth: 4,
   },
   favoriteBadge: {
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: COLORS.primary,
+    backgroundColor: Colors.red,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,

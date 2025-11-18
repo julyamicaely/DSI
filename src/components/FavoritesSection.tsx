@@ -123,7 +123,7 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
         {/* Conteúdo */}
         <View style={styles.favoriteContent}>
           <View style={styles.favoriteHeader}>
-            <Ionicons name="heart" size={16} color={COLORS.primary} />
+            <Ionicons name="heart" size={16} color={Colors.red} />
             <Text style={styles.favoriteName} numberOfLines={1}>
               {item.name}
             </Text>
@@ -180,7 +180,7 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
     <>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="heart" size={20} color={COLORS.primary} />
+          <Ionicons name="heart" size={20} color={Colors.red} />
           <Text style={styles.title}>Meus Favoritos</Text>
           <Text style={styles.count}>({favorites.length})</Text>
         </View>
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: Colors.red,
   },
   saveButtonText: {
     fontSize: 14,
