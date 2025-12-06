@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -9,7 +9,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Modal,
-  Pressable
+  Pressable,
+  Animated,
+  PanResponder
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
@@ -41,6 +43,9 @@ interface Consulta {
 }
 
 export default function DadosClinicosScreen() {
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const formBgAnimation = React.useRef(new Animated.Value(1)).current;
+  
   const [consulta, setConsulta] = useState<Consulta>({
     idade: "",
     genero: "",
@@ -71,6 +76,9 @@ export default function DadosClinicosScreen() {
   // Estados para undo
   const [consultasParaExcluir, setConsultasParaExcluir] = useState<Consulta[]>([]);
   const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // Estados para swipe
+  const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     carregarConsultas();
@@ -177,6 +185,27 @@ export default function DadosClinicosScreen() {
   const handleEditar = (item: Consulta) => {
     setConsulta(item);
     setEditandoId(item.id || null);
+    
+    // Animação de destaque do formulário
+    Animated.sequence([
+      Animated.timing(formBgAnimation, {
+        toValue: 0.95,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(formBgAnimation, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+    ]).start();
+    
+    // Scroll suave para o topo para mostrar o formulário
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }, 100);
+    
+    toast.info("Editando", "Consulta carregada para edição");
   };
 
   const handleDuploClique = (item: Consulta) => {
@@ -253,6 +282,130 @@ export default function DadosClinicosScreen() {
     // Função antiga mantida por compatibilidade, mas não usada
   };
 
+  // Componente de Card com Swipe
+  const SwipeableCard = ({ item }: { item: Consulta }) => {
+    const translateX = useRef(new Animated.Value(0)).current;
+    
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return Math.abs(gestureState.dx) > 5;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (gestureState.dx < 0) {
+            // Só permite arrastar para a esquerda
+            translateX.setValue(Math.max(gestureState.dx, -80));
+          }
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx < -40) {
+            // Se arrastou mais de 40px, vai direto para edição
+            handleEditar(item);
+            // Volta para a posição inicial
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          } else {
+            // Volta para a posição inicial
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+            if (swipedItemId === item.id) {
+              setSwipedItemId(null);
+            }
+          }
+        },
+      })
+    ).current;
+
+    // Fecha o swipe se outro item for aberto
+    useEffect(() => {
+      if (swipedItemId !== item.id && swipedItemId !== null) {
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    }, [swipedItemId]);
+
+    return (
+      <View style={styles.swipeContainer}>
+        {/* Botão de Editar (atrás do card) */}
+        <View style={styles.swipeEditAction}>
+          <TouchableOpacity 
+            style={styles.swipeEditButton}
+            onPress={() => {
+              handleEditar(item);
+              Animated.spring(translateX, {
+                toValue: 0,
+                useNativeDriver: true,
+              }).start();
+              setSwipedItemId(null);
+            }}
+          >
+            <Ionicons name="create-outline" size={24} color={Colors.white} />
+            <Text style={styles.swipeActionText}>Editar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Card que pode ser arrastado */}
+        <Animated.View
+          style={[
+            styles.swipeableCardWrapper,
+            { transform: [{ translateX }] }
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <Pressable 
+            onPress={() => {
+              if (swipedItemId === item.id) {
+                // Se está aberto, fecha
+                Animated.spring(translateX, {
+                  toValue: 0,
+                  useNativeDriver: true,
+                }).start();
+                setSwipedItemId(null);
+              } else {
+                handleDuploClique(item);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+              consultasSelecionadas.includes(item.id || '') && styles.cardSelected
+            ]}
+          >
+            <View style={styles.cardContent}>
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                onPress={() => handleToggleSelect(item.id || '')}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <View style={[
+                  styles.checkbox,
+                  consultasSelecionadas.includes(item.id || '') && styles.checkboxSelected
+                ]}>
+                  {consultasSelecionadas.includes(item.id || '') && (
+                    <Ionicons name="checkmark" size={16} color="#FFF" />
+                  )}
+                </View>
+              </TouchableOpacity>
+              
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
+                <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
+                <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
+              </View>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </View>
+    );
+  };
+
   // Validar apenas os campos obrigatórios (excluir IMC que é calculado automaticamente)
   const camposObrigatoriosValidacao: (keyof Consulta)[] = [
     'idade', 'genero', 'altura', 'peso', 
@@ -266,16 +419,37 @@ export default function DadosClinicosScreen() {
   return (
     <View style={styles.container}>
       <ScrollView 
+        ref={scrollViewRef}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         {/* Header */}
-        <Text style={styles.titulo}>Dados Clínicos</Text>
-        <Text style={styles.subtitulo}>Preencha seus dados para análise de risco cardiovascular</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.titulo}>Dados Clínicos</Text>
+          {editandoId && (
+            <View style={styles.editingBadge}>
+              <Ionicons name="create-outline" size={16} color={Colors.white} />
+              <Text style={styles.editingBadgeText}>Editando</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.subtitulo}>
+          {editandoId 
+            ? "Atualize os dados da consulta abaixo" 
+            : "Preencha seus dados para análise de risco cardiovascular"}
+        </Text>
 
         {/* Formulário */}
-        <View style={styles.form}>
+        <Animated.View 
+          style={[
+            styles.form,
+            {
+              transform: [{ scale: formBgAnimation }],
+            },
+            editandoId && styles.formEditing
+          ]}
+        >
           {/* Seção: Dados Demográficos */}
           <Text style={styles.secaoTitulo}>📋 Dados Demográficos</Text>
           
@@ -477,6 +651,33 @@ export default function DadosClinicosScreen() {
           </View>
 
           {/* Botões de Ação */}
+          {editandoId && (
+            <TouchableOpacity 
+              style={styles.botaoCancelar} 
+              onPress={() => {
+                setConsulta({
+                  idade: "",
+                  genero: "",
+                  altura: "",
+                  peso: "",
+                  pressaoAlta: "",
+                  pressaoBaixa: "",
+                  colesterol: "",
+                  glicose: "",
+                  imc: "",
+                  fumante: "",
+                  alcool: "",
+                  ativo: "",
+                });
+                setEditandoId(null);
+                toast.info("Cancelado", "Edição cancelada");
+              }}
+            >
+              <Ionicons name="close-outline" size={20} color={Colors.red} />
+              <Text style={styles.textoBotaoCancelar}>Cancelar Edição</Text>
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity style={styles.botaoSalvar} onPress={handleSalvar}>
             <Ionicons name="save-outline" size={20} color="#FFF" />
             <Text style={styles.textoBotao}>{editandoId ? "Atualizar Consulta" : "Salvar Consulta"}</Text>
@@ -501,50 +702,24 @@ export default function DadosClinicosScreen() {
               )}
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
 
         {/* Lista de Consultas Salvas */}
         <Text style={styles.listaTitulo}>Consultas Salvas</Text>
+        {consultas.length > 0 && (
+          <Text style={styles.listaHint}>
+            💡 Arraste o card para a esquerda para editar ou marque as consultas para excluir
+          </Text>
+        )}
         {consultas.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="folder-open-outline" size={64} color="#BDC3C7" />
             <Text style={styles.emptyText}>Nenhuma consulta salva</Text>
           </View>
         ) : (
-          consultas.map((item) => (
-            <Pressable 
-              key={item.id}
-              onPress={() => handleDuploClique(item)}
-              style={({ pressed }) => [
-                styles.card,
-                pressed && styles.cardPressed,
-                consultasSelecionadas.includes(item.id || '') && styles.cardSelected
-              ]}
-            >
-              <View style={styles.cardContent}>
-                <TouchableOpacity 
-                  style={styles.checkboxContainer}
-                  onPress={() => handleToggleSelect(item.id || '')}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <View style={[
-                    styles.checkbox,
-                    consultasSelecionadas.includes(item.id || '') && styles.checkboxSelected
-                  ]}>
-                    {consultasSelecionadas.includes(item.id || '') && (
-                      <Ionicons name="checkmark" size={16} color="#FFF" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-                
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
-                  <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
-                  <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
-                </View>
-              </View>
-            </Pressable>
-          ))
+          consultas.map((item) => {
+            return <SwipeableCard key={item.id} item={item} />;
+          })
         )}
       </ScrollView>
 
@@ -744,6 +919,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  formEditing: {
+    borderWidth: 3,
+    borderColor: Colors.blue,
+    shadowColor: Colors.blue,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
   secaoTitulo: {
     fontSize: 18,
     fontWeight: "700",
@@ -826,6 +1009,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "#2C3E50",
   },
+  listaHint: {
+    fontSize: 13,
+    color: Colors.gray,
+    marginBottom: 15,
+    textAlign: "center",
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
@@ -840,7 +1029,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 15,
-    marginBottom: 15,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1296,5 +1484,75 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  // Header do formulário
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  editingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blue,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  editingBadgeText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  // Botão de cancelar edição
+  botaoCancelar: {
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    padding: 15,
+    alignItems: "center",
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.red,
+  },
+  textoBotaoCancelar: {
+    color: Colors.red,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  // Ações de swipe
+  swipeContainer: {
+    marginBottom: 15,
+    position: 'relative',
+  },
+  swipeableCardWrapper: {
+    backgroundColor: 'transparent',
+  },
+  swipeEditAction: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    backgroundColor: Colors.blue,
+    justifyContent: "center",
+    alignItems: "center",
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  swipeEditButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swipeActionText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
   },
 });
