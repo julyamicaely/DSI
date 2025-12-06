@@ -152,6 +152,91 @@ export default function DadosClinicosScreen() {
       return;
     }
 
+    // Validações de range
+    const idade = parseInt(consulta.idade);
+    const altura = parseInt(consulta.altura);
+    const peso = parseFloat(consulta.peso);
+    const pressaoAlta = parseInt(consulta.pressaoAlta);
+    const pressaoBaixa = parseInt(consulta.pressaoBaixa);
+
+    // Validar idade (18-140 anos)
+    if (idade < 18 || idade > 140) {
+      setCampoComErro('idade');
+      idadeRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "A idade deve estar entre 18 e 140 anos");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar altura (100-250 cm)
+    if (altura < 100 || altura > 250) {
+      setCampoComErro('altura');
+      alturaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "A altura deve estar entre 100 e 250 cm");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar peso (30-300 kg)
+    if (peso < 30 || peso > 300) {
+      setCampoComErro('peso');
+      pesoRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "O peso deve estar entre 30 e 300 kg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar pressão sistólica (60-250 mmHg)
+    if (pressaoAlta < 60 || pressaoAlta > 250) {
+      setCampoComErro('pressaoAlta');
+      pressaoAltaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "A pressão sistólica deve estar entre 60 e 250 mmHg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar pressão diastólica (40-150 mmHg)
+    if (pressaoBaixa < 40 || pressaoBaixa > 150) {
+      setCampoComErro('pressaoBaixa');
+      pressaoBaixaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "A pressão diastólica deve estar entre 40 e 150 mmHg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar que pressão sistólica > diastólica
+    if (pressaoAlta <= pressaoBaixa) {
+      setCampoComErro('pressaoAlta');
+      pressaoAltaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => {}
+      );
+      toast.warning("Valor inválido", "A pressão sistólica deve ser maior que a diastólica");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
     if (editandoId) {
       await atualizarConsulta(editandoId, consulta);
       toast.success("Sucesso", "Consulta atualizada!");
