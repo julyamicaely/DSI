@@ -43,7 +43,7 @@ import {
   HospitalFilters,
   HospitalFiltersState,
 } from '../../components';
-import { COLORS, MAP_CONFIG, ERROR_MESSAGES } from '../../config/constants';
+import { MAP_CONFIG, ERROR_MESSAGES } from '../../config/constants';
 import useLocationPermission from '../../hooks/useLocationPermission';
 import useNearbyHospitals from '../../hooks/useNearbyHospitals';
 import Logger from '../../utils/logger';
@@ -431,7 +431,7 @@ export default function HospitaisProximos() {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="medical" size={64} color={COLORS.lightGray} />
+        <Ionicons name="medical" size={64} color={colors.lightGray} />
         <Text style={styles.emptyText}>
           {filters.openNow || filters.minRating > 0
             ? 'Nenhum hospital encontrado com os filtros aplicados'
@@ -492,7 +492,7 @@ export default function HospitaisProximos() {
                     latitude: hospital.coordinates.latitude,
                     longitude: hospital.coordinates.longitude,
                   }}
-                  pinColor={isFav ? COLORS.error : COLORS.secondary}
+                  pinColor={isFav ? colors.red : colors.blue}
                   onPress={() => {
                     setSelectedHospital(hospital);
                     centerMapOn(hospital.coordinates);
@@ -529,7 +529,7 @@ export default function HospitaisProximos() {
                     latitude: favorite.latitude,
                     longitude: favorite.longitude,
                   }}
-                  pinColor={COLORS.error}
+                  pinColor={colors.red}
                   onPress={() => {
                     setSelectedHospital(favoriteAsHospital);
                     centerMapOn(favoriteAsHospital.coordinates);
@@ -573,7 +573,7 @@ export default function HospitaisProximos() {
                 onPress={handleToggleMapExpansion}
                 activeOpacity={0.8}
               >
-                <Ionicons name="list" size={22} color="#FFF" />
+                <Ionicons name="list" size={22} color={colors.white} />
                 <Text style={styles.collapseButtonText}>Ver Lista</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -587,7 +587,7 @@ export default function HospitaisProximos() {
                 onPress={() => setSelectedHospital(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="close-circle" size={28} color={COLORS.white} />
+                <Ionicons name="close-circle" size={28} color={colors.white} />
               </TouchableOpacity>
               
               <HospitalCard
@@ -645,14 +645,14 @@ export default function HospitaisProximos() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray + '30',
+    borderBottomColor: colors.lightGray + '30',
   },
   backButton: {
     padding: 8,
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.black,
+    color: colors.darkGray,
     alignSelf: 'center',
   },
   errorContainer: {
@@ -687,10 +687,10 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     backgroundColor: colors.red,
     borderRadius: 14,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
     top: 20,
     right: 20,
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   collapseButtonText: {
-    color: '#FFF',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     alignItems: 'flex-end',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
   },
   listToggleButton: {
     flexDirection: 'row',
@@ -752,9 +752,9 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: 24,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.black,
+    color: colors.darkGray,
     marginBottom: 12,
   },
   emptyState: {
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 16,
-    color: COLORS.gray,
+    color: colors.gray,
   },
   listContent: {
     paddingBottom: 16,

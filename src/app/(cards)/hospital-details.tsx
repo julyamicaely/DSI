@@ -23,7 +23,7 @@ import { PlaceDetails } from '../../types/hospital.types';
 import googlePlacesService from '../../services/googlePlaces.service';
 import { useFavoritesStore } from '../../store/favoritesStore';
 import { FavoriteButton, LoadingOverlay, ErrorMessage } from '../../components';
-import { COLORS, ERROR_MESSAGES } from '../../config/constants';
+import { ERROR_MESSAGES } from '../../config/constants';
 import colors from '../../components/Colors';
 
 export default function HospitalDetails() {
@@ -174,7 +174,7 @@ export default function HospitalDetails() {
           <Image source={{ uri: photoUrl }} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.placeholderImage]}>
-            <Ionicons name="medical" size={80} color={COLORS.lightGray} />
+            <Ionicons name="medical" size={80} color={colors.lightGray} />
           </View>
         )}
 
@@ -184,7 +184,7 @@ export default function HospitalDetails() {
         {/* Rating */}
         {details.rating && (
           <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={20} color="#FFB800" />
+            <Ionicons name="star" size={20} color={colors.yellow} />
             <Text style={styles.ratingText}>{details.rating.toFixed(1)}</Text>
             {details.user_ratings_total && (
               <Text style={styles.ratingCount}>
@@ -205,7 +205,7 @@ export default function HospitalDetails() {
             <Ionicons
               name={details.opening_hours.open_now ? 'checkmark-circle' : 'close-circle'}
               size={16}
-              color={details.opening_hours.open_now ? COLORS.success : COLORS.error}
+              color={details.opening_hours.open_now ? colors.green : colors.red}
             />
             <Text
               style={[
@@ -279,7 +279,7 @@ export default function HospitalDetails() {
           <Ionicons
             name="call"
             size={24}
-            color={details.formatted_phone_number ? COLORS.white : COLORS.lightGray}
+            color={details.formatted_phone_number ? colors.white : colors.lightGray}
           />
           <Text style={[styles.actionText, !details.formatted_phone_number && styles.actionTextDisabled]}>
             Ligar
@@ -287,7 +287,7 @@ export default function HospitalDetails() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={handleOpenMaps}>
-          <Ionicons name="navigate" size={24} color={COLORS.white} />
+          <Ionicons name="navigate" size={24} color={colors.white} />
           <Text style={styles.actionText}>Rotas</Text>
         </TouchableOpacity>
 
@@ -295,7 +295,7 @@ export default function HospitalDetails() {
           <Ionicons
             name="globe"
             size={24}
-            color={details.website ? COLORS.white : COLORS.lightGray}
+            color={details.website ? colors.white : colors.lightGray}
           />
           <Text style={[styles.actionText, !details.website && styles.actionTextDisabled]}>
             Site
@@ -309,7 +309,7 @@ export default function HospitalDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -317,9 +317,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray + '30',
+    borderBottomColor: colors.lightGray + '30',
   },
   backButton: {
     padding: 8,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.black,
+    color: colors.darkGray,
   },
   content: {
     flex: 1,
@@ -337,14 +337,14 @@ const styles = StyleSheet.create({
     height: 250,
   },
   placeholderImage: {
-    backgroundColor: COLORS.lightGray + '30',
+    backgroundColor: colors.lightGray + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.black,
+    color: colors.darkGray,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
@@ -358,11 +358,11 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.black,
+    color: colors.darkGray,
   },
   ratingCount: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: colors.gray,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -376,20 +376,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   openBadge: {
-    backgroundColor: COLORS.success + '20',
+    backgroundColor: colors.green + '20',
   },
   closedBadge: {
-    backgroundColor: COLORS.error + '20',
+    backgroundColor: colors.red + '20',
   },
   statusText: {
     fontSize: 14,
     fontWeight: '600',
   },
   openText: {
-    color: COLORS.success,
+    color: colors.green,
   },
   closedText: {
-    color: COLORS.error,
+    color: colors.red,
   },
   section: {
     paddingHorizontal: 16,
@@ -404,20 +404,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.black,
+    color: colors.darkGray,
   },
   sectionContent: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: colors.gray,
     lineHeight: 20,
   },
   link: {
-    color: COLORS.secondary,
+    color: colors.blue,
     textDecorationLine: 'underline',
   },
   weekdayText: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: colors.gray,
     lineHeight: 22,
   },
   errorWrapper: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -448,9 +448,9 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.white,
+    color: colors.white,
   },
   actionTextDisabled: {
-    color: COLORS.lightGray,
+    color: colors.lightGray,
   },
 });
