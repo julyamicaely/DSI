@@ -7,11 +7,11 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { auth } from "../../../../firebaseConfig";
 import { getUserData, updateUserInfo } from "../../../services/firebase.service";
 import { useAuth } from "../../../context/AuthContext";
+import { toast } from "../../../utils/toast";
 
 export default function MyInfoScreen() {
   const [userName, setUserName] = useState("");
@@ -44,7 +44,7 @@ export default function MyInfoScreen() {
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      Alert.alert("Erro", "Não foi possível carregar suas informações.");
+      toast.error("Erro", "Não foi possível carregar suas informações.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ export default function MyInfoScreen() {
   const handleSave = async () => {
     // Validações básicas
     if (!userName.trim()) {
-      Alert.alert("Atenção", "O nome não pode estar vazio.");
+      toast.warning("Atenção", "O nome não pode estar vazio.");
       return;
     }
 
@@ -66,7 +66,7 @@ export default function MyInfoScreen() {
         additionalInfo: additionalInfo.trim(),
       });
 
-      Alert.alert("Sucesso", "Informações atualizadas com sucesso!");
+      toast.success("Sucesso", "Informações atualizadas com sucesso!");
 
       // Notificar outras telas sobre a atualização
       triggerDataUpdate();
@@ -75,7 +75,7 @@ export default function MyInfoScreen() {
       await loadUserData();
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      Alert.alert("Erro", "Não foi possível salvar as informações.");
+      toast.error("Erro", "Não foi possível salvar as informações.");
     } finally {
       setSaving(false);
     }

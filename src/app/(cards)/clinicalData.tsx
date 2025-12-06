@@ -20,6 +20,7 @@ import {
 } from "../../services/mlPrediction.service";
 import CustomTextInput from "../../components/CustomTextInput";
 import Colors from "../../components/Colors";
+import { toast } from "../../utils/toast";
 
 interface Consulta {
   id?: string;
@@ -81,17 +82,17 @@ export default function DadosClinicosScreen() {
     
     const campoVazio = camposObrigatorios.find(campo => !consulta[campo] || consulta[campo]?.trim() === '');
     if (campoVazio) {
-      Alert.alert("Atenção", "Preencha todos os campos antes de salvar.");
+      toast.warning("É necessário preencher todos os campos", "Preencha todos os campos antes de salvar.");
       return;
     }
 
     if (editandoId) {
       await atualizarConsulta(editandoId, consulta);
-      Alert.alert("Sucesso", "Consulta atualizada!");
+      toast.success("Sucesso", "Consulta atualizada!");
       setEditandoId(null);
     } else {
       await adicionarConsulta(consulta);
-      Alert.alert("Sucesso", "Consulta salva!");
+      toast.success("Sucesso", "Consulta salva!");
     }
 
     setConsulta({
@@ -125,7 +126,7 @@ export default function DadosClinicosScreen() {
     
     const campoVazio = camposObrigatorios.find(campo => !consulta[campo as keyof Consulta]);
     if (campoVazio) {
-      Alert.alert("Atenção", "Preencha todos os campos antes de analisar o risco.");
+      toast.warning("É necessário preencher todos os campos", "Preencha todos os campos antes de analisar o risco.");
       return;
     }
 
@@ -155,8 +156,8 @@ export default function DadosClinicosScreen() {
       
     } catch (error) {
       console.error('[ClinicalData] Erro na análise:', error);
-      Alert.alert(
-        "Erro", 
+      toast.error(
+        "Erro ao analisar", 
         "Ocorreu um erro ao analisar os dados. Verifique se todos os campos estão preenchidos corretamente."
       );
     } finally {
@@ -172,7 +173,7 @@ export default function DadosClinicosScreen() {
   const handleRemover = async (id?: string) => {
     if (!id) return;
     await deletarConsulta(id);
-    Alert.alert("Removido", "Consulta deletada!");
+    toast.success("Removido", "Consulta deletada!");
     carregarConsultas();
   };
 

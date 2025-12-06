@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from 'expo-router';
+import { toast } from '../../utils/toast';
 
 import { PlaceDetails } from '../../types/hospital.types';
 import googlePlacesService from '../../services/googlePlaces.service';
@@ -77,7 +78,7 @@ export default function HospitalDetails() {
     try {
       if (isHospitalFavorite) {
         await removeFavorite(placeId);
-        Alert.alert('Removido', 'Hospital removido dos favoritos');
+        toast.success('Removido dos favoritos', 'Hospital removido da sua lista');
       } else {
         await addFavorite({
           placeId: details.place_id,
@@ -89,10 +90,10 @@ export default function HospitalDetails() {
           rating: details.rating,
           photoReference: details.photos?.[0]?.photo_reference,
         });
-        Alert.alert('Adicionado', 'Hospital adicionado aos favoritos');
+        toast.success('Adicionado aos favoritos', 'Hospital salvo na sua lista');
       }
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Erro ao atualizar favorito');
+      toast.error('Erro', err instanceof Error ? err.message : 'Erro ao atualizar favorito');
     }
   };
 

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
+import { toast } from '../../utils/toast';
 
 import {
   DailyProgressEntry,
@@ -164,23 +165,23 @@ export default function GoalsScreen() {
   const handleSaveGoal = async () => {
 
     if (!selectedHabitId) {
-      Alert.alert('Selecione um hábito', 'É necessário vincular a meta a um hábito existente.');
+      toast.warning('Selecione um hábito', 'É necessário vincular a meta a um hábito existente.');
       return;
     }
 
     if (!target.trim()) {
-      Alert.alert('Meta inválida', 'Descreva a meta antes de salvar.');
+      toast.warning('Meta inválida', 'Descreva a meta antes de salvar.');
       return;
     }
 
     const habit = habits.find((item) => item.id === selectedHabitId);
     if (!habit) {
-      Alert.alert('Hábito não encontrado', 'Atualize a lista de hábitos e tente novamente.');
+      toast.error('Hábito não encontrado', 'Atualize a lista de hábitos e tente novamente.');
       return;
     }
 
     if (!isValidDayForHabit(habit, deadline)) {
-      Alert.alert('Não é possível criar meta para dias sem hábito');
+      toast.warning('Atenção', 'Não é possível criar meta para dias sem hábito');
       return;
     }
 
@@ -201,7 +202,7 @@ export default function GoalsScreen() {
       closeModal();
       await loadData();
     } catch (error) {
-      Alert.alert('Erro ao salvar', 'Não foi possível salvar a meta. Tente novamente.');
+      toast.error('Erro ao salvar', 'Não foi possível salvar a meta. Tente novamente.');
     }
   };
 
@@ -223,7 +224,7 @@ export default function GoalsScreen() {
               }
               await loadData();
             } catch (error) {
-              Alert.alert('Erro ao excluir', 'Não foi possível excluir a meta.');
+              toast.error('Erro ao excluir', 'Não foi possível excluir a meta.');
             }
           },
         },
@@ -253,19 +254,19 @@ export default function GoalsScreen() {
         )
       );
     } catch (error) {
-      Alert.alert('Erro ao atualizar progresso', 'Não foi possível atualizar o status do dia.');
+      toast.error('Erro ao atualizar', 'Não foi possível atualizar o status do dia.');
     }
   };
 
   const handleOpenDayProgress = (goal: Goal, day: Date) => {
     const habit = habits.find((h) => h.id === goal.habitId) ?? null;
     if (!isValidDayForHabit(habit, day)) {
-      Alert.alert('Não é possível criar meta para dias sem hábito');
+      toast.warning('Atenção', 'Não é possível criar meta para dias sem hábito');
       return;
     }
 
     if (day > goal.deadline) {
-      Alert.alert('Data inválida', 'O dia selecionado está além do prazo da meta.');
+      toast.warning('Data inválida', 'O dia selecionado está além do prazo da meta.');
       return;
     }
 
@@ -296,12 +297,12 @@ export default function GoalsScreen() {
     const numericTarget = Number(dailyProgressTarget);
 
     if (!numericTarget || numericTarget <= 0) {
-      Alert.alert('Meta diária inválida', 'Informe um alvo diário maior que zero.');
+      toast.warning('Meta diária inválida', 'Informe um alvo diário maior que zero.');
       return;
     }
 
     if (numericValue < 0) {
-      Alert.alert('Valor inválido', 'O valor atual não pode ser negativo.');
+      toast.warning('Valor inválido', 'O valor atual não pode ser negativo.');
       return;
     }
 
@@ -347,7 +348,7 @@ export default function GoalsScreen() {
 
       setDailyProgressModalVisible(false);
     } catch (error) {
-      Alert.alert('Erro ao salvar progresso', 'Não foi possível registrar o progresso diário.');
+      toast.error('Erro ao salvar', 'Não foi possível registrar o progresso diário.');
     }
   };
 
@@ -392,7 +393,7 @@ export default function GoalsScreen() {
       );
       setDailyProgressModalVisible(false);
     } catch (error) {
-      Alert.alert('Erro ao excluir', 'Não foi possível remover o progresso diário.');
+      toast.error('Erro ao excluir', 'Não foi possível remover o progresso diário.');
     }
   };
 

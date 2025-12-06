@@ -7,6 +7,7 @@ import colors from '../components/Colors'
 import { registerForPushNotificationsAsync } from '../utils/registerForPushNotifications';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 export default function RootLayout() {
   
@@ -99,6 +100,7 @@ export default function RootLayout() {
           }}
           />
       </Stack>
+      <Toast />
     </PaperProvider>
   </AuthProvider>
   </SafeAreaProvider>
