@@ -46,6 +46,19 @@ export default function DadosClinicosScreen() {
   const scrollViewRef = React.useRef<ScrollView>(null);
   const formBgAnimation = React.useRef(new Animated.Value(1)).current;
   
+  // Refs para cada campo do formulário
+  const idadeRef = React.useRef<View>(null);
+  const generoRef = React.useRef<View>(null);
+  const alturaRef = React.useRef<View>(null);
+  const pesoRef = React.useRef<View>(null);
+  const pressaoAltaRef = React.useRef<View>(null);
+  const pressaoBaixaRef = React.useRef<View>(null);
+  const colesterolRef = React.useRef<View>(null);
+  const glicoseRef = React.useRef<View>(null);
+  const fumanteRef = React.useRef<View>(null);
+  const alcoolRef = React.useRef<View>(null);
+  const ativoRef = React.useRef<View>(null);
+  
   const [consulta, setConsulta] = useState<Consulta>({
     idade: "",
     genero: "",
@@ -73,6 +86,9 @@ export default function DadosClinicosScreen() {
   const [consultasSelecionadas, setConsultasSelecionadas] = useState<string[]>([]);
   const [lastTap, setLastTap] = useState<{ id: string; time: number } | null>(null);
   
+  // Estado para campo com erro
+  const [campoComErro, setCampoComErro] = useState<string | null>(null);
+  
   // Estados para undo
   const [consultasParaExcluir, setConsultasParaExcluir] = useState<Consulta[]>([]);
   const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
@@ -99,7 +115,40 @@ export default function DadosClinicosScreen() {
     
     const campoVazio = camposObrigatorios.find(campo => !consulta[campo] || consulta[campo]?.trim() === '');
     if (campoVazio) {
-      toast.warning("É necessário preencher todos os campos", "Preencha todos os campos antes de salvar.");
+      // Mapeamento de campos para refs e nomes amigáveis
+      const campoParaRef: Record<string, { ref: React.RefObject<View | null>, nome: string }> = {
+        'idade': { ref: idadeRef, nome: 'Idade' },
+        'genero': { ref: generoRef, nome: 'Sexo' },
+        'altura': { ref: alturaRef, nome: 'Altura' },
+        'peso': { ref: pesoRef, nome: 'Peso' },
+        'pressaoAlta': { ref: pressaoAltaRef, nome: 'Pressão Sistólica' },
+        'pressaoBaixa': { ref: pressaoBaixaRef, nome: 'Pressão Diastólica' },
+        'colesterol': { ref: colesterolRef, nome: 'Colesterol' },
+        'glicose': { ref: glicoseRef, nome: 'Glicose' },
+        'fumante': { ref: fumanteRef, nome: 'Fumante' },
+        'alcool': { ref: alcoolRef, nome: 'Álcool' },
+        'ativo': { ref: ativoRef, nome: 'Atividade Física' },
+      };
+
+      const campoInfo = campoParaRef[campoVazio];
+      setCampoComErro(campoVazio);
+      
+      // Scroll para o campo vazio
+      campoInfo.ref.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+        },
+        () => {}
+      );
+      
+      toast.warning(`Campo obrigatório`, `Preencha o campo "${campoInfo.nome}"`);
+      
+      // Remove o destaque após 3 segundos
+      setTimeout(() => {
+        setCampoComErro(null);
+      }, 3000);
+      
       return;
     }
 
@@ -453,201 +502,322 @@ export default function DadosClinicosScreen() {
           {/* Seção: Dados Demográficos */}
           <Text style={styles.secaoTitulo}>📋 Dados Demográficos</Text>
           
-          <Text style={styles.label}>Idade (anos)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric" 
-            placeholder="Ex: 45"
-            value={consulta.idade} 
-            onChangeText={v => setConsulta({ ...consulta, idade: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={idadeRef} style={campoComErro === 'idade' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Idade (anos)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric" 
+              placeholder="Ex: 45"
+              value={consulta.idade} 
+              onChangeText={v => {
+                setConsulta({ ...consulta, idade: v });
+                if (campoComErro === 'idade') setCampoComErro(null);
+              }} 
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'idade' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
-          <Text style={styles.label}>Sexo</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.genero === 'Masculino' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, genero: 'Masculino' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.genero === 'Masculino' && styles.optionButtonTextSelected]}>
-                Masculino
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.genero === 'Feminino' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, genero: 'Feminino' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.genero === 'Feminino' && styles.optionButtonTextSelected]}>
-                Feminino
-              </Text>
-            </TouchableOpacity>
+          <View ref={generoRef} style={campoComErro === 'genero' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Sexo</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.genero === 'Masculino' && styles.optionButtonSelected,
+                  campoComErro === 'genero' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, genero: 'Masculino' });
+                  if (campoComErro === 'genero') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.genero === 'Masculino' && styles.optionButtonTextSelected]}>
+                  Masculino
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.genero === 'Feminino' && styles.optionButtonSelected,
+                  campoComErro === 'genero' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, genero: 'Feminino' });
+                  if (campoComErro === 'genero') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.genero === 'Feminino' && styles.optionButtonTextSelected]}>
+                  Feminino
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Seção: Medidas Físicas */}
           <Text style={styles.secaoTitulo}>📏 Medidas Físicas</Text>
 
-          <Text style={styles.label}>Altura (cm)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 175" 
-            value={consulta.altura} 
-            onChangeText={v => setConsulta({ ...consulta, altura: v })}
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={alturaRef} style={campoComErro === 'altura' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Altura (cm)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 175" 
+              value={consulta.altura} 
+              onChangeText={v => {
+                setConsulta({ ...consulta, altura: v });
+                if (campoComErro === 'altura') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'altura' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
-          <Text style={styles.label}>Peso (kg)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="decimal-pad"
-            placeholder="Ex: 80" 
-            value={consulta.peso} 
-            onChangeText={v => setConsulta({ ...consulta, peso: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pesoRef} style={campoComErro === 'peso' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Peso (kg)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="decimal-pad"
+              placeholder="Ex: 80" 
+              value={consulta.peso} 
+              onChangeText={v => {
+                setConsulta({ ...consulta, peso: v });
+                if (campoComErro === 'peso') setCampoComErro(null);
+              }} 
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'peso' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
           {/* Seção: Pressão Arterial */}
           <Text style={styles.secaoTitulo}>❤️ Pressão Arterial</Text>
 
-          <Text style={styles.label}>Pressão Sistólica (Alta) - mmHg</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 120" 
-            value={consulta.pressaoAlta} 
-            onChangeText={v => setConsulta({ ...consulta, pressaoAlta: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pressaoAltaRef} style={campoComErro === 'pressaoAlta' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pressão Sistólica (Alta) - mmHg</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 120" 
+              value={consulta.pressaoAlta} 
+              onChangeText={v => {
+                setConsulta({ ...consulta, pressaoAlta: v });
+                if (campoComErro === 'pressaoAlta') setCampoComErro(null);
+              }} 
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'pressaoAlta' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
-          <Text style={styles.label}>Pressão Diastólica (Baixa) - mmHg</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 80" 
-            value={consulta.pressaoBaixa} 
-            onChangeText={v => setConsulta({ ...consulta, pressaoBaixa: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pressaoBaixaRef} style={campoComErro === 'pressaoBaixa' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pressão Diastólica (Baixa) - mmHg</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 80" 
+              value={consulta.pressaoBaixa} 
+              onChangeText={v => {
+                setConsulta({ ...consulta, pressaoBaixa: v });
+                if (campoComErro === 'pressaoBaixa') setCampoComErro(null);
+              }} 
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'pressaoBaixa' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
           {/* Seção: Exames Laboratoriais */}
           <Text style={styles.secaoTitulo}>🔬 Exames Laboratoriais</Text>
 
-          <Text style={styles.label}>Colesterol</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.colesterol === 'Normal' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, colesterol: 'Normal' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.colesterol === 'Normal' && styles.optionButtonTextSelected]}>
-                Normal
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.colesterol === 'Alto' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, colesterol: 'Alto' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.colesterol === 'Alto' && styles.optionButtonTextSelected]}>
-                Alto
-              </Text>
-            </TouchableOpacity>
+          <View ref={colesterolRef} style={campoComErro === 'colesterol' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Colesterol</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.colesterol === 'Normal' && styles.optionButtonSelected,
+                  campoComErro === 'colesterol' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, colesterol: 'Normal' });
+                  if (campoComErro === 'colesterol') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.colesterol === 'Normal' && styles.optionButtonTextSelected]}>
+                  Normal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.colesterol === 'Alto' && styles.optionButtonSelected,
+                  campoComErro === 'colesterol' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, colesterol: 'Alto' });
+                  if (campoComErro === 'colesterol') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.colesterol === 'Alto' && styles.optionButtonTextSelected]}>
+                  Alto
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Glicose</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.glicose === 'Normal' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, glicose: 'Normal' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.glicose === 'Normal' && styles.optionButtonTextSelected]}>
-                Normal
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.glicose === 'Alta' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, glicose: 'Alta' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.glicose === 'Alta' && styles.optionButtonTextSelected]}>
-                Alta
-              </Text>
-            </TouchableOpacity>
+          <View ref={glicoseRef} style={campoComErro === 'glicose' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Glicose</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.glicose === 'Normal' && styles.optionButtonSelected,
+                  campoComErro === 'glicose' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, glicose: 'Normal' });
+                  if (campoComErro === 'glicose') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.glicose === 'Normal' && styles.optionButtonTextSelected]}>
+                  Normal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.glicose === 'Alta' && styles.optionButtonSelected,
+                  campoComErro === 'glicose' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, glicose: 'Alta' });
+                  if (campoComErro === 'glicose') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.glicose === 'Alta' && styles.optionButtonTextSelected]}>
+                  Alta
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Seção: Hábitos de Vida */}
           <Text style={styles.secaoTitulo}>🏃 Hábitos de Vida</Text>
 
-          <Text style={styles.label}>Você fuma?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.fumante === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, fumante: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.fumante === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.fumante === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, fumante: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.fumante === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={fumanteRef} style={campoComErro === 'fumante' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Você fuma?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.fumante === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'fumante' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, fumante: 'Não' });
+                  if (campoComErro === 'fumante') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.fumante === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.fumante === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'fumante' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, fumante: 'Sim' });
+                  if (campoComErro === 'fumante') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.fumante === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Consome álcool regularmente?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.alcool === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, alcool: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.alcool === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.alcool === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, alcool: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.alcool === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={alcoolRef} style={campoComErro === 'alcool' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Consome álcool regularmente?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.alcool === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'alcool' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, alcool: 'Não' });
+                  if (campoComErro === 'alcool') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.alcool === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.alcool === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'alcool' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, alcool: 'Sim' });
+                  if (campoComErro === 'alcool') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.alcool === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Pratica atividade física regular?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.ativo === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, ativo: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.ativo === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.ativo === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, ativo: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.ativo === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={ativoRef} style={campoComErro === 'ativo' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pratica atividade física regular?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.ativo === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'ativo' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, ativo: 'Não' });
+                  if (campoComErro === 'ativo') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.ativo === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton, 
+                  consulta.ativo === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'ativo' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, ativo: 'Sim' });
+                  if (campoComErro === 'ativo') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.ativo === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Botões de Ação */}
@@ -1524,6 +1694,19 @@ const styles = StyleSheet.create({
     color: Colors.red,
     fontWeight: "bold",
     fontSize: 16,
+  },
+  // Estilos para campos com erro
+  campoComErro: {
+    borderWidth: 2,
+    borderColor: Colors.red,
+    borderRadius: 12,
+    padding: 8,
+    marginTop: 10,
+    backgroundColor: Colors.lightRed + '30',
+  },
+  buttonComErro: {
+    borderColor: Colors.red,
+    borderWidth: 2,
   },
   // Ações de swipe
   swipeContainer: {
