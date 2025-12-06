@@ -8,7 +8,8 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
-  Modal
+  Modal,
+  Pressable
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
@@ -62,6 +63,14 @@ export default function DadosClinicosScreen() {
   const [analisando, setAnalisando] = useState(false);
   const [resultado, setResultado] = useState<PredictionResult | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  
+  // Estados para seleção múltipla
+  const [consultasSelecionadas, setConsultasSelecionadas] = useState<string[]>([]);
+  const [lastTap, setLastTap] = useState<{ id: string; time: number } | null>(null);
+  
+  // Estados para undo
+  const [consultasParaExcluir, setConsultasParaExcluir] = useState<Consulta[]>([]);
+  const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     carregarConsultas();
@@ -170,11 +179,78 @@ export default function DadosClinicosScreen() {
     setEditandoId(item.id || null);
   };
 
-  const handleRemover = async (id?: string) => {
-    if (!id) return;
-    await deletarConsulta(id);
-    toast.success("Removido", "Consulta deletada!");
-    carregarConsultas();
+  const handleDuploClique = (item: Consulta) => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300; // 300ms para considerar duplo clique
+    
+    if (lastTap && lastTap.id === item.id && (now - lastTap.time) < DOUBLE_PRESS_DELAY) {
+      // Duplo clique detectado - editar
+      handleEditar(item);
+      setLastTap(null);
+    } else {
+      // Primeiro clique
+      setLastTap({ id: item.id || '', time: now });
+    }
+  };
+
+  const handleToggleSelect = (consultaId: string) => {
+    setConsultasSelecionadas(prev => 
+      prev.includes(consultaId) 
+        ? prev.filter(id => id !== consultaId)
+        : [...prev, consultaId]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (consultasSelecionadas.length === 0) return;
+    
+    // Guardar consultas antes de excluir (para undo)
+    const consultasAExcluir = consultas.filter(c => consultasSelecionadas.includes(c.id || ''));
+    setConsultasParaExcluir(consultasAExcluir);
+    
+    // Remover da lista imediatamente (UI)
+    setConsultas(prev => prev.filter(c => !consultasSelecionadas.includes(c.id || '')));
+    
+    const quantidade = consultasSelecionadas.length;
+    
+    // Limpar timer anterior se existir
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+    }
+    
+    // Timer de 5 segundos para excluir permanentemente
+    const timer = setTimeout(async () => {
+      try {
+        await Promise.all(consultasSelecionadas.map(id => deletarConsulta(id)));
+        setConsultasParaExcluir([]);
+        toast.success("Excluído", `${quantidade} consulta${quantidade > 1 ? 's removidas' : ' removida'} permanentemente`);
+      } catch (error) {
+        // Se der erro, restaurar consultas
+        setConsultas(prev => [...prev, ...consultasAExcluir]);
+        toast.error("Erro", "Não foi possível excluir as consultas.");
+      }
+    }, 5000);
+    
+    setUndoTimer(timer);
+    setConsultasSelecionadas([]);
+  };
+
+  const handleUndo = () => {
+    // Cancelar timer de exclusão
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      setUndoTimer(null);
+    }
+    
+    // Restaurar consultas
+    setConsultas(prev => [...prev, ...consultasParaExcluir]);
+    setConsultasParaExcluir([]);
+    
+    toast.success("Desfeito", "Consultas restauradas!");
+  };
+
+  const handleRemover = async () => {
+    // Função antiga mantida por compatibilidade, mas não usada
   };
 
   // Validar apenas os campos obrigatórios (excluir IMC que é calculado automaticamente)
@@ -436,24 +512,71 @@ export default function DadosClinicosScreen() {
           </View>
         ) : (
           consultas.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
-              <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
-              <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
-              <View style={styles.cardBotoes}>
-                <TouchableOpacity style={styles.botaoEditar} onPress={() => handleEditar(item)}>
-                  <Ionicons name="create-outline" size={16} color="#FFF" />
-                  <Text style={styles.textoBotao}>Editar</Text>
+            <Pressable 
+              key={item.id}
+              onPress={() => handleDuploClique(item)}
+              style={({ pressed }) => [
+                styles.card,
+                pressed && styles.cardPressed,
+                consultasSelecionadas.includes(item.id || '') && styles.cardSelected
+              ]}
+            >
+              <View style={styles.cardContent}>
+                <TouchableOpacity 
+                  style={styles.checkboxContainer}
+                  onPress={() => handleToggleSelect(item.id || '')}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <View style={[
+                    styles.checkbox,
+                    consultasSelecionadas.includes(item.id || '') && styles.checkboxSelected
+                  ]}>
+                    {consultasSelecionadas.includes(item.id || '') && (
+                      <Ionicons name="checkmark" size={16} color="#FFF" />
+                    )}
+                  </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.botaoExcluir} onPress={() => handleRemover(item.id)}>
-                  <Ionicons name="trash-outline" size={16} color="#FFF" />
-                  <Text style={styles.textoBotao}>Excluir</Text>
-                </TouchableOpacity>
+                
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
+                  <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
+                  <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
+                </View>
               </View>
-            </View>
+            </Pressable>
           ))
         )}
       </ScrollView>
+
+      {/* Botão Flutuante de Exclusão */}
+      {consultasSelecionadas.length > 0 && (
+        <View style={styles.floatingButtonContainer}>
+          <TouchableOpacity 
+            style={styles.floatingDeleteButton}
+            onPress={handleDeleteSelected}
+          >
+            <Ionicons name="trash-outline" size={24} color="#FFF" />
+            <Text style={styles.floatingDeleteText}>
+              Excluir {consultasSelecionadas.length}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Snackbar de Undo */}
+      {consultasParaExcluir.length > 0 && (
+        <View style={styles.undoSnackbar}>
+          <View style={styles.undoContent}>
+            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+            <Text style={styles.undoText}>
+              {consultasParaExcluir.length} consulta{consultasParaExcluir.length > 1 ? 's excluídas' : ' excluída'}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={handleUndo} style={styles.undoButton}>
+            <Text style={styles.undoButtonText}>DESFAZER</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Modal de Resultado */}
       {renderResultModal()}
@@ -1004,5 +1127,174 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  // Estilos para interação do card
+  cardPressed: {
+    backgroundColor: "#F0F2F5",
+    transform: [{ scale: 0.98 }],
+  },
+  cardSelected: {
+    borderColor: Colors.red,
+    borderWidth: 2,
+    backgroundColor: "#FFF5F5",
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkboxContainer: {
+    padding: 4,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.gray,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+  },
+  checkboxSelected: {
+    backgroundColor: Colors.red,
+    borderColor: Colors.red,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardHint: {
+    fontSize: 11,
+    color: Colors.gray,
+    fontStyle: "italic",
+    marginTop: 8,
+  },
+  // Botão flutuante de exclusão
+  floatingButtonContainer: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  floatingDeleteButton: {
+    backgroundColor: Colors.red,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    gap: 8,
+  },
+  floatingDeleteText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  // Snackbar de Undo
+  undoSnackbar: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: Colors.red,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  undoContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  undoText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  undoButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+  },
+  undoButtonText: {
+    color: Colors.red,
+    fontSize: 15,
+    fontWeight: "bold",
+  },
+  // Modal de exclusão
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteModalContent: {
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 30,
+    width: "85%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  deleteModalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#2C3E50",
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  deleteModalText: {
+    fontSize: 15,
+    color: "#7F8C8D",
+    textAlign: "center",
+    marginBottom: 25,
+    lineHeight: 22,
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    gap: 15,
+    width: "100%",
+  },
+  deleteModalButtonCancel: {
+    flex: 1,
+    backgroundColor: "#ECF0F1",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  deleteModalButtonTextCancel: {
+    color: "#2C3E50",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteModalButtonConfirm: {
+    flex: 1,
+    backgroundColor: Colors.red,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  deleteModalButtonTextConfirm: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
