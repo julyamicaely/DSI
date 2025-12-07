@@ -1,4 +1,4 @@
-import { View, Text, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -8,6 +8,7 @@ import { auth } from "../../firebaseConfig";
 import CustomTextInput from "../components/CustomTextInput";
 import CustomButton from "../components/CustomButton";
 import TemporaryMessage from "../components/TemporaryMessage";
+import { toast } from "../utils/toast";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -29,7 +30,7 @@ export default function RegisterScreen() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       await updateProfile(userCredential.user, { displayName: nomeUsuario });
       setUser(userCredential.user); // Salva o usuário no contexto
-      Alert.alert("Sucesso", "Conta criada com sucesso!");
+      toast.success("Conta criada com sucesso!", "Bem-vindo ao LifeBeat!");
       router.replace("/home");
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
@@ -44,7 +45,7 @@ export default function RegisterScreen() {
       
       else {
         const message = error instanceof Error ? error.message : String(error);
-        Alert.alert("Erro", message);
+        toast.error("Erro ao criar conta", message);
       }
       console.log(error);
     }

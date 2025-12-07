@@ -10,7 +10,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { uploadProfilePhoto, updateUserPhoto } from "../services/firebase.service";
 import { useAuth } from "../context/AuthContext";
-import TemporaryMessage from "./TemporaryMessage";
+import { toast } from "../utils/toast";
 
 interface ProfilePhotoPickerProps {
   userId: string;
@@ -55,7 +55,7 @@ export default function ProfilePhotoPicker({
       }
     } catch (error) {
       console.error("Erro ao selecionar imagem:", error);
-      setTempMessage("Erro: Não foi possível selecionar a imagem.");
+      toast.error("Erro", "Não foi possível selecionar a imagem.");
     }
   };
 
@@ -73,7 +73,7 @@ export default function ProfilePhotoPicker({
 
       // Recarregar dados do usuário no contexto
       await refreshUser();
-      
+
       // Notificar outras telas sobre a atualização
       triggerDataUpdate();
 
@@ -82,10 +82,10 @@ export default function ProfilePhotoPicker({
         onPhotoUpdated(downloadURL);
       }
 
-      setTempMessage("Sucesso: Foto de perfil atualizada!");
+      toast.success("Sucesso", "Foto de perfil atualizada!");
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      setTempMessage("Erro: Não foi possível atualizar a foto de perfil.");
+      toast.error("Erro", "Não foi possível atualizar a foto de perfil.");
     } finally {
       setUploading(false);
     }

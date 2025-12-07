@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  FlatList, 
-  StyleSheet, 
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
   Alert,
   ScrollView,
   ActivityIndicator,
-  Modal
+  Modal,
+  Pressable,
+  Animated,
+  PanResponder
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
-import { 
-  predictCardiovascularRisk, 
+import {
+  predictCardiovascularRisk,
   formatPredictionForDisplay,
   type PatientClinicalData,
-  type PredictionResult 
+  type PredictionResult
 } from "../../services/mlPrediction.service";
 import CustomTextInput from "../../components/CustomTextInput";
 import Colors from "../../components/Colors";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { toast } from "../../utils/toast";
 
 interface Consulta {
   id?: string;
@@ -40,6 +43,22 @@ interface Consulta {
 }
 
 export default function DadosClinicosScreen() {
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const formBgAnimation = React.useRef(new Animated.Value(1)).current;
+
+  // Refs para cada campo do formulário
+  const idadeRef = React.useRef<View>(null);
+  const generoRef = React.useRef<View>(null);
+  const alturaRef = React.useRef<View>(null);
+  const pesoRef = React.useRef<View>(null);
+  const pressaoAltaRef = React.useRef<View>(null);
+  const pressaoBaixaRef = React.useRef<View>(null);
+  const colesterolRef = React.useRef<View>(null);
+  const glicoseRef = React.useRef<View>(null);
+  const fumanteRef = React.useRef<View>(null);
+  const alcoolRef = React.useRef<View>(null);
+  const ativoRef = React.useRef<View>(null);
+
   const [consulta, setConsulta] = useState<Consulta>({
     idade: "",
     genero: "",
@@ -57,11 +76,25 @@ export default function DadosClinicosScreen() {
 
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [editandoId, setEditandoId] = useState<string | null>(null);
-  
+
   // Estados para predição ML
   const [analisando, setAnalisando] = useState(false);
   const [resultado, setResultado] = useState<PredictionResult | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Estados para seleção múltipla
+  const [consultasSelecionadas, setConsultasSelecionadas] = useState<string[]>([]);
+  const [lastTap, setLastTap] = useState<{ id: string; time: number } | null>(null);
+
+  // Estado para campo com erro
+  const [campoComErro, setCampoComErro] = useState<string | null>(null);
+
+  // Estados para undo
+  const [consultasParaExcluir, setConsultasParaExcluir] = useState<Consulta[]>([]);
+  const [undoTimer, setUndoTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Estados para swipe
+  const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     carregarConsultas();
@@ -75,24 +108,142 @@ export default function DadosClinicosScreen() {
   const handleSalvar = async () => {
     // Validar apenas os campos obrigatórios (excluir IMC que é calculado automaticamente)
     const camposObrigatorios: (keyof Consulta)[] = [
-      'idade', 'genero', 'altura', 'peso', 
+      'idade', 'genero', 'altura', 'peso',
       'pressaoAlta', 'pressaoBaixa', 'colesterol', 'glicose',
       'fumante', 'alcool', 'ativo'
     ];
-    
+
     const campoVazio = camposObrigatorios.find(campo => !consulta[campo] || consulta[campo]?.trim() === '');
     if (campoVazio) {
-      Alert.alert("Atenção", "Preencha todos os campos antes de salvar.");
+      // Mapeamento de campos para refs e nomes amigáveis
+      const campoParaRef: Record<string, { ref: React.RefObject<View | null>, nome: string }> = {
+        'idade': { ref: idadeRef, nome: 'Idade' },
+        'genero': { ref: generoRef, nome: 'Sexo' },
+        'altura': { ref: alturaRef, nome: 'Altura' },
+        'peso': { ref: pesoRef, nome: 'Peso' },
+        'pressaoAlta': { ref: pressaoAltaRef, nome: 'Pressão Sistólica' },
+        'pressaoBaixa': { ref: pressaoBaixaRef, nome: 'Pressão Diastólica' },
+        'colesterol': { ref: colesterolRef, nome: 'Colesterol' },
+        'glicose': { ref: glicoseRef, nome: 'Glicose' },
+        'fumante': { ref: fumanteRef, nome: 'Fumante' },
+        'alcool': { ref: alcoolRef, nome: 'Álcool' },
+        'ativo': { ref: ativoRef, nome: 'Atividade Física' },
+      };
+
+      const campoInfo = campoParaRef[campoVazio];
+      setCampoComErro(campoVazio);
+
+      // Scroll para o campo vazio
+      campoInfo.ref.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+        },
+        () => { }
+      );
+
+      toast.warning(`Campo obrigatório`, `Preencha o campo "${campoInfo.nome}"`);
+
+      // Remove o destaque após 3 segundos
+      setTimeout(() => {
+        setCampoComErro(null);
+      }, 3000);
+
+      return;
+    }
+
+    // Validações de range
+    const idade = parseInt(consulta.idade);
+    const altura = parseInt(consulta.altura);
+    const peso = parseFloat(consulta.peso);
+    const pressaoAlta = parseInt(consulta.pressaoAlta);
+    const pressaoBaixa = parseInt(consulta.pressaoBaixa);
+
+    // Validar idade (18-140 anos)
+    if (idade < 18 || idade > 140) {
+      setCampoComErro('idade');
+      idadeRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "A idade deve estar entre 18 e 140 anos");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar altura (100-250 cm)
+    if (altura < 100 || altura > 250) {
+      setCampoComErro('altura');
+      alturaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "A altura deve estar entre 100 e 250 cm");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar peso (30-300 kg)
+    if (peso < 30 || peso > 300) {
+      setCampoComErro('peso');
+      pesoRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "O peso deve estar entre 30 e 300 kg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar pressão sistólica (60-250 mmHg)
+    if (pressaoAlta < 60 || pressaoAlta > 250) {
+      setCampoComErro('pressaoAlta');
+      pressaoAltaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "A pressão sistólica deve estar entre 60 e 250 mmHg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar pressão diastólica (40-150 mmHg)
+    if (pressaoBaixa < 40 || pressaoBaixa > 150) {
+      setCampoComErro('pressaoBaixa');
+      pressaoBaixaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "A pressão diastólica deve estar entre 40 e 150 mmHg");
+      setTimeout(() => setCampoComErro(null), 3000);
+      return;
+    }
+
+    // Validar que pressão sistólica > diastólica
+    if (pressaoAlta <= pressaoBaixa) {
+      setCampoComErro('pressaoAlta');
+      pressaoAltaRef.current?.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => scrollViewRef.current?.scrollTo({ y: y - 100, animated: true }),
+        () => { }
+      );
+      toast.warning("Valor inválido", "A pressão sistólica deve ser maior que a diastólica");
+      setTimeout(() => setCampoComErro(null), 3000);
       return;
     }
 
     if (editandoId) {
       await atualizarConsulta(editandoId, consulta);
-      Alert.alert("Sucesso", "Consulta atualizada!");
+      toast.success("Sucesso", "Consulta atualizada!");
       setEditandoId(null);
     } else {
       await adicionarConsulta(consulta);
-      Alert.alert("Sucesso", "Consulta salva!");
+      toast.success("Sucesso", "Consulta salva!");
     }
 
     setConsulta({
@@ -119,19 +270,19 @@ export default function DadosClinicosScreen() {
   const handleAnalisarRisco = async () => {
     // Validar campos obrigatórios
     const camposObrigatorios = [
-      'idade', 'genero', 'altura', 'peso', 
+      'idade', 'genero', 'altura', 'peso',
       'pressaoAlta', 'pressaoBaixa', 'colesterol', 'glicose',
       'fumante', 'alcool', 'ativo'
     ];
-    
+
     const campoVazio = camposObrigatorios.find(campo => !consulta[campo as keyof Consulta]);
     if (campoVazio) {
-      Alert.alert("Atenção", "Preencha todos os campos antes de analisar o risco.");
+      toast.warning("É necessário preencher todos os campos", "Preencha todos os campos antes de analisar o risco.");
       return;
     }
 
     setAnalisando(true);
-    
+
     try {
       // Preparar dados para o modelo ML
       const patientData: PatientClinicalData = {
@@ -150,14 +301,14 @@ export default function DadosClinicosScreen() {
 
       // Realizar predição
       const prediction = await predictCardiovascularRisk(patientData);
-      
+
       setResultado(prediction);
       setModalVisible(true);
-      
+
     } catch (error) {
       console.error('[ClinicalData] Erro na análise:', error);
-      Alert.alert(
-        "Erro", 
+      toast.error(
+        "Erro ao analisar",
         "Ocorreu um erro ao analisar os dados. Verifique se todos os campos estão preenchidos corretamente."
       );
     } finally {
@@ -168,247 +319,628 @@ export default function DadosClinicosScreen() {
   const handleEditar = (item: Consulta) => {
     setConsulta(item);
     setEditandoId(item.id || null);
+
+    // Animação de destaque do formulário
+    Animated.sequence([
+      Animated.timing(formBgAnimation, {
+        toValue: 0.95,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(formBgAnimation, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    // Scroll suave para o topo para mostrar o formulário
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }, 100);
+
+    toast.info("Editando", "Consulta carregada para edição");
   };
 
-  const handleRemover = async (id?: string) => {
-    if (!id) return;
-    await deletarConsulta(id);
-    Alert.alert("Removido", "Consulta deletada!");
-    carregarConsultas();
+  const handleDuploClique = (item: Consulta) => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300; // 300ms para considerar duplo clique
+
+    if (lastTap && lastTap.id === item.id && (now - lastTap.time) < DOUBLE_PRESS_DELAY) {
+      // Duplo clique detectado - editar
+      handleEditar(item);
+      setLastTap(null);
+    } else {
+      // Primeiro clique
+      setLastTap({ id: item.id || '', time: now });
+    }
+  };
+
+  const handleToggleSelect = (consultaId: string) => {
+    setConsultasSelecionadas(prev =>
+      prev.includes(consultaId)
+        ? prev.filter(id => id !== consultaId)
+        : [...prev, consultaId]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (consultasSelecionadas.length === 0) return;
+
+    // Guardar consultas antes de excluir (para undo)
+    const consultasAExcluir = consultas.filter(c => consultasSelecionadas.includes(c.id || ''));
+    setConsultasParaExcluir(consultasAExcluir);
+
+    // Remover da lista imediatamente (UI)
+    setConsultas(prev => prev.filter(c => !consultasSelecionadas.includes(c.id || '')));
+
+    const quantidade = consultasSelecionadas.length;
+
+    // Limpar timer anterior se existir
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+    }
+
+    // Timer de 5 segundos para excluir permanentemente
+    const timer = setTimeout(async () => {
+      try {
+        await Promise.all(consultasSelecionadas.map(id => deletarConsulta(id)));
+        setConsultasParaExcluir([]);
+        toast.success("Excluído", `${quantidade} consulta${quantidade > 1 ? 's removidas' : ' removida'} permanentemente`);
+      } catch (error) {
+        // Se der erro, restaurar consultas
+        setConsultas(prev => [...prev, ...consultasAExcluir]);
+        toast.error("Erro", "Não foi possível excluir as consultas.");
+      }
+    }, 5000);
+
+    setUndoTimer(timer);
+    setConsultasSelecionadas([]);
+  };
+
+  const handleUndo = () => {
+    // Cancelar timer de exclusão
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      setUndoTimer(null);
+    }
+
+    // Restaurar consultas
+    setConsultas(prev => [...prev, ...consultasParaExcluir]);
+    setConsultasParaExcluir([]);
+
+    toast.success("Desfeito", "Consultas restauradas!");
+  };
+
+  const handleRemover = async () => {
+    // Função antiga mantida por compatibilidade, mas não usada
+  };
+
+  // Componente de Card com Swipe
+  const SwipeableCard = ({ item }: { item: Consulta }) => {
+    const translateX = useRef(new Animated.Value(0)).current;
+
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return Math.abs(gestureState.dx) > 5;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (gestureState.dx < 0) {
+            // Só permite arrastar para a esquerda
+            translateX.setValue(Math.max(gestureState.dx, -80));
+          }
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx < -40) {
+            // Se arrastou mais de 40px, vai direto para edição
+            handleEditar(item);
+            // Volta para a posição inicial
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          } else {
+            // Volta para a posição inicial
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+            if (swipedItemId === item.id) {
+              setSwipedItemId(null);
+            }
+          }
+        },
+      })
+    ).current;
+
+    // Fecha o swipe se outro item for aberto
+    useEffect(() => {
+      if (swipedItemId !== item.id && swipedItemId !== null) {
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    }, [swipedItemId]);
+
+    return (
+      <View style={styles.swipeContainer}>
+        {/* Botão de Editar (atrás do card) */}
+        <View style={styles.swipeEditAction}>
+          <TouchableOpacity
+            style={styles.swipeEditButton}
+            onPress={() => {
+              handleEditar(item);
+              Animated.spring(translateX, {
+                toValue: 0,
+                useNativeDriver: true,
+              }).start();
+              setSwipedItemId(null);
+            }}
+          >
+            <Ionicons name="create-outline" size={24} color={Colors.white} />
+            <Text style={styles.swipeActionText}>Editar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Card que pode ser arrastado */}
+        <Animated.View
+          style={[
+            styles.swipeableCardWrapper,
+            { transform: [{ translateX }] }
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <Pressable
+            onPress={() => {
+              if (swipedItemId === item.id) {
+                // Se está aberto, fecha
+                Animated.spring(translateX, {
+                  toValue: 0,
+                  useNativeDriver: true,
+                }).start();
+                setSwipedItemId(null);
+              } else {
+                handleDuploClique(item);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+              consultasSelecionadas.includes(item.id || '') && styles.cardSelected
+            ]}
+          >
+            <View style={styles.cardContent}>
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => handleToggleSelect(item.id || '')}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <View style={[
+                  styles.checkbox,
+                  consultasSelecionadas.includes(item.id || '') && styles.checkboxSelected
+                ]}>
+                  {consultasSelecionadas.includes(item.id || '') && (
+                    <Ionicons name="checkmark" size={16} color="#FFF" />
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
+                <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
+                <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
+              </View>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </View>
+    );
   };
 
   // Validar apenas os campos obrigatórios (excluir IMC que é calculado automaticamente)
   const camposObrigatoriosValidacao: (keyof Consulta)[] = [
-    'idade', 'genero', 'altura', 'peso', 
+    'idade', 'genero', 'altura', 'peso',
     'pressaoAlta', 'pressaoBaixa', 'colesterol', 'glicose',
     'fumante', 'alcool', 'ativo'
   ];
-  const todosPreenchidos = camposObrigatoriosValidacao.every(campo => 
+  const todosPreenchidos = camposObrigatoriosValidacao.every(campo =>
     consulta[campo] && consulta[campo]?.trim() !== ''
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
+    <View style={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
       >
         {/* Header */}
-        <Text style={styles.titulo}>Dados Clínicos</Text>
-        <Text style={styles.subtitulo}>Preencha seus dados para análise de risco cardiovascular</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.titulo}>Dados Clínicos</Text>
+          {editandoId && (
+            <View style={styles.editingBadge}>
+              <Ionicons name="create-outline" size={16} color={Colors.white} />
+              <Text style={styles.editingBadgeText}>Editando</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.subtitulo}>
+          {editandoId
+            ? "Atualize os dados da consulta abaixo"
+            : "Preencha seus dados para análise de risco cardiovascular"}
+        </Text>
 
         {/* Formulário */}
-        <View style={styles.form}>
+        <Animated.View
+          style={[
+            styles.form,
+            {
+              transform: [{ scale: formBgAnimation }],
+            },
+            editandoId && styles.formEditing
+          ]}
+        >
           {/* Seção: Dados Demográficos */}
           <Text style={styles.secaoTitulo}>📋 Dados Demográficos</Text>
-          
-          <Text style={styles.label}>Idade (anos)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric" 
-            placeholder="Ex: 45"
-            value={consulta.idade} 
-            onChangeText={v => setConsulta({ ...consulta, idade: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
 
-          <Text style={styles.label}>Sexo</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.genero === 'Masculino' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, genero: 'Masculino' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.genero === 'Masculino' && styles.optionButtonTextSelected]}>
-                Masculino
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.genero === 'Feminino' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, genero: 'Feminino' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.genero === 'Feminino' && styles.optionButtonTextSelected]}>
-                Feminino
-              </Text>
-            </TouchableOpacity>
+          <View ref={idadeRef} style={campoComErro === 'idade' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Idade (anos)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 45"
+              value={consulta.idade}
+              onChangeText={v => {
+                setConsulta({ ...consulta, idade: v });
+                if (campoComErro === 'idade') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'idade' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
+
+          <View ref={generoRef} style={campoComErro === 'genero' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Sexo</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.genero === 'Masculino' && styles.optionButtonSelected,
+                  campoComErro === 'genero' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, genero: 'Masculino' });
+                  if (campoComErro === 'genero') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.genero === 'Masculino' && styles.optionButtonTextSelected]}>
+                  Masculino
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.genero === 'Feminino' && styles.optionButtonSelected,
+                  campoComErro === 'genero' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, genero: 'Feminino' });
+                  if (campoComErro === 'genero') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.genero === 'Feminino' && styles.optionButtonTextSelected]}>
+                  Feminino
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Seção: Medidas Físicas */}
           <Text style={styles.secaoTitulo}>📏 Medidas Físicas</Text>
 
-          <Text style={styles.label}>Altura (cm)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 175" 
-            value={consulta.altura} 
-            onChangeText={v => setConsulta({ ...consulta, altura: v })}
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={alturaRef} style={campoComErro === 'altura' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Altura (cm)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 175"
+              value={consulta.altura}
+              onChangeText={v => {
+                setConsulta({ ...consulta, altura: v });
+                if (campoComErro === 'altura') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'altura' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
-          <Text style={styles.label}>Peso (kg)</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="decimal-pad"
-            placeholder="Ex: 80" 
-            value={consulta.peso} 
-            onChangeText={v => setConsulta({ ...consulta, peso: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pesoRef} style={campoComErro === 'peso' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Peso (kg)</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="decimal-pad"
+              placeholder="Ex: 80"
+              value={consulta.peso}
+              onChangeText={v => {
+                setConsulta({ ...consulta, peso: v });
+                if (campoComErro === 'peso') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'peso' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
           {/* Seção: Pressão Arterial */}
           <Text style={styles.secaoTitulo}>❤️ Pressão Arterial</Text>
 
-          <Text style={styles.label}>Pressão Sistólica (Alta) - mmHg</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 120" 
-            value={consulta.pressaoAlta} 
-            onChangeText={v => setConsulta({ ...consulta, pressaoAlta: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pressaoAltaRef} style={campoComErro === 'pressaoAlta' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pressão Sistólica (Alta) - mmHg</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 120"
+              value={consulta.pressaoAlta}
+              onChangeText={v => {
+                setConsulta({ ...consulta, pressaoAlta: v });
+                if (campoComErro === 'pressaoAlta') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'pressaoAlta' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
-          <Text style={styles.label}>Pressão Diastólica (Baixa) - mmHg</Text>
-          <CustomTextInput
-            containerStyle={{ width: '100%' }}
-            keyboardType="numeric"
-            placeholder="Ex: 80" 
-            value={consulta.pressaoBaixa} 
-            onChangeText={v => setConsulta({ ...consulta, pressaoBaixa: v })} 
-            backgroundColor={Colors.white}
-            placeholderTextColor={Colors.gray}
-            outlineColor={Colors.gray}
-            blurredBackgroundColor={Colors.lightestBlue}
-          />
+          <View ref={pressaoBaixaRef} style={campoComErro === 'pressaoBaixa' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pressão Diastólica (Baixa) - mmHg</Text>
+            <CustomTextInput
+              containerStyle={{ width: '100%' }}
+              keyboardType="numeric"
+              placeholder="Ex: 80"
+              value={consulta.pressaoBaixa}
+              onChangeText={v => {
+                setConsulta({ ...consulta, pressaoBaixa: v });
+                if (campoComErro === 'pressaoBaixa') setCampoComErro(null);
+              }}
+              backgroundColor={Colors.white}
+              placeholderTextColor={Colors.gray}
+              outlineColor={campoComErro === 'pressaoBaixa' ? Colors.red : Colors.gray}
+              blurredBackgroundColor={Colors.lightestBlue}
+            />
+          </View>
 
           {/* Seção: Exames Laboratoriais */}
           <Text style={styles.secaoTitulo}>🔬 Exames Laboratoriais</Text>
 
-          <Text style={styles.label}>Colesterol</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.colesterol === 'Normal' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, colesterol: 'Normal' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.colesterol === 'Normal' && styles.optionButtonTextSelected]}>
-                Normal
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.colesterol === 'Alto' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, colesterol: 'Alto' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.colesterol === 'Alto' && styles.optionButtonTextSelected]}>
-                Alto
-              </Text>
-            </TouchableOpacity>
+          <View ref={colesterolRef} style={campoComErro === 'colesterol' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Colesterol</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.colesterol === 'Normal' && styles.optionButtonSelected,
+                  campoComErro === 'colesterol' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, colesterol: 'Normal' });
+                  if (campoComErro === 'colesterol') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.colesterol === 'Normal' && styles.optionButtonTextSelected]}>
+                  Normal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.colesterol === 'Alto' && styles.optionButtonSelected,
+                  campoComErro === 'colesterol' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, colesterol: 'Alto' });
+                  if (campoComErro === 'colesterol') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.colesterol === 'Alto' && styles.optionButtonTextSelected]}>
+                  Alto
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Glicose</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.glicose === 'Normal' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, glicose: 'Normal' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.glicose === 'Normal' && styles.optionButtonTextSelected]}>
-                Normal
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.glicose === 'Alta' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, glicose: 'Alta' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.glicose === 'Alta' && styles.optionButtonTextSelected]}>
-                Alta
-              </Text>
-            </TouchableOpacity>
+          <View ref={glicoseRef} style={campoComErro === 'glicose' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Glicose</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.glicose === 'Normal' && styles.optionButtonSelected,
+                  campoComErro === 'glicose' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, glicose: 'Normal' });
+                  if (campoComErro === 'glicose') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.glicose === 'Normal' && styles.optionButtonTextSelected]}>
+                  Normal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.glicose === 'Alta' && styles.optionButtonSelected,
+                  campoComErro === 'glicose' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, glicose: 'Alta' });
+                  if (campoComErro === 'glicose') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.glicose === 'Alta' && styles.optionButtonTextSelected]}>
+                  Alta
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Seção: Hábitos de Vida */}
           <Text style={styles.secaoTitulo}>🏃 Hábitos de Vida</Text>
 
-          <Text style={styles.label}>Você fuma?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.fumante === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, fumante: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.fumante === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.fumante === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, fumante: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.fumante === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={fumanteRef} style={campoComErro === 'fumante' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Você fuma?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.fumante === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'fumante' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, fumante: 'Não' });
+                  if (campoComErro === 'fumante') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.fumante === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.fumante === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'fumante' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, fumante: 'Sim' });
+                  if (campoComErro === 'fumante') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.fumante === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Consome álcool regularmente?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.alcool === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, alcool: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.alcool === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.alcool === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, alcool: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.alcool === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={alcoolRef} style={campoComErro === 'alcool' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Consome álcool regularmente?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.alcool === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'alcool' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, alcool: 'Não' });
+                  if (campoComErro === 'alcool') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.alcool === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.alcool === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'alcool' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, alcool: 'Sim' });
+                  if (campoComErro === 'alcool') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.alcool === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Text style={styles.label}>Pratica atividade física regular?</Text>
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.ativo === 'Não' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, ativo: 'Não' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.ativo === 'Não' && styles.optionButtonTextSelected]}>
-                Não
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, consulta.ativo === 'Sim' && styles.optionButtonSelected]}
-              onPress={() => setConsulta({ ...consulta, ativo: 'Sim' })}
-            >
-              <Text style={[styles.optionButtonText, consulta.ativo === 'Sim' && styles.optionButtonTextSelected]}>
-                Sim
-              </Text>
-            </TouchableOpacity>
+          <View ref={ativoRef} style={campoComErro === 'ativo' ? styles.campoComErro : undefined}>
+            <Text style={styles.label}>Pratica atividade física regular?</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.ativo === 'Não' && styles.optionButtonSelected,
+                  campoComErro === 'ativo' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, ativo: 'Não' });
+                  if (campoComErro === 'ativo') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.ativo === 'Não' && styles.optionButtonTextSelected]}>
+                  Não
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  consulta.ativo === 'Sim' && styles.optionButtonSelected,
+                  campoComErro === 'ativo' && styles.buttonComErro
+                ]}
+                onPress={() => {
+                  setConsulta({ ...consulta, ativo: 'Sim' });
+                  if (campoComErro === 'ativo') setCampoComErro(null);
+                }}
+              >
+                <Text style={[styles.optionButtonText, consulta.ativo === 'Sim' && styles.optionButtonTextSelected]}>
+                  Sim
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Botões de Ação */}
+          {editandoId && (
+            <TouchableOpacity
+              style={styles.botaoCancelar}
+              onPress={() => {
+                setConsulta({
+                  idade: "",
+                  genero: "",
+                  altura: "",
+                  peso: "",
+                  pressaoAlta: "",
+                  pressaoBaixa: "",
+                  colesterol: "",
+                  glicose: "",
+                  imc: "",
+                  fumante: "",
+                  alcool: "",
+                  ativo: "",
+                });
+                setEditandoId(null);
+                toast.info("Cancelado", "Edição cancelada");
+              }}
+            >
+              <Ionicons name="close-outline" size={20} color={Colors.red} />
+              <Text style={styles.textoBotaoCancelar}>Cancelar Edição</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.botaoSalvar} onPress={handleSalvar}>
             <Ionicons name="save-outline" size={20} color="#FFF" />
             <Text style={styles.textoBotao}>{editandoId ? "Atualizar Consulta" : "Salvar Consulta"}</Text>
           </TouchableOpacity>
 
           {todosPreenchidos && (
-            <TouchableOpacity 
-              style={[styles.botaoRisco, analisando && styles.botaoRiscoDisabled]} 
+            <TouchableOpacity
+              style={[styles.botaoRisco, analisando && styles.botaoRiscoDisabled]}
               onPress={handleAnalisarRisco}
               disabled={analisando}
             >
@@ -425,35 +957,56 @@ export default function DadosClinicosScreen() {
               )}
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
 
         {/* Lista de Consultas Salvas */}
         <Text style={styles.listaTitulo}>Consultas Salvas</Text>
+        {consultas.length > 0 && (
+          <Text style={styles.listaHint}>
+            💡 Arraste o card para a esquerda para editar ou marque as consultas para excluir
+          </Text>
+        )}
         {consultas.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="folder-open-outline" size={64} color="#BDC3C7" />
             <Text style={styles.emptyText}>Nenhuma consulta salva</Text>
           </View>
         ) : (
-          consultas.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
-              <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
-              <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
-              <View style={styles.cardBotoes}>
-                <TouchableOpacity style={styles.botaoEditar} onPress={() => handleEditar(item)}>
-                  <Ionicons name="create-outline" size={16} color="#FFF" />
-                  <Text style={styles.textoBotao}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.botaoExcluir} onPress={() => handleRemover(item.id)}>
-                  <Ionicons name="trash-outline" size={16} color="#FFF" />
-                  <Text style={styles.textoBotao}>Excluir</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+          consultas.map((item) => {
+            return <SwipeableCard key={item.id} item={item} />;
+          })
         )}
       </ScrollView>
+
+      {/* Botão Flutuante de Exclusão */}
+      {consultasSelecionadas.length > 0 && (
+        <View style={styles.floatingButtonContainer}>
+          <TouchableOpacity
+            style={styles.floatingDeleteButton}
+            onPress={handleDeleteSelected}
+          >
+            <Ionicons name="trash-outline" size={24} color="#FFF" />
+            <Text style={styles.floatingDeleteText}>
+              Excluir {consultasSelecionadas.length}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Snackbar de Undo */}
+      {consultasParaExcluir.length > 0 && (
+        <View style={styles.undoSnackbar}>
+          <View style={styles.undoContent}>
+            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+            <Text style={styles.undoText}>
+              {consultasParaExcluir.length} consulta{consultasParaExcluir.length > 1 ? 's excluídas' : ' excluída'}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={handleUndo} style={styles.undoButton}>
+            <Text style={styles.undoButtonText}>DESFAZER</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Modal de Resultado */}
       {renderResultModal()}
@@ -512,10 +1065,11 @@ export default function DadosClinicosScreen() {
                             <Text style={styles.factorName}>{factor.factor}</Text>
                             <View style={[
                               styles.severityBadge,
-                              { backgroundColor: 
-                                factor.severity === 'CRÍTICO' ? Colors.red :
-                                factor.severity === 'ALTO' ? '#E67E22' :
-                                factor.severity === 'MODERADO' ? '#F39C12' : '#27AE60'
+                              {
+                                backgroundColor:
+                                  factor.severity === 'CRÍTICO' ? Colors.red :
+                                    factor.severity === 'ALTO' ? '#E67E22' :
+                                      factor.severity === 'MODERADO' ? '#F39C12' : '#27AE60'
                               }
                             ]}>
                               <Text style={styles.severityText}>{factor.severity}</Text>
@@ -559,8 +1113,8 @@ export default function DadosClinicosScreen() {
                   </View>
 
                   {/* Botão de Fechar */}
-                  <TouchableOpacity 
-                    style={styles.modalCloseButton} 
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
                     onPress={() => setModalVisible(false)}
                   >
                     <Text style={styles.modalCloseButtonText}>Fechar</Text>
@@ -571,8 +1125,8 @@ export default function DadosClinicosScreen() {
                   <Ionicons name="alert-circle-outline" size={64} color="#E74C3C" />
                   <Text style={styles.errorTitle}>Erro na Análise</Text>
                   <Text style={styles.errorMessage}>{resultado.error || 'Erro desconhecido'}</Text>
-                  <TouchableOpacity 
-                    style={styles.modalCloseButton} 
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
                     onPress={() => setModalVisible(false)}
                   >
                     <Text style={styles.modalCloseButtonText}>Fechar</Text>
@@ -620,6 +1174,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  formEditing: {
+    borderWidth: 3,
+    borderColor: Colors.blue,
+    shadowColor: Colors.blue,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   secaoTitulo: {
     fontSize: 18,
@@ -703,6 +1265,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "#2C3E50",
   },
+  listaHint: {
+    fontSize: 13,
+    color: Colors.gray,
+    marginBottom: 15,
+    textAlign: "center",
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
@@ -717,7 +1285,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 15,
-    marginBottom: 15,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1004,5 +1571,257 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  // Estilos para interação do card
+  cardPressed: {
+    backgroundColor: "#F0F2F5",
+    transform: [{ scale: 0.98 }],
+  },
+  cardSelected: {
+    borderColor: Colors.red,
+    borderWidth: 2,
+    backgroundColor: "#FFF5F5",
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkboxContainer: {
+    padding: 4,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.gray,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+  },
+  checkboxSelected: {
+    backgroundColor: Colors.red,
+    borderColor: Colors.red,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardHint: {
+    fontSize: 11,
+    color: Colors.gray,
+    fontStyle: "italic",
+    marginTop: 8,
+  },
+  // Botão flutuante de exclusão
+  floatingButtonContainer: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  floatingDeleteButton: {
+    backgroundColor: Colors.red,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    gap: 8,
+  },
+  floatingDeleteText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  // Snackbar de Undo
+  undoSnackbar: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: Colors.red,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  undoContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  undoText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  undoButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+  },
+  undoButtonText: {
+    color: Colors.red,
+    fontSize: 15,
+    fontWeight: "bold",
+  },
+  // Modal de exclusão
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteModalContent: {
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 30,
+    width: "85%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  deleteModalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#2C3E50",
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  deleteModalText: {
+    fontSize: 15,
+    color: "#7F8C8D",
+    textAlign: "center",
+    marginBottom: 25,
+    lineHeight: 22,
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    gap: 15,
+    width: "100%",
+  },
+  deleteModalButtonCancel: {
+    flex: 1,
+    backgroundColor: "#ECF0F1",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  deleteModalButtonTextCancel: {
+    color: "#2C3E50",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteModalButtonConfirm: {
+    flex: 1,
+    backgroundColor: Colors.red,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  deleteModalButtonTextConfirm: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Header do formulário
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  editingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blue,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  editingBadgeText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  // Botão de cancelar edição
+  botaoCancelar: {
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    padding: 15,
+    alignItems: "center",
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.red,
+  },
+  textoBotaoCancelar: {
+    color: Colors.red,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  // Estilos para campos com erro
+  campoComErro: {
+    borderWidth: 2,
+    borderColor: Colors.red,
+    borderRadius: 12,
+    padding: 8,
+    marginTop: 10,
+    backgroundColor: Colors.lightRed + '30',
+  },
+  buttonComErro: {
+    borderColor: Colors.red,
+    borderWidth: 2,
+  },
+  // Ações de swipe
+  swipeContainer: {
+    marginBottom: 15,
+    position: 'relative',
+  },
+  swipeableCardWrapper: {
+    backgroundColor: 'transparent',
+  },
+  swipeEditAction: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    backgroundColor: Colors.blue,
+    justifyContent: "center",
+    alignItems: "center",
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  swipeEditButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swipeActionText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
   },
 });

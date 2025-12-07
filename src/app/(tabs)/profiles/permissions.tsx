@@ -8,6 +8,7 @@ import {
   saveUserPermissions,
   UserPermissions,
 } from "../../../services/firebase.service";
+import { toast } from "../../../utils/toast";
 
 export default function Permissions() {
   const [loading, setLoading] = useState(true);
@@ -75,7 +76,7 @@ export default function Permissions() {
       }
     } catch (error) {
       console.error("Erro ao alterar permissão de notificações:", error);
-      Alert.alert("Erro", "Não foi possível alterar a permissão de notificações.");
+      toast.error("Erro", "Não foi possível alterar a permissão de notificações.");
     }
   };
 
@@ -108,7 +109,7 @@ export default function Permissions() {
       }
     } catch (error) {
       console.error("Erro ao alterar permissão de localização:", error);
-      Alert.alert("Erro", "Não foi possível alterar a permissão de localização.");
+      toast.error("Erro", "Não foi possível alterar a permissão de localização.");
     }
   };
 
@@ -119,7 +120,7 @@ export default function Permissions() {
       await saveUserPermissions(updatedPermissions);
     } catch (error) {
       console.error("Erro ao salvar preferência:", error);
-      Alert.alert("Erro", "Não foi possível salvar a preferência.");
+      toast.error("Erro", "Não foi possível salvar a preferência.");
     }
   };
 

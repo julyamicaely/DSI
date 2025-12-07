@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
 import { useState } from "react";
 import { deleteUserAccount } from "../../../services/firebase.service";
+import { toast } from "../../../utils/toast";
 
 export default function Logout() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function Logout() {
 
   const handleConfirmDelete = async () => {
     if (!password.trim()) {
-      Alert.alert("Atenção", "Por favor, digite sua senha para confirmar.");
+      toast.warning("Atenção", "Por favor, digite sua senha para confirmar.");
       return;
     }
 
