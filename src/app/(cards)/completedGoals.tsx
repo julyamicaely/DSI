@@ -8,12 +8,16 @@ import Colors from '../../components/Colors';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { toast } from '../../utils/toast';
 import { useRouter } from 'expo-router';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import CustomButton from '../../components/CustomButton';
 
 const CompletedGoalsScreen: React.FC = () => {
     const router = useRouter();
     const [completedGoals, setCompletedGoals] = useState<Goal[]>([]);
     const [habits, setHabits] = useState<Habit[]>([]);
     const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         try {
@@ -41,14 +45,23 @@ const CompletedGoalsScreen: React.FC = () => {
 
 
 
-    const handleDeleteGoal = async (goalId: string) => {
+    const handleDeleteGoal = useCallback((goalId: string) => {
+        setSelectedGoalId(goalId);
+        setModalVisible(true);
+    }, []);
+
+    const executeDelete = async () => {
+        if (!selectedGoalId) return;
         try {
-            await deleteGoal(goalId);
-            setCompletedGoals(prev => prev.filter(g => g.id !== goalId));
+            await deleteGoal(selectedGoalId);
+            setCompletedGoals(prev => prev.filter(g => g.id !== selectedGoalId));
             toast.success('Meta excluída permanentemente.');
         } catch (error) {
             console.error(error);
             toast.error('Erro ao excluir meta.');
+        } finally {
+            setModalVisible(false);
+            setSelectedGoalId(null);
         }
     };
 
@@ -79,11 +92,34 @@ const CompletedGoalsScreen: React.FC = () => {
                             onSelectToggle={() => { }} // No selection in read-only list for now, deletion is via card button
                             isSelected={false}
                             readOnly={true}
+                            disableDeleteAlert={true}
                         />
+
                     )}
                     contentContainerStyle={styles.listContent}
                 />
             )}
+            <ConfirmationModal
+                visible={modalVisible}
+                title="Excluir Meta"
+                message="Tem certeza que deseja excluir esta meta permanentemente?"
+                onClose={() => setModalVisible(false)}
+            >
+                <CustomButton
+                    title="Cancelar"
+                    onPress={() => setModalVisible(false)}
+                    backgroundColor={Colors.lightGray}
+                    textColor={Colors.black}
+                    width="45%"
+                />
+                <CustomButton
+                    title="Excluir"
+                    onPress={executeDelete}
+                    backgroundColor={Colors.red}
+                    textColor={Colors.white}
+                    width="45%"
+                />
+            </ConfirmationModal>
         </View>
     );
 };

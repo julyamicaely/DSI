@@ -23,6 +23,7 @@ interface GoalAccordionCardProps {
   isSelected: boolean;
   onSelectToggle: (goalId: string) => void;
   readOnly?: boolean;
+  disableDeleteAlert?: boolean;
 }
 
 const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
@@ -36,6 +37,7 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
   onSelectToggle,
   habits,
   readOnly = false,
+  disableDeleteAlert = false,
 }) => {
 
   // Form State
@@ -160,6 +162,11 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
   };
 
   const handleDeletePress = () => {
+    if (disableDeleteAlert) {
+      onDelete(goal.id);
+      return;
+    }
+
     Alert.alert(
       "Excluir Meta",
       "Tem certeza que deseja excluir esta meta?",

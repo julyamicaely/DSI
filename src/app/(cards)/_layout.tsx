@@ -29,7 +29,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
@@ -53,7 +53,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
@@ -77,7 +77,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
@@ -101,7 +101,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
@@ -125,7 +125,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
@@ -149,7 +149,7 @@ export default function StackLayout() {
           headerRight: () => {
             return (
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => { }} >
+                <TouchableOpacity style={styles.headerButtonsRight} onPress={() => routerButton.push('/about')} >
                   <Image source={require('../../assets/buttonHelp.svg')} style={styles.headerButtonsRight} />
                 </TouchableOpacity>
               </View>
