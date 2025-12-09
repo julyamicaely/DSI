@@ -17,6 +17,7 @@ interface CustomButtonProps {
   padding?: number;
   iconName?: React.ComponentProps<typeof Ionicons>['name'];
   iconColor?: string;
+  color?: string; // Adicionado para compatibilidade
 }
 
 const CustomButton = ({
@@ -32,13 +33,19 @@ const CustomButton = ({
   padding = 0,
   iconName,
   iconColor,
+  color, // Recebe a prop color
 }: CustomButtonProps) => {
+  // Usa color se backgroundColor não for passado explicitamente ou para sobrescrever?
+  // O erro dizia que 'color' foi passado. Vamos usar 'color' como fallback ou prioridade para backgroundColor.
+  // Se o usuário passar 'color', provavelmente quer definir a cor de fundo (como no Button nativo).
+  const finalBackgroundColor = color || backgroundColor;
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
         {
-          backgroundColor: backgroundColor,
+          backgroundColor: finalBackgroundColor,
           borderColor: borderColor,
           borderWidth: borderWidth,
           width,
