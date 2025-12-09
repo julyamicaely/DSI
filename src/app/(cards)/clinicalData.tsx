@@ -40,6 +40,13 @@ interface Consulta {
   fumante?: string;
   alcool?: string;
   ativo?: string;
+  // Resultado da análise de risco
+  riskAnalysis?: {
+    probability: number;
+    riskLevel: string;
+    recommendation: string;
+    analyzedAt: string;
+  };
 }
 
 export default function DadosClinicosScreen() {
@@ -113,7 +120,10 @@ export default function DadosClinicosScreen() {
       'fumante', 'alcool', 'ativo'
     ];
     
-    const campoVazio = camposObrigatorios.find(campo => !consulta[campo] || consulta[campo]?.trim() === '');
+    const campoVazio = camposObrigatorios.find(campo => {
+      const valor = consulta[campo];
+      return !valor || (typeof valor === 'string' && valor.trim() === '');
+    });
     if (campoVazio) {
       // Mapeamento de campos para refs e nomes amigáveis
       const campoParaRef: Record<string, { ref: React.RefObject<View | null>, nome: string }> = {
@@ -305,6 +315,23 @@ export default function DadosClinicosScreen() {
       setResultado(prediction);
       setModalVisible(true);
       
+      // Salvar resultado da análise na consulta
+      const displayInfo = prediction.probability >= 0.7 
+        ? { riskText: 'Alto Risco', color: '#E74C3C' }
+        : prediction.probability >= 0.4 
+        ? { riskText: 'Risco Moderado', color: '#F39C12' }
+        : { riskText: 'Baixo Risco', color: '#27AE60' };
+      
+      setConsulta({
+        ...consulta,
+        riskAnalysis: {
+          probability: prediction.probability,
+          riskLevel: displayInfo.riskText,
+          recommendation: prediction.recommendation,
+          analyzedAt: new Date().toISOString()
+        }
+      });
+      
     } catch (error) {
       console.error('[ClinicalData] Erro na análise:', error);
       toast.error(
@@ -340,6 +367,27 @@ export default function DadosClinicosScreen() {
     }, 100);
     
     toast.info("Editando", "Consulta carregada para edição");
+  };
+
+  const handleMostrarAnalise = (item: Consulta) => {
+    if (!item.riskAnalysis) return;
+    
+    // Criar objeto de resultado a partir da análise salva
+    const savedResult: PredictionResult = {
+      success: true,
+      probability: item.riskAnalysis.probability,
+      risk_level: item.riskAnalysis.riskLevel === 'Alto Risco' ? 'alto' : 
+                  item.riskAnalysis.riskLevel === 'Risco Moderado' ? 'médio' : 'baixo',
+      risk_category: item.riskAnalysis.riskLevel === 'Alto Risco' ? 'alto_risco' : 
+                     item.riskAnalysis.riskLevel === 'Risco Moderado' ? 'risco_moderado' : 'sem_risco',
+      confidence: 85, // Default confidence for saved results
+      recommendation: item.riskAnalysis.recommendation,
+      top_risk_factors: [],
+      feature_importance: [],
+    };
+    
+    setResultado(savedResult);
+    setModalVisible(true);
   };
 
   const handleDuploClique = (item: Consulta) => {
@@ -529,9 +577,44 @@ export default function DadosClinicosScreen() {
               </TouchableOpacity>
               
               <View style={styles.cardInfo}>
-                <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
-                <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
-                <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
+                <View style={styles.cardMainInfo}>
+                  <View style={styles.cardTextContainer}>
+                    <Text style={styles.cardTexto}>Idade: {item.idade} | Gênero: {item.genero}</Text>
+                    <Text style={styles.cardTexto}>Peso: {item.peso}kg | Altura: {item.altura}cm</Text>
+                    <Text style={styles.cardTexto}>Pressão: {item.pressaoAlta}/{item.pressaoBaixa} mmHg</Text>
+                  </View>
+                  
+                  {/* Badge de Análise de Risco */}
+                  {item.riskAnalysis && (
+                    <TouchableOpacity 
+                      style={styles.riskBadgeContainer}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleMostrarAnalise(item);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[
+                        styles.riskBadge,
+                        { backgroundColor: 
+                          item.riskAnalysis.probability >= 70 ? '#E74C3C' :
+                          item.riskAnalysis.probability >= 40 ? '#F39C12' :
+                          '#27AE60'
+                        }
+                      ]}>
+                        <Ionicons name="fitness" size={14} color="#FFF" />
+                        <Text style={styles.riskBadgeText}>
+                          {item.riskAnalysis.probability.toFixed(0)}%
+                        </Text>
+                      </View>
+                      <Text style={styles.riskBadgeLabel}>
+                        {item.riskAnalysis.probability >= 70 ? 'Alto Risco' :
+                         item.riskAnalysis.probability >= 40 ? 'Risco Moderado' :
+                         'Baixo Risco'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           </Pressable>
@@ -546,9 +629,10 @@ export default function DadosClinicosScreen() {
     'pressaoAlta', 'pressaoBaixa', 'colesterol', 'glicose',
     'fumante', 'alcool', 'ativo'
   ];
-  const todosPreenchidos = camposObrigatoriosValidacao.every(campo => 
-    consulta[campo] && consulta[campo]?.trim() !== ''
-  );
+  const todosPreenchidos = camposObrigatoriosValidacao.every(campo => {
+    const valor = consulta[campo];
+    return valor && typeof valor === 'string' && valor.trim() !== '';
+  });
 
   return (
     <View style={styles.container}>
@@ -1033,7 +1117,14 @@ export default function DadosClinicosScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Header do Modal */}
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitulo}>Análise de Risco Cardiovascular</Text>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitulo}>Análise de Risco Cardiovascular</Text>
+                  {consulta.riskAnalysis && (
+                    <Text style={styles.modalSubtitle}>
+                      Análise salva • {new Date(consulta.riskAnalysis.analyzedAt).toLocaleDateString('pt-BR')}
+                    </Text>
+                  )}
+                </View>
                 <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
                   <Ionicons name="close-circle" size={32} color={Colors.gray} />
                 </TouchableOpacity>
@@ -1342,11 +1433,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  modalTitleContainer: {
+    flex: 1,
+  },
   modalTitulo: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#2C3E50",
-    flex: 1,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: Colors.gray,
+    marginTop: 4,
   },
   closeButton: {
     padding: 4,
@@ -1605,6 +1703,40 @@ const styles = StyleSheet.create({
   },
   cardInfo: {
     flex: 1,
+  },
+  cardMainInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  cardTextContainer: {
+    flex: 1,
+  },
+  riskBadgeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 70,
+  },
+  riskBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+    marginBottom: 4,
+  },
+  riskBadgeText: {
+    color: "#FFF",
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  riskBadgeLabel: {
+    fontSize: 10,
+    color: Colors.gray,
+    textAlign: "center",
+    fontWeight: "600",
   },
   cardHint: {
     fontSize: 11,
