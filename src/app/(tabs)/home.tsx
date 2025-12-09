@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView, Button } from 'react-native';
 import { useRouter } from 'expo-router';
 import { auth } from '../../../firebaseConfig';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import NotificationCard from '../../components/NotificationCard';
 import ImpactCard from '../../components/ImpactCard';
 import colors from '../../components/Colors';
@@ -171,16 +172,18 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    loadUserData();
-    loadNextHabit();
-    loadNextGoal();
-    loadLastClinicalData();
-    loadImpactStats();
-    initializeFavorites().then(() => {
-      loadClosestFavoriteHospital();
-    });
-  }, [dataUpdateTrigger]); // Recarrega quando dataUpdateTrigger muda
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+      loadNextHabit();
+      loadNextGoal();
+      loadLastClinicalData();
+      loadImpactStats();
+      initializeFavorites().then(() => {
+        loadClosestFavoriteHospital();
+      });
+    }, [dataUpdateTrigger])
+  );
 
   useEffect(() => {
     if (favorites.length > 0) {

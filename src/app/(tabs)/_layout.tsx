@@ -65,7 +65,7 @@ export default function TabLayout() {
             <View style={{ flexDirection: 'row' }}>
               <TouchableOpacity
                 style={styles.headerButtonsRight}
-                onPress={() => {}}
+                onPress={() => routerButton.push('/about')}
               >
                 <Image
                   source={require('../../assets/buttonHelp.svg')}
@@ -88,8 +88,8 @@ export default function TabLayout() {
       />
 
       {/* 📊 Aba Gerenciamento */}
-      
-     {/*  <Tabs.Screen
+
+      {/*  <Tabs.Screen
         name="management"
         options={{
           title: 'Gerenciamento',
