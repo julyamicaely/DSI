@@ -1,6 +1,6 @@
 import { db, auth } from "../../firebaseConfig";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
-import { deleteGoalsByHabit } from "./goalsServices";
+// import { deleteGoalsByHabit } from "./goalsServices";
 
 const habitsRef = collection(db, "habits");
 
@@ -27,5 +27,5 @@ export const updateHabit = async (id: string, dados: any) => {
 export const deleteHabit = async (id: string) => {
   const ref = doc(db, "habits", id);
   await deleteDoc(ref);
-  await deleteGoalsByHabit(id);
+  // await deleteGoalsByHabit(id);
 };

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FILTER_OPTIONS } from '../config/constants';
+import Colors from './Colors';
 
 export interface HospitalFiltersState {
   openNow: boolean;
@@ -50,7 +51,7 @@ export default function HospitalFilters({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Ionicons name="filter" size={20} color={COLORS.primary} />
+          <Ionicons name="filter" size={20} color={Colors.red} />
           <Text style={styles.headerTitle}>Filtros</Text>
           {resultCount !== undefined && (
             <Text style={styles.resultCount}>({resultCount} resultados)</Text>
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
   clearButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.primary,
+    color: Colors.red,
   },
   filterSection: {
     marginBottom: 12,

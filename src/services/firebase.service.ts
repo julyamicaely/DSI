@@ -25,7 +25,7 @@ import {
   deleteObject,
   uploadBytes,
 } from "firebase/storage";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 // ============================================
 // 1. PERFIL E FOTO DE PERFIL

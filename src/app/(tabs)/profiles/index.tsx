@@ -4,6 +4,8 @@ import { useAuth } from "../../../context/AuthContext";
 import ProfilePhotoPicker from "../../../components/ProfilePhotoPicker";
 import { useState, useEffect } from "react";
 import { auth } from "../../../../firebaseConfig";
+import { Ionicons } from '@expo/vector-icons';
+import colors from "../../../components/Colors";
 
 export default function ProfileIndex() {
   const router = useRouter();
@@ -18,7 +20,7 @@ export default function ProfileIndex() {
         setUserName(currentUser.displayName || "Usuário");
       }
     };
-    
+
     loadUserName();
   }, [dataUpdateTrigger, user]);
 
@@ -41,6 +43,7 @@ export default function ProfileIndex() {
           onPress={() => router.push("/(tabs)/profiles/myinfo")}
         >
           <Text style={styles.optionText}>Minhas Informações</Text>
+          <Ionicons name="chevron-forward-sharp" size={24} color={colors.lightBlue2} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -48,6 +51,7 @@ export default function ProfileIndex() {
           onPress={() => router.push("/(tabs)/profiles/dadoscli")}
         >
           <Text style={styles.optionText}>Dados Clínicos</Text>
+          <Ionicons name="chevron-forward-sharp" size={24} color={colors.lightBlue2} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -55,6 +59,15 @@ export default function ProfileIndex() {
           onPress={() => router.push("/(tabs)/profiles/permissions")}
         >
           <Text style={styles.optionText}>Permissões</Text>
+          <Ionicons name="chevron-forward-sharp" size={24} color={colors.lightBlue2} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => router.push("/(tabs)/profiles/conquistas")}
+        >
+          <Text style={styles.optionText}>Conquistas</Text>
+          <Ionicons name="chevron-forward-sharp" size={24} color={colors.lightBlue2} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -64,6 +77,7 @@ export default function ProfileIndex() {
           <Text style={[styles.optionText, styles.deleteText]}>
             Excluir Conta
           </Text>
+          <Ionicons name="chevron-forward-sharp" size={24} color={colors.red} />
         </TouchableOpacity>
       </View>
     </View>
@@ -75,13 +89,15 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: "bold", marginTop: 15, marginBottom: 30, color: "#333" },
   optionsContainer: { width: "100%", gap: 10 },
   option: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.white,
     padding: 15,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightBlue2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  optionText: { fontSize: 16, color: "#333" },
-  deleteOption: { backgroundColor: "#FDECEC", borderColor: "#E53935" },
-  deleteText: { color: "#E53935", fontWeight: "600" },
+  optionText: { fontSize: 16, padding: 3 },
+  deleteOption: { borderColor: colors.red, borderBottomWidth: 1, borderBottomColor: colors.red },
+  deleteText: { color: colors.red, fontWeight: "600" },
 });

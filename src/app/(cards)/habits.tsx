@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "../../services/habitsServices";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -8,37 +8,41 @@ import Colors from '../../components/Colors';
 import Accordion from '../../components/Accordion';
 import { registerForPushNotificationsAsync } from '../../utils/registerForPushNotifications';
 import * as Notifications from 'expo-notifications';
-import { List } from 'react-native-paper';
-import ConfirmationModal from '../../components/ConfirmationModal';
 import { Ionicons } from '@expo/vector-icons';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { toast } from '../../utils/toast';
+import { Platform } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowBanner: true, 
+    shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
 
 LocaleConfig.locales['pt-br'] = {
-  monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
-  monthNamesShort: ['Jan.','Fev.','Mar.','Abr.','Mai.','Jun.','Jul.','Ago.','Set.','Out.','Nov.','Dez.'],
-  dayNames: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
-  dayNamesShort: ['D','S','T','Q','Q','S','S']
+  monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+  monthNamesShort: ['Jan.', 'Fev.', 'Mar.', 'Abr.', 'Mai.', 'Jun.', 'Jul.', 'Ago.', 'Set.', 'Out.', 'Nov.', 'Dez.'],
+  dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+  dayNamesShort: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 };
 LocaleConfig.defaultLocale = 'pt-br';
 
-async function schedulePushNotification(habitName: string, reminder: Date, weekdays: number[], frequency: Frequency, selectedDates: { [date: string]: { selected: true; } }) {
+async function schedulePushNotification(habitName: string, reminder: Date, weekdays: number[], frequency: Frequency, selectedDates: { [date: string]: { selected: true; } }, vibration?: VibrationType) {
   const reminderTime = new Date(reminder);
+
+  const channelId = vibration || 'default';
 
   if (frequency === 'daily') {
     // Schedule for every day of the week
     for (let i = 1; i <= 7; i++) {
       const trigger = {
         type: 'weekly' as const,
-        channelId: 'default',
+        channelId: channelId,
         weekday: i,
         hour: reminderTime.getHours(),
         minute: reminderTime.getMinutes(),
@@ -58,7 +62,7 @@ async function schedulePushNotification(habitName: string, reminder: Date, weekd
 
       const trigger = {
         type: 'weekly' as const,
-        channelId: 'default',
+        channelId: channelId,
         weekday: dayIndex + 1,
         hour: reminderTime.getHours(),
         minute: reminderTime.getMinutes(),
@@ -77,7 +81,7 @@ async function schedulePushNotification(habitName: string, reminder: Date, weekd
     for (const dateStr in selectedDates) {
       const [year, month, day] = dateStr.split('-').map(Number);
       const trigger = {
-        channelId: 'default',
+        channelId: channelId,
         year: frequency === 'yearly' ? year : undefined,
         month: month,
         day: day,
@@ -97,6 +101,7 @@ async function schedulePushNotification(habitName: string, reminder: Date, weekd
 }
 
 type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type VibrationType = 'default' | 'short' | 'long' | 'none';
 
 type Habit = {
   id: string;
@@ -106,15 +111,52 @@ type Habit = {
   weekdays?: number[];
   frequency?: Frequency;
   selectedDates?: { [date: string]: { selected: true; } };
+  vibration?: VibrationType;
 };
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const frequencies: { label: string; value: Frequency }[] = [
-    { label: 'Diariamente', value: 'daily' },
-    { label: 'Semanalmente', value: 'weekly' },
-    { label: 'Mensalmente', value: 'monthly' },
-    { label: 'Anualmente', value: 'yearly' },
+  { label: 'Diariamente', value: 'daily' },
+  { label: 'Semanalmente', value: 'weekly' },
+  { label: 'Mensalmente', value: 'monthly' },
+  { label: 'Anualmente', value: 'yearly' },
 ];
+
+const vibrationOptions: { label: string; value: VibrationType }[] = [
+  { label: 'Padrão', value: 'default' },
+  { label: 'Curta', value: 'short' },
+  { label: 'Longa', value: 'long' },
+  { label: 'Nenhuma', value: 'none' },
+];
+
+async function setupNotificationChannels() {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Padrão',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+    await Notifications.setNotificationChannelAsync('short', {
+      name: 'Curta',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 100, 50, 100],
+      lightColor: '#FF231F7C',
+    });
+    await Notifications.setNotificationChannelAsync('long', {
+      name: 'Longa',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 500, 200, 500],
+      lightColor: '#FF231F7C',
+    });
+    await Notifications.setNotificationChannelAsync('none', {
+      name: 'Sem Vibração',
+      importance: Notifications.AndroidImportance.MAX,
+      enableVibrate: false,
+      lightColor: '#FF231F7C',
+    });
+  }
+}
 
 export default function HabitsScreen() {
 
@@ -141,6 +183,9 @@ export default function HabitsScreen() {
   const [modalMessage, setModalMessage] = useState('');
   const [modalActions, setModalActions] = useState<React.ReactNode | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [vibration, setVibration] = useState<VibrationType>('default');
+  const [showVibrationPicker, setShowVibrationPicker] = useState(false);
+  const [selectedFrequency, setSelectedFrequency] = useState<Frequency | 'all'>('all');
 
   const openModal = (title: string, message: string, actions: React.ReactNode) => {
     setModalTitle(title);
@@ -204,6 +249,7 @@ export default function HabitsScreen() {
   }, []);
 
   useEffect(() => {
+    setupNotificationChannels();
     loadHabitsFromStorage();
   }, []);
 
@@ -215,12 +261,14 @@ export default function HabitsScreen() {
       }
     } catch (error) {
       console.error('Failed to load habits from storage', error);
+      toast.error("Erro", "Falha ao carregar os hábitos.");
     }
   };
 
   const onAddHabit = () => {
     // Check if there's already a new habit being created
     if (habits.find(h => h.id.startsWith('new-'))) {
+      toast.warning("Atenção", "Você já está criando um novo hábito.");
       return; // Or show an alert to the user
     }
 
@@ -239,6 +287,7 @@ export default function HabitsScreen() {
     setReminders([]);
     setSelectedWeekdays([]);
     setFrequency('weekly');
+    setVibration('default');
     setSelectedDates({});
     setIsNewHabitAccordionExpanded(false);
   }
@@ -278,9 +327,9 @@ export default function HabitsScreen() {
   };
 
   const handleToggleWeekday = (dayIndex: number) => {
-    setSelectedWeekdays(prev => 
-      prev.includes(dayIndex) 
-        ? prev.filter(d => d !== dayIndex) 
+    setSelectedWeekdays(prev =>
+      prev.includes(dayIndex)
+        ? prev.filter(d => d !== dayIndex)
         : [...prev, dayIndex]
     );
   };
@@ -288,7 +337,7 @@ export default function HabitsScreen() {
   const onDayPress = (day: any) => {
     const dateString = day.dateString;
     setSelectedDates(prev => {
-      const newDates = {...prev};
+      const newDates = { ...prev };
       if (newDates[dateString]) {
         delete newDates[dateString];
       } else {
@@ -299,8 +348,8 @@ export default function HabitsScreen() {
   };
 
   const handleToggleSelect = (habitId: string) => {
-    setSelectedHabits(prev => 
-      prev.includes(habitId) 
+    setSelectedHabits(prev =>
+      prev.includes(habitId)
         ? prev.filter(id => id !== habitId)
         : [...prev, habitId]
     );
@@ -308,7 +357,7 @@ export default function HabitsScreen() {
 
   const handleDeleteSelected = () => {
     const title = selectedHabits.length === 1 ? 'Excluir Hábito' : 'Excluir Hábitos';
-    const message = selectedHabits.length === 1 
+    const message = selectedHabits.length === 1
       ? 'Tem certeza que deseja excluir o hábito selecionado?'
       : `Tem certeza que deseja excluir os ${selectedHabits.length} hábitos selecionados?`;
 
@@ -325,11 +374,10 @@ export default function HabitsScreen() {
               setSelectedHabits([]);
               loadHabitsFromStorage();
               closeModal();
+              toast.success("Sucesso", "Hábitos excluídos com sucesso!");
             } catch (error) {
               closeModal();
-              openModal('Erro', 'Não foi possível excluir os hábitos selecionados.', 
-                <CustomButton title="OK" onPress={closeModal} backgroundColor={Colors.lightBlue} textColor={Colors.white} />
-              );
+              toast.error('Erro', 'Não foi possível excluir os hábitos selecionados.');
             }
           }}
           backgroundColor={Colors.red}
@@ -341,48 +389,57 @@ export default function HabitsScreen() {
   };
 
   const handleSaveHabits = async () => {
-    if (editingHabit) {
-      setIsSaving(true);
-      // Update existing habit
-      const isNew = editingHabit.id.startsWith('new-');
-      const habitData = { 
-        name: habitName, 
-        time: habitTime, 
-        reminders: reminders, 
-        weekdays: frequency === 'weekly' ? selectedWeekdays : (frequency === 'daily' ? [0,1,2,3,4,5,6] : []),
-        frequency: frequency,
-        selectedDates: selectedDates,
-      };
+    try {
+      if (editingHabit) {
+        setIsSaving(true);
+        // Update existing habit
+        const isNew = editingHabit.id.startsWith('new-');
+        const habitData = {
+          name: habitName,
+          time: habitTime,
+          reminders: reminders,
+          weekdays: frequency === 'weekly' ? selectedWeekdays : (frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : []),
+          frequency: frequency,
+          vibration: vibration,
+          selectedDates: selectedDates,
+        };
 
-      if (isNew) {
-        await addHabit(habitData);
-      } else {
-        await updateHabit(editingHabit.id, habitData);
+        if (isNew) {
+          await addHabit(habitData);
+          toast.success("Sucesso", "Hábito criado com sucesso!");
+        } else {
+          await updateHabit(editingHabit.id, habitData);
+          toast.success("Sucesso", "Hábito atualizado com sucesso!");
+        }
       }
-    }
 
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    const allHabits = await listHabits() as Habit[];
-    if (allHabits) {
-      for (const habit of allHabits) {
-        if (habit.reminders && (habit.weekdays && habit.weekdays.length > 0 || habit.selectedDates)) {
-          const reminderDates = habit.reminders.map(r =>
-            r && typeof (r as any).seconds === 'number'
-              ? new Date((r as any).seconds * 1000)
-              : new Date(r)
-          );
-          for (const reminderDate of reminderDates) {
-            await schedulePushNotification(habit.name, reminderDate, habit.weekdays || [], habit.frequency || 'weekly', habit.selectedDates || {});
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      const allHabits = await listHabits() as Habit[];
+      if (allHabits) {
+        for (const habit of allHabits) {
+          if (habit.reminders && (habit.weekdays && habit.weekdays.length > 0 || habit.selectedDates)) {
+            const reminderDates = habit.reminders.map(r =>
+              r && typeof (r as any).seconds === 'number'
+                ? new Date((r as any).seconds * 1000)
+                : new Date(r)
+            );
+            for (const reminderDate of reminderDates) {
+              await schedulePushNotification(habit.name, reminderDate, habit.weekdays || [], habit.frequency || 'weekly', habit.selectedDates || {}, habit.vibration || 'default');
+            }
           }
         }
       }
+
+      setHabitName('');
+      onModalClose();
+
+      loadHabitsFromStorage();
+      setIsSaving(false);
+    } catch (error) {
+      console.error("Erro ao salvar hábito:", error);
+      toast.error("Erro", "Falha ao salvar o hábito.");
+      setIsSaving(false);
     }
-
-    setHabitName('');
-    onModalClose();
-
-    loadHabitsFromStorage();
-    setIsSaving(false);
   };
 
   const handleEditHabit = (habit: Habit) => {
@@ -412,6 +469,7 @@ export default function HabitsScreen() {
       }
       setSelectedWeekdays(habit.weekdays || []);
       setFrequency(habit.frequency || 'weekly');
+      setVibration(habit.vibration || 'default');
       setSelectedDates(habit.selectedDates || {});
       setIsNewHabitAccordionExpanded(false); // Close "Novo Hábito" accordion if open
     }
@@ -421,13 +479,21 @@ export default function HabitsScreen() {
     if (editingHabit) {
       const updatedHabits = habits.filter(g => g.id !== editingHabit.id);
       setHabits(updatedHabits);
-      await deleteHabit(editingHabit.id);
+      try {
+        await deleteHabit(editingHabit.id);
+        toast.success("Sucesso", "Hábito excluído com sucesso!");
+      } catch (error) {
+        console.error("Erro ao excluir hábito:", error);
+        toast.error("Erro", "Falha ao excluir o hábito.");
+        // Reverte a alteração visual se falhar (opcional, mas boa prática)
+        loadHabitsFromStorage();
+      }
       onModalClose();
     }
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Hábitos Inteligentes</Text>
       <View style={styles.button}>
         {selectedHabits.length > 0 ? (
@@ -450,16 +516,63 @@ export default function HabitsScreen() {
           />
         )}
       </View>
+      <View style={styles.filterWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContainer}
+        >
+          {[{ label: 'Todos', value: 'all' }, ...frequencies.filter(f => f.value !== 'yearly')].map((freq) => (
+            <TouchableOpacity
+              key={freq.value}
+              style={[
+                styles.filterButton,
+                selectedFrequency === freq.value && styles.filterButtonSelected,
+              ]}
+              onPress={() => setSelectedFrequency(freq.value as Frequency | 'all')}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFrequency === freq.value && styles.filterTextSelected,
+                ]}
+              >
+                {freq.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       <FlatList
-        data={habits}
+        data={habits.filter(h => {
+          if (selectedFrequency === 'all') return true;
+          if (selectedFrequency === 'daily') {
+            return h.frequency === 'daily' || (h.frequency === 'weekly' && h.weekdays?.length === 7);
+          }
+          if (selectedFrequency === 'weekly') {
+            return h.frequency === 'weekly';
+          }
+          if (selectedFrequency === 'monthly') {
+            return h.frequency === 'monthly' || h.frequency === 'yearly';
+          }
+          return false;
+        })}
         renderItem={({ item }) => (
-          <List.Section key={item.id} style={styles.listSection}>
+          <View key={item.id} style={styles.listSection}>
             <Accordion
               title={item.name}
               isExpanded={editingHabit?.id === item.id}
-              onPress={() => handleEditHabit(item)}
+              onPress={() => {
+                if (selectedHabits.length > 0) {
+                  handleToggleSelect(item.id);
+                } else {
+                  handleEditHabit(item);
+                }
+              }}
               isSelected={selectedHabits.includes(item.id)}
               onSelect={() => handleToggleSelect(item.id)}
+              onLongPress={() => handleToggleSelect(item.id)}
             >
               <View>
                 <View style={styles.textInputs}>
@@ -469,6 +582,7 @@ export default function HabitsScreen() {
                     value={habitName}
                     onChangeText={setHabitName}
                     borderRadius={8}
+                    width={'95%'}
                   />
                 </View>
                 <View style={styles.remindersContainer}>
@@ -538,14 +652,14 @@ export default function HabitsScreen() {
                         style={[
                           styles.weekdayButton,
                           selectedWeekdays.includes(index) &&
-                            styles.weekdayButtonSelected,
+                          styles.weekdayButtonSelected,
                         ]}
                       >
                         <Text
                           style={[
                             styles.weekdayText,
                             selectedWeekdays.includes(index) &&
-                              styles.weekdayTextSelected,
+                            styles.weekdayTextSelected,
                           ]}
                         >
                           {day}
@@ -555,17 +669,45 @@ export default function HabitsScreen() {
                   </View>
                 )}
                 {(frequency === 'monthly' || frequency === 'yearly') && (
-                    <Calendar
-                        onDayPress={onDayPress}
-                        markedDates={selectedDates}
-                        markingType={'multi-dot'}
-                        theme={{
-                            selectedDayBackgroundColor: Colors.lightBlue,
-                            todayTextColor: Colors.lightBlue,
-                            arrowColor: Colors.lightBlue,
-                        }}
-                    />
+                  <Calendar
+                    onDayPress={onDayPress}
+                    markedDates={selectedDates}
+                    markingType={'multi-dot'}
+                    theme={{
+                      selectedDayBackgroundColor: Colors.lightBlue,
+                      todayTextColor: Colors.lightBlue,
+                      arrowColor: Colors.lightBlue,
+                    }}
+                  />
                 )}
+
+                <Text style={styles.modalTitles}>Vibração</Text>
+                <TouchableOpacity
+                  style={styles.selectField}
+                  onPress={() => setShowVibrationPicker(!showVibrationPicker)}
+                >
+                  <Text style={styles.selectFieldText}>
+                    {vibrationOptions.find(opt => opt.value === vibration)?.label || 'Padrão'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showVibrationPicker && (
+                  <View style={styles.dropdownList}>
+                    {vibrationOptions.map(opt => (
+                      <TouchableOpacity
+                        key={opt.value}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setVibration(opt.value);
+                          setShowVibrationPicker(false);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
                 <View style={styles.modalButtons}>
                   <CustomButton
                     title={editingHabit?.id.startsWith('new-') ? 'Adicionar Hábito' : 'Salvar'}
@@ -585,21 +727,23 @@ export default function HabitsScreen() {
                 </Text>
               </View>
             </Accordion>
-          </List.Section>
+          </View>
         )}
         keyExtractor={(item) => item.id}
         style={styles.column}
         contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
       />
-      {showTimePicker && (
-        <DateTimePicker
-          value={habitTime || new Date()}
-          mode="time"
-          is24Hour={true}
-          display="default"
-          onChange={onTimeChange}
-        />
-      )}
+      {
+        showTimePicker && (
+          <DateTimePicker
+            value={habitTime || new Date()}
+            mode="time"
+            is24Hour={true}
+            display="default"
+            onChange={onTimeChange}
+          />
+        )
+      }
       <ConfirmationModal
         visible={isModalVisible}
         title={modalTitle}
@@ -608,18 +752,17 @@ export default function HabitsScreen() {
       >
         {modalActions}
       </ConfirmationModal>
-    </View>
-  );  
+    </SafeAreaView >
+  );
 }
 
-const styles = StyleSheet.create ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
     gap: 5,
     backgroundColor: '#fff',
   },
-    scrollContent: {
+  scrollContent: {
     paddingBottom: 70,
   },
   title: {
@@ -632,22 +775,6 @@ const styles = StyleSheet.create ({
   button: {
     alignSelf: 'center',
     marginBottom: 12,
-  },
-  modalContent: {
-    width: '90%',
-    height: 'auto',
-    backgroundColor: Colors.lightestBlue,
-    marginHorizontal: '5%',
-    borderRadius: 30,
-    position: 'absolute',
-    bottom: '30%',
-    borderWidth: 1,
-    borderColor: Colors.lightBlue,
-    borderStyle: 'dashed',
-    gap: -5,
-  },
-  accordion: {
-    width: '90%',
   },
   modalTitles: {
     fontWeight: '500',
@@ -753,7 +880,34 @@ const styles = StyleSheet.create ({
     alignSelf: 'center'
   },
   listSection: {
-    width: 350,
-    marginEnd: 30,
+    alignSelf: 'center',
+    width: 326,
+  },
+  filterWrapper: {
+    marginBottom: 15,
+  },
+  filterContainer: {
+    paddingHorizontal: 20,
+    gap: 10,
+    alignItems: 'center',
+    paddingVertical: 5, // Add padding for shadows if needed
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: Colors.lighterBlue,
+    // Remove border for cleaner look
+  },
+  filterButtonSelected: {
+    backgroundColor: Colors.blue,
+  },
+  filterText: {
+    color: Colors.blue,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  filterTextSelected: {
+    color: Colors.white,
   },
 })

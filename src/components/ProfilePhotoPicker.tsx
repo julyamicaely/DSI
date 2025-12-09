@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { uploadProfilePhoto, updateUserPhoto } from "../services/firebase.service";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "../utils/toast";
+import TemporaryMessage from "./TemporaryMessage";
 
 interface ProfilePhotoPickerProps {
   userId: string;
@@ -29,6 +29,7 @@ export default function ProfilePhotoPicker({
   const [photoUrl, setPhotoUrl] = useState(currentPhotoUrl);
   const [uploading, setUploading] = useState(false);
   const { refreshUser, triggerDataUpdate } = useAuth();
+  const [tempMessage, setTempMessage] = useState<string>('');
 
   const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
@@ -38,10 +39,7 @@ export default function ProfilePhotoPicker({
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(
-          "Permissão negada",
-          "Precisamos de acesso à galeria para você escolher uma foto."
-        );
+        setTempMessage("Permissão negada: Precisamos de acesso à galeria para você escolher uma foto.");
         return;
       }
 
@@ -76,7 +74,7 @@ export default function ProfilePhotoPicker({
 
       // Recarregar dados do usuário no contexto
       await refreshUser();
-      
+
       // Notificar outras telas sobre a atualização
       triggerDataUpdate();
 
@@ -116,6 +114,7 @@ export default function ProfilePhotoPicker({
           <Ionicons name="camera" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+      <TemporaryMessage message={tempMessage} onHide={() => setTempMessage('')} />
     </View>
   );
 }

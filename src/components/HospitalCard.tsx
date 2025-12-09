@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Hospital } from '../types/hospital.types';
 import { COLORS } from '../config/constants';
 import googlePlacesService from '../services/googlePlaces.service';
+import Colors from './Colors';
 
 interface HospitalCardProps {
   hospital: Hospital;
@@ -120,7 +121,7 @@ export const HospitalCard: React.FC<HospitalCardProps> = ({
           <Ionicons
             name={isFavorite ? 'heart' : 'heart-outline'}
             size={24}
-            color={isFavorite ? COLORS.primary : COLORS.gray}
+            color={isFavorite ? Colors.red : COLORS.gray}
           />
         </TouchableOpacity>
       )}
