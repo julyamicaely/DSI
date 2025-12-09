@@ -22,6 +22,7 @@ interface GoalAccordionCardProps {
   onDelete: (goalId: string) => void;
   isSelected: boolean;
   onSelectToggle: (goalId: string) => void;
+  readOnly?: boolean;
 }
 
 const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
@@ -34,6 +35,7 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
   isSelected,
   onSelectToggle,
   habits,
+  readOnly = false,
 }) => {
 
   // Form State
@@ -57,7 +59,7 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
   const translateX = useRef(new Animated.Value(0)).current;
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !readOnly,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 10;
       },
@@ -194,17 +196,19 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
     <View style={[styles.swipeContainer, isSelected && styles.selectedCard]}>
 
       {/* Edit Action Background (Same as ClinicalData) */}
-      <View style={styles.swipeEditAction}>
-        <TouchableOpacity
-          style={styles.swipeEditButton}
-          onPress={() => {
-            if (!isExpanded) toggleAccordion();
-          }}
-        >
-          <Icon name="edit" size={24} color={colors.white} />
-          <Text style={styles.swipeActionText}>Editar</Text>
-        </TouchableOpacity>
-      </View>
+      {!readOnly && (
+        <View style={styles.swipeEditAction}>
+          <TouchableOpacity
+            style={styles.swipeEditButton}
+            onPress={() => {
+              if (!isExpanded) toggleAccordion();
+            }}
+          >
+            <Icon name="edit" size={24} color={colors.white} />
+            <Text style={styles.swipeActionText}>Editar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Animated.View
         style={[
@@ -253,7 +257,7 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
             <View style={[styles.progressBar, { width: `${Math.min(100, progressPercentage)}%` }]} />
           </View>
 
-          {progressPercentage >= 100 && (
+          {progressPercentage >= 100 && !readOnly && (
             <View style={{ alignItems: 'center', marginVertical: 10 }}>
               <CustomButton
                 title="Concluir Meta"
@@ -270,34 +274,37 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
             <View style={styles.expandedContent} onStartShouldSetResponder={() => true}>
 
               {/* Seção de Registro de Progresso */}
-              <View style={styles.progressSection}>
-                <Text style={styles.sectionTitle}>Registrar Progresso de Hoje</Text>
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, { flex: 1, marginBottom: 0, marginRight: 10 }]}
-                    placeholder="Valor (ex: 0.5)"
-                    keyboardType="numeric"
-                    value={todayProgress}
-                    onChangeText={setTodayProgress}
-                  />
-                  <CustomButton
-                    title="Registrar"
-                    onPress={handleRegisterProgress}
-                    color={colors.blue}
-                    iconName="add-circle-outline"
-                    width={130}
-                    height={40}
-                  />
+              {!readOnly && (
+                <View style={styles.progressSection}>
+                  <Text style={styles.sectionTitle}>Registrar Progresso de Hoje</Text>
+                  <View style={styles.row}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, marginBottom: 0, marginRight: 10 }]}
+                      placeholder="Valor (ex: 0.5)"
+                      keyboardType="numeric"
+                      value={todayProgress}
+                      onChangeText={setTodayProgress}
+                    />
+                    <CustomButton
+                      title="Registrar"
+                      onPress={handleRegisterProgress}
+                      color={colors.blue}
+                      iconName="add-circle-outline"
+                      width={130}
+                      height={40}
+                    />
+                  </View>
                 </View>
-              </View>
+              )}
 
               <Text style={styles.sectionTitle}>Editar Detalhes</Text>
 
               <Text style={styles.label}>Nome da Meta</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, readOnly && styles.readOnlyInput]}
                 value={formData.name}
                 onChangeText={text => handleChange('name', text)}
+                editable={!readOnly}
               />
 
               <Text style={styles.label}>Hábito Associado</Text>
@@ -305,7 +312,7 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
                 <HabitSelector
                   habits={habits}
                   selectedHabitId={formData.habitId}
-                  onSelect={(value) => handleChange('habitId', value)}
+                  onSelect={(value) => !readOnly && handleChange('habitId', value)}
                 />
               </View>
 
@@ -313,19 +320,21 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
                 <View style={{ flex: 1, marginRight: 5 }}>
                   <Text style={styles.label}>Meta Alvo</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, readOnly && styles.readOnlyInput]}
                     value={String(formData.target)}
                     onChangeText={text => handleChange('target', Number(text))}
                     keyboardType="numeric"
+                    editable={!readOnly}
                   />
                 </View>
                 <View style={{ flex: 1, marginLeft: 5 }}>
                   <Text style={styles.label}>Meta Diária</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, readOnly && styles.readOnlyInput]}
                     value={String(formData.dailyTarget)}
                     onChangeText={text => handleChange('dailyTarget', Number(text))}
                     keyboardType="numeric"
+                    editable={!readOnly}
                   />
                   {formData.dailyTarget !== goal.dailyTarget && (
                     <Text style={{ color: colors.orange, fontSize: 12, fontStyle: 'italic', marginTop: -5, marginBottom: 5 }}>
@@ -362,14 +371,25 @@ const GoalAccordionCard: React.FC<GoalAccordionCardProps> = React.memo(({
               )}
 
               <View style={styles.footerButtons}>
-                <CustomButton
-                  title={isSaving ? "Salvando..." : "Salvar Alterações"}
-                  onPress={handleSavePress}
-                  backgroundColor={colors.blue}
-                  textColor={colors.white}
-                  iconName="save-outline"
-                  width="100%"
-                />
+                {!readOnly ? (
+                  <CustomButton
+                    title={isSaving ? "Salvando..." : "Salvar Alterações"}
+                    onPress={handleSavePress}
+                    backgroundColor={colors.blue}
+                    textColor={colors.white}
+                    iconName="save-outline"
+                    width="100%"
+                  />
+                ) : (
+                  <CustomButton
+                    title="Excluir Meta"
+                    onPress={handleDeletePress}
+                    backgroundColor={colors.red}
+                    textColor={colors.white}
+                    iconName="trash-outline"
+                    width="100%"
+                  />
+                )}
               </View>
             </View>
           )}
@@ -435,6 +455,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginTop: 4,
+  },
+  readOnlyInput: {
+    backgroundColor: colors.lightestBlue,
+    color: colors.gray,
   }
 });
 

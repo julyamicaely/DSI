@@ -136,6 +136,7 @@ export const completeGoal = async (goal: Goal): Promise<{ newUnlock: boolean; ac
   // 1. Mark goal as completed in Firestore (optional: add a 'completedAt' field or status)
   // For now, we just assume the user wants to "finish" it.
   // We could add { status: 'completed' } to updates if schema supports it.
+  await updateDoc(ref, { status: 'completed' });
 
   // 2. Calculate if perfect
   const isPerfect = calculateIsPerfect(goal);

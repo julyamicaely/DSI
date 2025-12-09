@@ -1,6 +1,7 @@
 // src/app/(cards)/goals.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, FlatList, StyleSheet, LayoutAnimation, Platform, UIManager, TouchableOpacity, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import GoalAccordionCard from '../../components/GoalAccordionCard';
 import CreateGoalModal from '../../components/CreateGoalModal';
@@ -171,8 +172,12 @@ const GoalsScreen: React.FC = () => {
   }, [navigation, isSelectionMode, selectedGoalIds.length, handleDeleteSelectedGoals]);
   */
 
+  const activeGoals = useMemo(() => goals.filter(g => g.status !== 'completed'), [goals]);
+  const hasCompletedGoals = useMemo(() => goals.some(g => g.status === 'completed'), [goals]);
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Metas</Text>
       <View style={styles.buttonContainer}>
         {isSelectionMode ? (
           <CustomButton
@@ -184,19 +189,35 @@ const GoalsScreen: React.FC = () => {
             width={326}
           />
         ) : (
-          <CustomButton
-            iconName='add'
-            title="Nova Meta"
-            onPress={openCreateModal}
-            backgroundColor={ComponentColors.blue}
-            textColor={ComponentColors.white}
-            width={326}
-          />
+          <>
+            <CustomButton
+              iconName='add'
+              title="Nova Meta"
+              onPress={openCreateModal}
+              backgroundColor={ComponentColors.blue}
+              textColor={ComponentColors.white}
+              width={326}
+            />
+            {hasCompletedGoals && (
+              <View style={{ marginTop: 10 }}>
+                <CustomButton
+                  iconName='trophy-outline'
+                  title="Metas Concluídas"
+                  onPress={() => navigation.navigate('completedGoals' as never)}
+                  backgroundColor={ComponentColors.white}
+                  textColor={ComponentColors.blue}
+                  width={326}
+                  borderWidth={1}
+                  borderColor={ComponentColors.blue}
+                />
+              </View>
+            )}
+          </>
         )}
       </View>
 
       <FlatList
-        data={goals}
+        data={activeGoals}
         keyExtractor={item => item.id}
         renderItem={({ item: goal }) => (
           <GoalAccordionCard
@@ -223,15 +244,16 @@ const GoalsScreen: React.FC = () => {
         goalToEdit={null}
         habits={habits}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white, paddingTop: 20 },
+  container: { flex: 1, backgroundColor: Colors.white },
   list: { paddingTop: 10, },
   buttonContainer: { alignItems: 'center', marginBottom: 10 },
   selectionModeText: { textAlign: 'center', marginVertical: 10, color: Colors.red, fontWeight: 'bold', width: '90%', alignSelf: 'center' },
+  title: { fontSize: 20, fontWeight: '600', color: '#333', textAlign: 'center', marginBottom: 10 },
 });
 
 

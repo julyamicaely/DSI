@@ -34,6 +34,7 @@ export interface Goal {
   progressTotal: number;
   progress: string[]; // Array de datas completadas ('YYYY-MM-DD')
   habitId: string; // 🚨 Essencial para o modal
+  status?: 'active' | 'completed';
   dailyProgress?: {
     [key: string]: DailyProgressEntry; // 'YYYY-MM-DD': { progress: 1, target: 1, percentage: 100 }
   };
