@@ -10,7 +10,7 @@ import { listGoals, deleteGoal, updateDailyProgress, updateGoal } from '../../se
 import { listHabits } from '../../services/habitsServices'; // Do seu colega
 import { updateGoalProgress, rollbackGoalProgress } from '../../utils/goalUtils';
 import { Goal, Habit, DailyProgressEntry, Colors, GoalFormValues } from '../../types'; 
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 
 const GoalsScreen: React.FC = () => { 
