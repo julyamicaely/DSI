@@ -6,7 +6,12 @@ const consultasRef = collection(db, "consultas");
 export const adicionarConsulta = async (dados: any) => {
   const user = auth.currentUser;
   if (!user) throw new Error("Usuário não autenticado");
-  await addDoc(consultasRef, { ...dados, userId: user.uid });
+  await addDoc(consultasRef, { 
+    ...dados, 
+    userId: user.uid,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
 };
 
 export const listarConsultas = async () => {
@@ -20,7 +25,10 @@ export const listarConsultas = async () => {
 
 export const atualizarConsulta = async (id: string, dados: any) => {
   const ref = doc(db, "consultas", id);
-  await updateDoc(ref, dados);
+  await updateDoc(ref, { 
+    ...dados,
+    updatedAt: new Date().toISOString()
+  });
 };
 
 export const deletarConsulta = async (id: string) => {
