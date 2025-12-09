@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAchievementStats, AchievementStats, MILESTONES, removeGoalFromHistory } from '../../../services/achievementsService';
@@ -13,6 +13,30 @@ export default function AchievementsScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedAchievement, setSelectedAchievement] = useState<{ title: string, description: string, type: 'standard' | 'perfect' } | null>(null);
     const [selectedHistory, setSelectedHistory] = useState<any[]>([]);
+
+    // Toggle para mostrar/esconder texto de ajuda do Perfeccionista
+    const [showPerfectHelp, setShowPerfectHelp] = useState(false);
+    const helpTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    
+    useEffect(() => {
+        if (showPerfectHelp) {
+           
+            if (helpTimeoutRef.current) {
+                clearTimeout(helpTimeoutRef.current);
+            }
+            
+            helpTimeoutRef.current = setTimeout(() => {
+                setShowPerfectHelp(false);
+            }, 8000);
+        }
+        
+        return () => {
+            if (helpTimeoutRef.current) {
+                clearTimeout(helpTimeoutRef.current);
+            }
+        };
+    }, [showPerfectHelp]);
 
     // Confirmation Modal State
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -63,20 +87,6 @@ export default function AchievementsScreen() {
     const closeConfirmModal = () => {
         setConfirmModalVisible(false);
         setConfirmModalActions(null);
-    };
-
-    const showPerfectHelp = () => {
-        openConfirmModal(
-            "Como conquistar uma Meta Perfeita?",
-            "Uma meta é considerada 'Perfeita' quando é completa com eficiência total, sem metas diárias não atingidas ou atrasos.",
-            <CustomButton
-                title="Entendi"
-                onPress={closeConfirmModal}
-                backgroundColor={Colors.blue}
-                textColor={Colors.white}
-                width={'50%'}
-            />
-        );
     };
 
     const handleDeleteHistory = async (entryId: string) => {
@@ -163,11 +173,16 @@ export default function AchievementsScreen() {
 
             <View style={styles.sectionHeaderContainer}>
                 <Text style={styles.sectionTitle}>Perfeccionista</Text>
-                <TouchableOpacity onPress={showPerfectHelp} style={styles.helpButton}>
-                    <Ionicons name="help-circle-outline" size={22} color={Colors.gray} />
+                <TouchableOpacity onPress={() => setShowPerfectHelp(!showPerfectHelp)} style={styles.helpButton}>
+                    <Ionicons name={showPerfectHelp ? "close-circle-outline" : "help-circle-outline"} size={22} color={Colors.gray} />
                 </TouchableOpacity>
             </View>
             <Text style={styles.sectionDescription}>Complete metas sem falhar nenhum dia!</Text>
+            {showPerfectHelp && (
+                <Text style={styles.perfectHelpText}>
+                    Uma meta é considerada 'Perfeita' quando é completa com eficiência total, sem metas diárias não atingidas ou atrasos.
+                </Text>
+            )}
             <View style={styles.grid}>
                 {MILESTONES.map(m => (
                     <AchievementIcon
@@ -278,7 +293,14 @@ const styles = StyleSheet.create({
     helpButton: {
         marginTop: 2
     },
-    sectionDescription: { fontSize: 14, color: '#666', marginBottom: 15 },
+    sectionDescription: { fontSize: 14, color: '#666', marginBottom: 8 },
+    perfectHelpText: {
+        fontSize: 13,
+        color: '#888',
+        fontStyle: 'italic',
+        marginBottom: 15,
+        paddingHorizontal: 5,
+    },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 15, marginBottom: 30 },
 
