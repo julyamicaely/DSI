@@ -8,7 +8,8 @@ import colors from '../../components/Colors';
 import { getUserData } from '../../services/firebase.service';
 import { useAuth } from '../../context/AuthContext';
 import { listHabits } from '../../services/habitsServices';
-import { listGoals, Goal } from '../../services/goalsServices';
+import { listGoals } from '../../services/goalsServices';
+import { Goal } from '../../types';
 import { listarConsultas } from '../../services/consultasService';
 import { useFavoritesStore } from '../../store/favoritesStore';
 import * as Location from 'expo-location';
@@ -279,7 +280,7 @@ export default function HomeScreen() {
           const nextReminderTime = calculateNextReminder(habit, now);
           if (nextReminderTime) {
             goalsWithReminders.push({
-              goalName: goal.habitName,
+              goalName: goal.name, // Use goal.name instead of goal.habitName
               nextReminder: nextReminderTime
             });
           }
@@ -293,7 +294,7 @@ export default function HomeScreen() {
         setNextGoal(`${nextGoalInfo.goalName}, às ${timeString}`);
       } else {
         const goalWithMostProgress = goals.reduce((max, goal) => (goal.progress.length > max.progress.length ? goal : max), goals[0]);
-        setNextGoal(`${goalWithMostProgress.habitName}`);
+        setNextGoal(`${goalWithMostProgress.name}`); // Use goal.name
       }
     } catch (error) {
       console.error("Failed to load next goal:", error);
