@@ -458,12 +458,12 @@ export default function HomeScreen() {
         <View style={styles.impactCardsRow}>
           <ImpactCard
             title={impactTitle}
-            value={impactDays > 0 ? `${impactDays} dias!` : ""}
+            value={impactDays > 0 ? `${impactDays} dias de atividades completadas esta semana!` : ""}
             change={impactChange}
           />
           <ImpactCard
             title={habitImpactTitle}
-            value={habitImpactValue > 0 ? `${habitImpactValue} vezes!` : ""}
+            value={habitImpactValue > 0 ? `Completo ${habitImpactValue} vezes!` : ""}
             change={habitImpactChange}
           />
         </View>
