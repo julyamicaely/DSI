@@ -11,7 +11,8 @@ import {
   Modal,
   Pressable,
   Animated,
-  PanResponder
+  PanResponder,
+  SafeAreaView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { adicionarConsulta, listarConsultas, atualizarConsulta, deletarConsulta } from "../../services/consultasService";
@@ -1010,7 +1011,7 @@ export default function DadosClinicosScreen() {
 
       {/* Modal de Resultado */}
       {renderResultModal()}
-    </SafeAreaView>
+    </View>
   );
 
   /**
