@@ -338,11 +338,20 @@ export default function HomeScreen() {
     try {
       const consultas = await listarConsultas();
       if (consultas && consultas.length > 0) {
-        // Assuming the list is sorted by date, get the most recent one
-        const lastConsulta = consultas[0];
-        // You might need to add a date to your consulta object to sort properly
-        // For now, just showing a generic message
-        setLastClinicalData(`Registrado em ${new Date().toLocaleDateString()}`);
+        // Sort by date descending (newest first)
+        const sortedConsultas = consultas.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+
+        const lastConsulta = sortedConsultas[0] as any;
+
+        if (lastConsulta.createdAt) {
+          setLastClinicalData(`Registrado em ${new Date(lastConsulta.createdAt).toLocaleDateString()}`);
+        } else {
+          setLastClinicalData(`Registrado em ${new Date().toLocaleDateString()}`);
+        }
       } else {
         setLastClinicalData('Adicione dados de sua consulta');
       }

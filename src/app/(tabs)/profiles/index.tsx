@@ -18,7 +18,7 @@ export default function ProfileIndex() {
         setUserName(currentUser.displayName || "Usuário");
       }
     };
-    
+
     loadUserName();
   }, [dataUpdateTrigger, user]);
 
@@ -55,6 +55,13 @@ export default function ProfileIndex() {
           onPress={() => router.push("/(tabs)/profiles/permissions")}
         >
           <Text style={styles.optionText}>Permissões</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => router.push("/(tabs)/profiles/conquistas")}
+        >
+          <Text style={styles.optionText}>Conquistas</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

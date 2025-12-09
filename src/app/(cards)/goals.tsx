@@ -212,7 +212,7 @@ const GoalsScreen: React.FC = () => {
           />
         )}
         ListHeaderComponent={() => isSelectionMode ? (
-          <Text style={styles.selectionModeText}>Pressione uma meta para deselecionar ou use o ícone de lixeira.</Text>
+          <Text style={styles.selectionModeText}>Pressione a meta novamente para cancelar a seleção ou use o ícone de lixeira para excluir.</Text>
         ) : null}
         style={styles.list}
       />
@@ -231,7 +231,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white, paddingTop: 20 },
   list: { paddingTop: 10, },
   buttonContainer: { alignItems: 'center', marginBottom: 10 },
-  selectionModeText: { textAlign: 'center', marginVertical: 10, color: Colors.red, fontWeight: 'bold', },
+  selectionModeText: { textAlign: 'center', marginVertical: 10, color: Colors.red, fontWeight: 'bold', width: '90%', alignSelf: 'center' },
 });
+
 
 export default GoalsScreen;

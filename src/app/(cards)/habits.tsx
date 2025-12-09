@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { addHabit, listHabits, updateHabit, deleteHabit } from "../../services/habitsServices";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -185,6 +185,7 @@ export default function HabitsScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [vibration, setVibration] = useState<VibrationType>('default');
   const [showVibrationPicker, setShowVibrationPicker] = useState(false);
+  const [selectedFrequency, setSelectedFrequency] = useState<Frequency | 'all'>('all');
 
   const openModal = (title: string, message: string, actions: React.ReactNode) => {
     setModalTitle(title);
@@ -515,16 +516,63 @@ export default function HabitsScreen() {
           />
         )}
       </View>
+      <View style={styles.filterWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContainer}
+        >
+          {[{ label: 'Todos', value: 'all' }, ...frequencies.filter(f => f.value !== 'yearly')].map((freq) => (
+            <TouchableOpacity
+              key={freq.value}
+              style={[
+                styles.filterButton,
+                selectedFrequency === freq.value && styles.filterButtonSelected,
+              ]}
+              onPress={() => setSelectedFrequency(freq.value as Frequency | 'all')}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFrequency === freq.value && styles.filterTextSelected,
+                ]}
+              >
+                {freq.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       <FlatList
-        data={habits}
+        data={habits.filter(h => {
+          if (selectedFrequency === 'all') return true;
+          if (selectedFrequency === 'daily') {
+            return h.frequency === 'daily' || (h.frequency === 'weekly' && h.weekdays?.length === 7);
+          }
+          if (selectedFrequency === 'weekly') {
+            return h.frequency === 'weekly';
+          }
+          if (selectedFrequency === 'monthly') {
+            return h.frequency === 'monthly' || h.frequency === 'yearly';
+          }
+          return false;
+        })}
         renderItem={({ item }) => (
           <View key={item.id} style={styles.listSection}>
             <Accordion
               title={item.name}
               isExpanded={editingHabit?.id === item.id}
-              onPress={() => handleEditHabit(item)}
+              onPress={() => {
+                if (selectedHabits.length > 0) {
+                  handleToggleSelect(item.id);
+                } else {
+                  handleEditHabit(item);
+                }
+              }}
               isSelected={selectedHabits.includes(item.id)}
               onSelect={() => handleToggleSelect(item.id)}
+              onLongPress={() => handleToggleSelect(item.id)}
             >
               <View>
                 <View style={styles.textInputs}>
@@ -685,15 +733,17 @@ export default function HabitsScreen() {
         style={styles.column}
         contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
       />
-      {showTimePicker && (
-        <DateTimePicker
-          value={habitTime || new Date()}
-          mode="time"
-          is24Hour={true}
-          display="default"
-          onChange={onTimeChange}
-        />
-      )}
+      {
+        showTimePicker && (
+          <DateTimePicker
+            value={habitTime || new Date()}
+            mode="time"
+            is24Hour={true}
+            display="default"
+            onChange={onTimeChange}
+          />
+        )
+      }
       <ConfirmationModal
         visible={isModalVisible}
         title={modalTitle}
@@ -702,7 +752,7 @@ export default function HabitsScreen() {
       >
         {modalActions}
       </ConfirmationModal>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
@@ -830,7 +880,34 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   listSection: {
-    width: 350,
-    marginEnd: 30,
+    alignSelf: 'center',
+    width: 326,
+  },
+  filterWrapper: {
+    marginBottom: 15,
+  },
+  filterContainer: {
+    paddingHorizontal: 20,
+    gap: 10,
+    alignItems: 'center',
+    paddingVertical: 5, // Add padding for shadows if needed
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: Colors.lighterBlue,
+    // Remove border for cleaner look
+  },
+  filterButtonSelected: {
+    backgroundColor: Colors.blue,
+  },
+  filterText: {
+    color: Colors.blue,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  filterTextSelected: {
+    color: Colors.white,
   },
 })
