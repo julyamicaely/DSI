@@ -3,17 +3,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, FlatList, StyleSheet, LayoutAnimation, Platform, UIManager, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import GoalAccordionCard from '../../components/GoalAccordionCard';
-import CreateGoalModal from '../../components/CreateGoalModal'; 
+import CreateGoalModal from '../../components/CreateGoalModal';
 import CustomButton from '../../components/CustomButton';
 import ComponentColors from '../../components/Colors';
 import { listGoals, deleteGoal, updateDailyProgress, updateGoal } from '../../services/goalsServices';
 import { listHabits } from '../../services/habitsServices'; // Do seu colega
 import { updateGoalProgress, rollbackGoalProgress } from '../../utils/goalUtils';
-import { Goal, Habit, DailyProgressEntry, Colors, GoalFormValues } from '../../types'; 
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Toast from 'react-native-root-toast';
+import { Goal, Habit, DailyProgressEntry, Colors, GoalFormValues } from '../../types';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { toast } from '../../utils/toast';
 
-const GoalsScreen: React.FC = () => { 
+const GoalsScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -28,23 +28,23 @@ const GoalsScreen: React.FC = () => {
   const fetchGoalsAndHabits = useCallback(async () => {
     try {
       const fetchedGoals = await listGoals();
-      
+
       // 🚨 CORREÇÃO DE TIPAGEM: Garante que o objeto retornado de listHabits tenha 'name' e 'userId'
-      const fetchedHabits: Partial<Habit>[] = (await listHabits()) || []; 
-      
+      const fetchedHabits: Partial<Habit>[] = (await listHabits()) || [];
+
       setGoals(fetchedGoals);
-      
+
       setHabits(
         fetchedHabits.map(habit => ({
           id: habit.id,
-          name: habit.name || `Hábito sem nome (${habit.id})`, 
+          name: habit.name || `Hábito sem nome (${habit.id})`,
           userId: habit.userId || '',
-        })) as Habit[] 
+        })) as Habit[]
       );
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      Toast.show('Erro ao carregar metas.', { duration: Toast.durations.LONG, backgroundColor: Colors.red });
+      toast.error('Erro ao carregar metas.');
     }
   }, []);
 
@@ -56,10 +56,10 @@ const GoalsScreen: React.FC = () => {
     try {
       await updateGoal(goalId, data);
       setGoals(prev => prev.map(g => g.id === goalId ? { ...g, ...data } : g));
-      Toast.show('Meta atualizada!', { duration: Toast.durations.SHORT, backgroundColor: Colors.blue });
+      toast.success('Meta atualizada!');
     } catch (error) {
       console.error('Erro ao atualizar meta:', error);
-      Toast.show('Erro ao atualizar meta.', { duration: Toast.durations.LONG, backgroundColor: Colors.red });
+      toast.error('Erro ao atualizar meta.');
     }
   };
 
@@ -71,21 +71,21 @@ const GoalsScreen: React.FC = () => {
     try {
       // 1. Atualização Otimista
       setGoals(prev => updateGoalProgress(prev, goalId, dateKey, entry));
-      
+
       // 2. Persistência no Firestore
       await updateDailyProgress(goalId, dateKey, entry);
-      Toast.show('Progresso salvo!', { duration: Toast.durations.SHORT, backgroundColor: Colors.blue });
-      
+      toast.success('Progresso salvo!');
+
     } catch (error) {
       console.error('Erro ao salvar progresso:', error);
-      
+
       // 3. Rollback
-      setGoals(prev => rollbackGoalProgress(prev, goalId, dateKey)); 
-      Toast.show('Erro ao salvar progresso. Rollback feito.', { duration: Toast.durations.LONG, backgroundColor: Colors.red });
-      throw error; 
+      setGoals(prev => rollbackGoalProgress(prev, goalId, dateKey));
+      toast.error('Erro ao salvar progresso. Rollback feito.');
+      throw error;
     }
   };
-  
+
   const handleSelectToggle = useCallback((goalId: string) => {
     // ... (Lógica de seleção)
     setSelectedGoalIds(prev => {
@@ -94,12 +94,12 @@ const GoalsScreen: React.FC = () => {
         if (newSelection.length === 0) setExpandedGoalId(null);
         return newSelection;
       } else {
-        setExpandedGoalId(null); 
+        setExpandedGoalId(null);
         return [...prev, goalId];
       }
     });
   }, []);
-  
+
   const toggleAccordion = useCallback((goalId: string) => {
     if (isSelectionMode) {
       handleSelectToggle(goalId);
@@ -113,12 +113,12 @@ const GoalsScreen: React.FC = () => {
     if (selectedGoalIds.length === 0) return;
 
     try {
-      await Promise.all(selectedGoalIds.map(id => deleteGoal(id))); 
+      await Promise.all(selectedGoalIds.map(id => deleteGoal(id)));
       setGoals(prev => prev.filter(g => !selectedGoalIds.includes(g.id)));
       setSelectedGoalIds([]);
-      Toast.show(`${selectedGoalIds.length} meta(s) excluída(s).`, { backgroundColor: Colors.blue });
+      toast.success(`${selectedGoalIds.length} meta(s) excluída(s).`);
     } catch (error) {
-      Toast.show('Erro ao excluir metas.', { backgroundColor: Colors.red });
+      toast.error('Erro ao excluir metas.');
     }
   };
 
@@ -126,17 +126,17 @@ const GoalsScreen: React.FC = () => {
     try {
       await deleteGoal(goalId);
       setGoals(prev => prev.filter(g => g.id !== goalId));
-      Toast.show('Meta excluída.', { backgroundColor: Colors.blue });
+      toast.success('Meta excluída.');
     } catch (error) {
       console.error(error);
-      Toast.show('Erro ao excluir meta.', { backgroundColor: Colors.red });
+      toast.error('Erro ao excluir meta.');
     }
   };
 
   const openCreateModal = () => {
     setIsGoalModalVisible(true);
   };
-  
+
   const closeGoalModal = (didUpdate: boolean = false) => {
     setIsGoalModalVisible(false);
     if (didUpdate) fetchGoalsAndHabits();
@@ -207,7 +207,7 @@ const GoalsScreen: React.FC = () => {
             onSave={handleSaveGoal}
             onSaveProgress={handleSaveDailyProgress}
             onDelete={handleDeleteGoal}
-            onSelectToggle={handleSelectToggle} 
+            onSelectToggle={handleSelectToggle}
             isSelected={selectedGoalIds.includes(goal.id)}
           />
         )}
@@ -216,12 +216,12 @@ const GoalsScreen: React.FC = () => {
         ) : null}
         style={styles.list}
       />
-      
-      <CreateGoalModal 
+
+      <CreateGoalModal
         isVisible={isGoalModalVisible}
         onClose={closeGoalModal}
         goalToEdit={null}
-        habits={habits} 
+        habits={habits}
       />
     </View>
   );

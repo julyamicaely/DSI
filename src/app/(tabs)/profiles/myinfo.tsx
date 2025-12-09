@@ -12,6 +12,7 @@ import { auth } from "../../../../firebaseConfig";
 import { getUserData, updateUserInfo } from "../../../services/firebase.service";
 import { useAuth } from "../../../context/AuthContext";
 import { toast } from "../../../utils/toast";
+import TemporaryMessage from "../../../components/TemporaryMessage";
 
 export default function MyInfoScreen() {
   const [userName, setUserName] = useState("");

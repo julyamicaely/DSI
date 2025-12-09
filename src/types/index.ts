@@ -2,12 +2,13 @@
 
 // Configuração de cores (para uso em componentes)
 export const Colors = {
-    white: '#FFFFFF',
-    blue: '#007AFF', // Cor principal
-    red: '#FF3B30',  // Cor de destaque/aviso
-    lightBlue: '#ADD8E6',
-    lighterBlue: '#E0F7FA',
-    lightestBlue: '#F0FFFF',
+  white: '#FFFFFF',
+  blue: '#007AFF', // Cor principal
+  red: '#FF3B30',  // Cor de destaque/aviso
+  lightBlue: '#ADD8E6',
+  lighterBlue: '#E0F7FA',
+  lightestBlue: '#F0FFFF',
+  orange: '#FFA500',
 };
 
 export interface DailyProgressEntry {
@@ -27,10 +28,10 @@ export interface Goal {
   userId: string;
   name: string;
   description?: string;
-  target: number; 
-  dailyTarget: number; 
+  target: number;
+  dailyTarget: number;
   deadline: Date;
-  progressTotal: number; 
+  progressTotal: number;
   progress: string[]; // Array de datas completadas ('YYYY-MM-DD')
   habitId: string; // 🚨 Essencial para o modal
   dailyProgress?: {

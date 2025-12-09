@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { uploadProfilePhoto, updateUserPhoto } from "../services/firebase.service";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "../utils/toast";
+import TemporaryMessage from "./TemporaryMessage";
 
 interface ProfilePhotoPickerProps {
   userId: string;
