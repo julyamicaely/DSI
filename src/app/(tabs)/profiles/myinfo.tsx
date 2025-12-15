@@ -12,6 +12,7 @@ import { auth } from "../../../../firebaseConfig";
 import { getUserData, updateUserInfo } from "../../../services/firebase.service";
 import { useAuth } from "../../../context/AuthContext";
 import { toast } from "../../../utils/toast";
+import TemporaryMessage from "../../../components/TemporaryMessage";
 
 export default function MyInfoScreen() {
   const [userName, setUserName] = useState("");
@@ -22,6 +23,7 @@ export default function MyInfoScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { triggerDataUpdate } = useAuth();
+  const [tempMessage, setTempMessage] = useState<string>('');
 
   useEffect(() => {
     loadUserData();
@@ -146,6 +148,7 @@ export default function MyInfoScreen() {
           <Text style={styles.saveButtonText}>Salvar informações</Text>
         )}
       </TouchableOpacity>
+      <TemporaryMessage message={tempMessage} onHide={() => setTempMessage('')} />
     </ScrollView>
   );
 }

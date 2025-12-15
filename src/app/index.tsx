@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ImageBackground, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import CustomButton from '../../src/components/CustomButton';  
+import CustomButton from '../../src/components/CustomButton';
 import colors from '../components/Colors'
 
 export default function IndexScreen() {
@@ -38,14 +38,14 @@ export default function IndexScreen() {
         />
         <CustomButton
           title="Sobre o LifeBeat"
-          onPress={() => { /* Página do LifeBeat */ }}
+          onPress={() => routerButton.push('/about')}
           backgroundColor={colors.lightRed}
           textColor="#000000"
           borderColor={colors.red}
           width={326}
         />
       </View>
-      
+
     </View>
   );
 }

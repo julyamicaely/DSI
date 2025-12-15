@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import { COLORS } from '../config/constants';
+import Colors from './Colors';
 
 interface LoadingOverlayProps {
   visible: boolean;
@@ -28,7 +29,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={Colors.red} />
           {message && <Text style={styles.message}>{message}</Text>}
         </View>
       </View>

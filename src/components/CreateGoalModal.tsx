@@ -4,7 +4,8 @@ import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, A
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from './CustomButton';
 import HabitSelector from './HabitSelector';
-import { Goal, GoalFormValues, Habit, Colors } from '../types';
+import { Goal, GoalFormValues, Habit } from '../types';
+import Colors from './Colors';
 import { createGoal, updateGoal } from '../services/goalsServices';
 import { isDateValidForHabit } from '../utils/habitUtils';
 
@@ -13,10 +14,10 @@ import { isDateValidForHabit } from '../utils/habitUtils';
 const initialFormState: GoalFormValues = {
   name: '',
   description: '',
-  target: 100, 
-  dailyTarget: 1, 
+  target: 100,
+  dailyTarget: 1,
   deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  habitId: '', 
+  habitId: '',
 };
 
 const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits }) => {
@@ -59,11 +60,11 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
       handleChange('deadline', selectedDate);
     }
   };
-  
+
   const handleSave = async () => {
     if (!formData.name || !formData.habitId || formData.target <= 0 || formData.dailyTarget <= 0) {
-        Alert.alert('Erro', 'Preencha todos os campos obrigatórios (Nome, Hábito, Metas).');
-        return;
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios (Nome, Hábito, Metas).');
+      return;
     }
 
     setIsLoading(true);
@@ -73,7 +74,7 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
       } else {
         await createGoal(formData);
       }
-      onClose(true); 
+      onClose(true);
     } catch (error: any) {
       console.error('Erro ao salvar meta:', error);
       Alert.alert('Erro', `Falha ao salvar meta: ${error.message || error}`);
@@ -81,7 +82,7 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Modal visible={isVisible} animationType="slide" transparent={true} onRequestClose={() => onClose(false)}>
       <View style={styles.centeredView}>
@@ -103,7 +104,7 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
             onChangeText={text => handleChange('description', text)}
             multiline
           />
-          
+
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerLabel}>Hábito Associado:</Text>
             <HabitSelector
@@ -112,7 +113,7 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
               onSelect={(value) => handleChange('habitId', value)}
             />
           </View>
-          
+
           <View style={styles.row}>
             <TextInput
               style={[styles.input, styles.halfInput]}
@@ -129,14 +130,14 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
               onChangeText={text => handleChange('dailyTarget', Number(text))}
             />
           </View>
-          
+
           <View style={styles.row}>
             <Text style={styles.dateLabel}>Prazo:</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateDisplay}>
-                <Text>{formData.deadline.toLocaleDateString()}</Text>
+              <Text>{formData.deadline.toLocaleDateString()}</Text>
             </TouchableOpacity>
           </View>
-          
+
           {showDatePicker && (
             <DateTimePicker
               value={formData.deadline}
@@ -161,15 +162,15 @@ const CreateGoalModal: React.FC<any> = ({ isVisible, onClose, goalToEdit, habits
 const styles = StyleSheet.create({
   centeredView: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', },
   modalView: { margin: 20, backgroundColor: Colors.white, borderRadius: 20, padding: 25, alignItems: 'stretch', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5, width: '90%', },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', },
-  input: { height: 40, borderColor: Colors.lightBlue, borderWidth: 1, borderRadius: 5, marginBottom: 10, paddingHorizontal: 10, backgroundColor: Colors.lightestBlue, },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: Colors.darkGray },
+  input: { height: 40, borderColor: Colors.lightBlue, borderWidth: 1, borderRadius: 8, marginBottom: 10, paddingHorizontal: 10, backgroundColor: Colors.white, color: Colors.darkGray },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, },
   halfInput: { flex: 1, marginHorizontal: 5, },
-  dateLabel: { fontSize: 16, color: '#333', marginRight: 10, },
-  dateDisplay: { flex: 1, padding: 10, borderColor: Colors.lightBlue, borderWidth: 1, borderRadius: 5, backgroundColor: Colors.lightestBlue, },
+  dateLabel: { fontSize: 14, fontWeight: 'bold', color: Colors.gray, marginRight: 10, },
+  dateDisplay: { flex: 1, padding: 10, borderColor: Colors.lightBlue, borderWidth: 1, borderRadius: 8, backgroundColor: Colors.white, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, },
   pickerContainer: { marginBottom: 10, },
-  pickerLabel: { fontSize: 14, marginBottom: 5, color: '#666', }
+  pickerLabel: { fontSize: 14, fontWeight: 'bold', marginBottom: 5, color: Colors.gray, }
 });
 
 export default CreateGoalModal;

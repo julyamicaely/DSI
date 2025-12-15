@@ -17,9 +17,9 @@ const ImpactCard = ({ title, value, change }: ImpactCardProps) => (
 export default ImpactCard;
 
 const styles = StyleSheet.create({
-    impactCard: {
+  impactCard: {
     flex: 1,
-    backgroundColor: '#F5F5F5', 
+    backgroundColor: '#F5F5F5',
     marginHorizontal: 5,
     padding: 15,
     borderRadius: 15,
@@ -35,14 +35,14 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   impactValue: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#A42020',
     marginBottom: 5,
   },
   impactChange: {
     fontSize: 14,
-    color: '#6B8E23', 
+    color: '#6B8E23',
     fontWeight: '600',
   },
 });

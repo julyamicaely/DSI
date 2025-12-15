@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, ScrollView, Button } from 'react-native';
 import { useRouter } from 'expo-router';
 import { auth } from '../../../firebaseConfig';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import NotificationCard from '../../components/NotificationCard';
 import ImpactCard from '../../components/ImpactCard';
 import colors from '../../components/Colors';
@@ -61,101 +62,101 @@ export default function HomeScreen() {
   const [habitImpactTitle, setHabitImpactTitle] = useState<string>("Nenhum hábito");
   const [habitImpactValue, setHabitImpactValue] = useState<number>(0);
   const [habitImpactChange, setHabitImpactChange] = useState<string>("");
-    // Helper to get week range
-    function getWeekRange(date: Date) {
-      const day = date.getDay();
-      const start = new Date(date);
-      start.setDate(date.getDate() - day);
-      start.setHours(0,0,0,0);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23,59,59,999);
-      return { start, end };
+  // Helper to get week range
+  function getWeekRange(date: Date) {
+    const day = date.getDay();
+    const start = new Date(date);
+    start.setDate(date.getDate() - day);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  // Count completed days in a week
+  function countCompletedDays(goals: Goal[], start: Date, end: Date) {
+    let total = 0;
+    for (const goal of goals) {
+      total += goal.progress.filter(key => {
+        const d = new Date(key);
+        return d >= start && d <= end;
+      }).length;
     }
+    return total;
+  }
 
-    // Count completed days in a week
-    function countCompletedDays(goals: Goal[], start: Date, end: Date) {
-      let total = 0;
-      for (const goal of goals) {
-        total += goal.progress.filter(key => {
-          const d = new Date(key);
-          return d >= start && d <= end;
-        }).length;
-      }
-      return total;
+  // Count activations for a habit in a week range
+  function countActivationsForHabit(habit: Habit, start: Date, end: Date): number {
+    if (habit.frequency === 'daily') {
+      return 7; // Full week
+    } else if (habit.frequency === 'weekly') {
+      return habit.weekdays ? habit.weekdays.length : 0;
+    } else if (habit.frequency === 'monthly' || habit.frequency === 'yearly') {
+      return habit.selectedDates ? Object.keys(habit.selectedDates).filter(dateStr => {
+        const d = new Date(dateStr);
+        return d >= start && d <= end;
+      }).length : 0;
     }
+    return 0;
+  }
 
-    // Count activations for a habit in a week range
-    function countActivationsForHabit(habit: Habit, start: Date, end: Date): number {
-      if (habit.frequency === 'daily') {
-        return 7; // Full week
-      } else if (habit.frequency === 'weekly') {
-        return habit.weekdays ? habit.weekdays.length : 0;
-      } else if (habit.frequency === 'monthly' || habit.frequency === 'yearly') {
-        return habit.selectedDates ? Object.keys(habit.selectedDates).filter(dateStr => {
-          const d = new Date(dateStr);
-          return d >= start && d <= end;
-        }).length : 0;
-      }
-      return 0;
-    }
-
-    const loadImpactStats = async () => {
-      const goals = await listGoals();
-      const habits = await listHabits() as Habit[];
-      if (!goals || goals.length === 0) {
-        setImpactTitle("Ops, nenhuma atividade registrada em Metas.");
-        setImpactDays(0);
-        setImpactChange("");
-      } else {
-        setImpactTitle("Atividades");
-        const now = new Date();
-        const { start: weekStart, end: weekEnd } = getWeekRange(now);
-        const { start: prevWeekStart, end: prevWeekEnd } = getWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
-        const currentWeekCount = countCompletedDays(goals, weekStart, weekEnd);
-        const prevWeekCount = countCompletedDays(goals, prevWeekStart, prevWeekEnd);
-        setImpactDays(currentWeekCount);
-        setImpactChange(
-          prevWeekCount === 0 ? "" : `${currentWeekCount - prevWeekCount >= 0 ? "+" : ""}${currentWeekCount - prevWeekCount} em relação à semana anterior.`
-        );
-      }
-
-      // For second card: habit with most activations this week
-      if (!habits || habits.length === 0) {
-        setHabitImpactTitle("Ops, nenhum hábito registrado em Hábitos.");
-        setHabitImpactValue(0);
-        setHabitImpactChange("");
-        return;
-      }
+  const loadImpactStats = async () => {
+    const goals = await listGoals();
+    const habits = await listHabits() as Habit[];
+    if (!goals || goals.length === 0) {
+      setImpactTitle("Ops, nenhuma atividade registrada em Metas.");
+      setImpactDays(0);
+      setImpactChange("");
+    } else {
+      setImpactTitle("Atividades");
       const now = new Date();
       const { start: weekStart, end: weekEnd } = getWeekRange(now);
       const { start: prevWeekStart, end: prevWeekEnd } = getWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
-      let maxHabit: Habit | null = null;
-      let maxCount = 0;
-      let prevMaxCount = 0;
-      for (const habit of habits) {
-        const currentCount = countActivationsForHabit(habit, weekStart, weekEnd);
-        const prevCount = countActivationsForHabit(habit, prevWeekStart, prevWeekEnd);
-        if (currentCount > maxCount) {
-          maxCount = currentCount;
-          maxHabit = habit;
-          prevMaxCount = prevCount;
-        }
-      }
-      setHabitImpactTitle(maxHabit ? maxHabit.name : "Hábitos");
-      setHabitImpactValue(maxCount);
-      setHabitImpactChange(
-        (prevMaxCount === 0 || maxCount === 0) ? "" : `${maxCount - prevMaxCount >= 0 ? "+" : ""}${maxCount - prevMaxCount} em relação à semana anterior.`
+      const currentWeekCount = countCompletedDays(goals, weekStart, weekEnd);
+      const prevWeekCount = countCompletedDays(goals, prevWeekStart, prevWeekEnd);
+      setImpactDays(currentWeekCount);
+      setImpactChange(
+        prevWeekCount === 0 ? "" : `${currentWeekCount - prevWeekCount >= 0 ? "+" : ""}${currentWeekCount - prevWeekCount} em relação à semana anterior.`
       );
-    };
-  
+    }
+
+    // For second card: habit with most activations this week
+    if (!habits || habits.length === 0) {
+      setHabitImpactTitle("Ops, nenhum hábito registrado em Hábitos.");
+      setHabitImpactValue(0);
+      setHabitImpactChange("");
+      return;
+    }
+    const now = new Date();
+    const { start: weekStart, end: weekEnd } = getWeekRange(now);
+    const { start: prevWeekStart, end: prevWeekEnd } = getWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
+    let maxHabit: Habit | null = null;
+    let maxCount = 0;
+    let prevMaxCount = 0;
+    for (const habit of habits) {
+      const currentCount = countActivationsForHabit(habit, weekStart, weekEnd);
+      const prevCount = countActivationsForHabit(habit, prevWeekStart, prevWeekEnd);
+      if (currentCount > maxCount) {
+        maxCount = currentCount;
+        maxHabit = habit;
+        prevMaxCount = prevCount;
+      }
+    }
+    setHabitImpactTitle(maxHabit ? maxHabit.name : "Hábitos");
+    setHabitImpactValue(maxCount);
+    setHabitImpactChange(
+      (prevMaxCount === 0 || maxCount === 0) ? "" : `${maxCount - prevMaxCount >= 0 ? "+" : ""}${maxCount - prevMaxCount} em relação à semana anterior.`
+    );
+  };
+
   const loadUserData = async () => {
     const user = auth.currentUser;
     if (user) {
       // Recarregar dados do Firebase Auth
       await user.reload();
       setUserName(user.displayName || '');
-      
+
       // Buscar dados do Firestore
       try {
         const userData = await getUserData(user.uid);
@@ -170,17 +171,19 @@ export default function HomeScreen() {
       }
     }
   };
-  
-  useEffect(() => {
-    loadUserData();
-    loadNextHabit();
-    loadNextGoal();
-    loadLastClinicalData();
-    loadImpactStats();
-    initializeFavorites().then(() => {
-      loadClosestFavoriteHospital();
-    });
-  }, [dataUpdateTrigger]); // Recarrega quando dataUpdateTrigger muda
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+      loadNextHabit();
+      loadNextGoal();
+      loadLastClinicalData();
+      loadImpactStats();
+      initializeFavorites().then(() => {
+        loadClosestFavoriteHospital();
+      });
+    }, [dataUpdateTrigger])
+  );
 
   useEffect(() => {
     if (favorites.length > 0) {
@@ -193,7 +196,7 @@ export default function HomeScreen() {
     time: Date;
   };
 
-  const calculateNextReminder = (habit: Habit, now: Date): Date | null => {
+  const calculateNextReminder = (habit: Habit, now: Date, includePastToday = false): Date | null => {
     if (!habit.reminders || !habit.weekdays) {
       return null;
     }
@@ -214,10 +217,10 @@ export default function HomeScreen() {
         const currentDay = now.getDay();
         let daysToAdd = (weekday - currentDay + 7) % 7;
 
-        if (daysToAdd === 0 && nextOccurrence < now) {
+        if (daysToAdd === 0 && nextOccurrence < now && !includePastToday) {
           daysToAdd = 7;
         }
-        
+
         nextOccurrence.setDate(now.getDate() + daysToAdd);
 
         if (!closestReminder || nextOccurrence < closestReminder) {
@@ -243,7 +246,7 @@ export default function HomeScreen() {
         const nextReminderTime = calculateNextReminder(habit, now);
         if (nextReminderTime) {
           if (!closestHabitReminder || nextReminderTime < closestHabitReminder.time) {
-            closestHabitReminder = { habitName: habit.name, time: nextReminderTime };
+            closestHabitReminder = { habitName: habit.name || 'Hábito sem nome', time: nextReminderTime };
           }
         }
       }
@@ -272,29 +275,61 @@ export default function HomeScreen() {
       }
 
       const now = new Date();
-      const goalsWithReminders: { goalName: string; nextReminder: Date }[] = [];
+      // Store full goal object to access progress later
+      const goalsWithReminders: { goal: Goal; nextReminder: Date }[] = [];
 
       goals.forEach(goal => {
         const habit = habits.find(h => h.id === goal.habitId);
         if (habit) {
-          const nextReminderTime = calculateNextReminder(habit, now);
+          const nextReminderTime = calculateNextReminder(habit, now, true);
           if (nextReminderTime) {
             goalsWithReminders.push({
-              goalName: goal.name, // Use goal.name instead of goal.habitName
+              goal: goal,
               nextReminder: nextReminderTime
             });
           }
         }
       });
 
-      if (goalsWithReminders.length > 0) {
-        goalsWithReminders.sort((a, b) => a.nextReminder.getTime() - b.nextReminder.getTime());
-        const nextGoalInfo = goalsWithReminders[0];
-        const timeString = nextGoalInfo.nextReminder.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        setNextGoal(`${nextGoalInfo.goalName}, às ${timeString}`);
+      // Filtrar metas para mostrar apenas as de "hoje"
+      const todayGoals = goalsWithReminders.filter(item => {
+        return item.nextReminder.getDate() === now.getDate() &&
+          item.nextReminder.getMonth() === now.getMonth() &&
+          item.nextReminder.getFullYear() === now.getFullYear();
+      });
+
+      if (todayGoals.length > 0) {
+        todayGoals.sort((a, b) => a.nextReminder.getTime() - b.nextReminder.getTime());
+        const nextGoalInfo = todayGoals[0];
+        const goal = nextGoalInfo.goal;
+        const reminderTime = nextGoalInfo.nextReminder;
+        const goalName = goal.name || 'Meta sem nome';
+
+        // Check if reminder time has passed
+        if (reminderTime < now) {
+          // Logic for past-due goals
+          const dateKey = now.toISOString().split('T')[0];
+          const dailyProgress = goal.dailyProgress?.[dateKey];
+          const progressValue = dailyProgress?.progress || 0;
+          const targetValue = goal.dailyTarget || 1;
+
+          if (progressValue >= targetValue) {
+            setNextGoal(`Progresso de hoje em ${goalName} alcançado!`);
+          } else if (progressValue > 0) {
+            const lacking = targetValue - progressValue;
+            setNextGoal(`Faltam ${lacking} para alcançar o progresso em ${goalName}`);
+          } else {
+            setNextGoal(`Progresso de hoje não alcançado!`);
+          }
+
+        } else {
+          // Logic for future goals (standard)
+          const timeString = reminderTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          setNextGoal(`${goalName}, às ${timeString}`);
+        }
+
       } else {
-        const goalWithMostProgress = goals.reduce((max, goal) => (goal.progress.length > max.progress.length ? goal : max), goals[0]);
-        setNextGoal(`${goalWithMostProgress.name}`); // Use goal.name
+        setNextGoal('Nenhuma meta para hoje');
       }
     } catch (error) {
       console.error("Failed to load next goal:", error);
@@ -306,11 +341,20 @@ export default function HomeScreen() {
     try {
       const consultas = await listarConsultas();
       if (consultas && consultas.length > 0) {
-        // Assuming the list is sorted by date, get the most recent one
-        const lastConsulta = consultas[0]; 
-        // You might need to add a date to your consulta object to sort properly
-        // For now, just showing a generic message
-        setLastClinicalData(`Registrado em ${new Date().toLocaleDateString()}`);
+        // Sort by date descending (newest first)
+        const sortedConsultas = consultas.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+
+        const lastConsulta = sortedConsultas[0] as any;
+
+        if (lastConsulta.createdAt) {
+          setLastClinicalData(`Registrado em ${new Date(lastConsulta.createdAt).toLocaleDateString()}`);
+        } else {
+          setLastClinicalData(`Registrado em ${new Date().toLocaleDateString()}`);
+        }
       } else {
         setLastClinicalData('Adicione dados de sua consulta');
       }
@@ -369,7 +413,7 @@ export default function HomeScreen() {
   const routerButton = useRouter();
 
   return (
-      <View style={styles.container}>
+    <View style={styles.container}>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
@@ -426,12 +470,12 @@ export default function HomeScreen() {
         <View style={styles.impactCardsRow}>
           <ImpactCard
             title={impactTitle}
-            value={impactDays > 0 ? `${impactDays} dias!` : ""}
+            value={impactDays > 0 ? `${impactDays} dias de atividades completadas esta semana!` : ""}
             change={impactChange}
           />
           <ImpactCard
             title={habitImpactTitle}
-            value={habitImpactValue > 0 ? `${habitImpactValue} vezes!` : ""}
+            value={habitImpactValue > 0 ? `Completo ${habitImpactValue} vezes!` : ""}
             change={habitImpactChange}
           />
         </View>
@@ -452,8 +496,8 @@ export default function HomeScreen() {
             subtitle="Envie atividades, lista de hábitos e muito mais aos..."
           />
         </View> */}
-        
-        </ScrollView>
+
+      </ScrollView>
     </View>
   );
 }
@@ -463,9 +507,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', 
+    backgroundColor: '#fff',
   },
-  
+
   // Estilo para o conteúdo dentro do ScrollView
   scrollContent: {
     paddingBottom: 70, // ESSENCIAL: Espaço para não esconder o conteúdo atrás do footer fixo
@@ -510,7 +554,7 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     flex: 1,
-    height: 180, 
+    height: 180,
     marginHorizontal: 5,
     borderRadius: 15,
     padding: 15,
@@ -519,14 +563,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
   },
   tag: {
-    backgroundColor: '#7F96FF', 
+    backgroundColor: '#7F96FF',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    alignSelf: 'flex-start', 
+    alignSelf: 'flex-start',
     marginBottom: 10,
   },
   tagText: {
@@ -547,7 +591,7 @@ const styles = StyleSheet.create({
   cardDate: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000', 
+    color: '#000',
     marginTop: 10,
   },
 
@@ -595,7 +639,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   actionIcon: {
-    backgroundColor: '#E6E6FA', 
+    backgroundColor: '#E6E6FA',
     borderRadius: 15,
     padding: 8,
     marginRight: 15,
@@ -615,7 +659,7 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: '#eee',
-    marginLeft: 50, 
+    marginLeft: 50,
   },
 
   // 6. FOOTER (Barra de Navegação Inferior)
@@ -623,10 +667,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    height: 70, 
+    height: 70,
     position: 'absolute', // FIXO
     bottom: 0,
     left: 0,
@@ -639,11 +683,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#999', 
+    color: '#999',
   },
   footerTextSelected: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#A42020', 
+    color: '#A42020',
   },
 });

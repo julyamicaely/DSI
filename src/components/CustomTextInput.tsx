@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, TextInputProps, StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, TextInput, View, TextInputProps, StyleProp, ViewStyle, DimensionValue } from 'react-native';
 import colors from './Colors';
 
 interface CustomTextInputProps extends TextInputProps {
@@ -13,20 +13,22 @@ interface CustomTextInputProps extends TextInputProps {
   outlineColor?: string;
   focusedBackgroundColor?: string;
   blurredBackgroundColor?: string;
+  width?: DimensionValue;
 }
 
-const CustomTextInput: React.FC<CustomTextInputProps> = ({ 
-  placeholder, 
-  backgroundColor, 
-  borderRadius, 
-  onFocus, 
-  onBlur, 
+const CustomTextInput: React.FC<CustomTextInputProps> = ({
+  placeholder,
+  backgroundColor,
+  borderRadius,
+  onFocus,
+  onBlur,
   containerStyle,
   placeholderTextColor,
   outlineColor,
   focusedBackgroundColor,
   blurredBackgroundColor,
-  ...props 
+  width,
+  ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -44,14 +46,14 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
     }
   };
 
-  const containerBackgroundColor = isFocused 
-    ? (focusedBackgroundColor || colors.white) 
+  const containerBackgroundColor = isFocused
+    ? (focusedBackgroundColor || colors.white)
     : (blurredBackgroundColor || backgroundColor || colors.lightestBlue);
 
   const borderColor = isFocused ? (outlineColor || colors.blue) : (outlineColor || '#A6B6FF');
 
   return (
-    <View style={[styles.container, { backgroundColor: containerBackgroundColor, borderRadius: borderRadius || 8, borderColor: borderColor }, containerStyle]}>
+    <View style={[styles.container, { backgroundColor: containerBackgroundColor, borderRadius: borderRadius || 8, borderColor: borderColor }, width ? { width } : undefined, containerStyle]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}

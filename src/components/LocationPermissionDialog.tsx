@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../config/constants';
 import type { PermissionStatus } from '../hooks/useLocationPermission';
+import Colors from './Colors';
 
 interface LocationPermissionDialogProps {
   visible: boolean;
@@ -52,7 +53,7 @@ export default function LocationPermissionDialog({
             <Ionicons 
               name={isDenied ? 'location-outline' : 'navigate-circle-outline'} 
               size={64} 
-              color={isDenied ? COLORS.error : COLORS.primary} 
+              color={isDenied ? COLORS.error : Colors.red} 
             />
           </View>
 
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: Colors.red,
   },
   primaryButtonText: {
     fontSize: 16,

@@ -2,10 +2,12 @@ import { Image } from 'expo-image';
 import { Tabs, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TabLayout() {
   const routerButton = useRouter();
   const insets = useSafeAreaInsets();
+  const { logout } = useAuth();
 
   return (
     <Tabs
@@ -58,11 +60,12 @@ export default function TabLayout() {
               <Text style={styles.title}>Lifebeat</Text>
             </View>
           ),
+          headerLeft: () => null,
           headerRight: () => (
             <View style={{ flexDirection: 'row' }}>
               <TouchableOpacity
                 style={styles.headerButtonsRight}
-                onPress={() => {}}
+                onPress={() => routerButton.push('/about')}
               >
                 <Image
                   source={require('../../assets/buttonHelp.svg')}
@@ -71,7 +74,7 @@ export default function TabLayout() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.headerButtonsRight}
-                onPress={() => {}}
+                onPress={() => logout().then(() => routerButton.replace('/login'))}
               >
                 <Image
                   source={require('../../assets/buttonLogOut.svg')}
@@ -85,8 +88,8 @@ export default function TabLayout() {
       />
 
       {/* 📊 Aba Gerenciamento */}
-      
-     {/*  <Tabs.Screen
+
+      {/*  <Tabs.Screen
         name="management"
         options={{
           title: 'Gerenciamento',
@@ -110,6 +113,7 @@ export default function TabLayout() {
               style={styles.tabIcons}
             />
           ),
+          headerShown: false,
         }}
       />
 
